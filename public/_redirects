@@ -1,8 +1,5 @@
-# Cloudflare Pages Redirects & Rewrites
+# Cloudflare Redirects & Rewrites (Relative URLs Only)
 # ==============================================================================
-# Canonical Apex Domain 301 Redirect (force non-www)
-https://www.aura432hz.com/* https://aura432hz.com/:splat 301!
-
 # Section Aliases & Legacy Route 301 Redirects
 /shop /gear 301
 /store /gear 301

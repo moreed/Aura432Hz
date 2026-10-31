@@ -132,8 +132,7 @@ export default {
 /assets/*
   Cache-Control: public, max-age=31536000, immutable`,
 
-    redirects: `https://www.aura432hz.com/* https://aura432hz.com/:splat 301!
-/shop /gear 301
+    redirects: `/shop /gear 301
 /store /gear 301
 /soundscapes /mixer 301
 /breathwork /breath 301
