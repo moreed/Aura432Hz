@@ -17,8 +17,14 @@ custom_domain = true
 pattern = "www.aura432hz.com"
 custom_domain = true
 
+[observability.logs]
+enabled = true
+invocation_logs = true
+persist = true
+
 [vars]
 NODE_VERSION = "22"
 ENVIRONMENT = "production"
 PRIMARY_DOMAIN = "aura432hz.com"
 ALT_DOMAIN = "www.aura432hz.com"
+
