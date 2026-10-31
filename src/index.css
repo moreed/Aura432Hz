@@ -1,0 +1,1251 @@
+@import "tailwindcss";
+
+/* ========================================================================= */
+/* AURORA SANCTUARY DESIGN SYSTEM: PERMANENTLY LOCKED & FROZEN               */
+/* Theme, Colors, Fonts, Layout, Icons, and Tokens are Immutable             */
+/* Reference: /DESIGN_SYSTEM_LOCKED.md                                       */
+/* Core Palette: #081321 Midnight Navy, #48E1D0 Aurora Teal, #A99AFB Lavender */
+/* ========================================================================= */
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/inter-variable.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@theme {
+  --font-sans: 'Inter', sans-serif;
+  --color-midnight: #081321;
+  --color-aurora-teal: #48E1D0;
+  --color-cosmic-lavender: #A99AFB;
+}
+
+:root {
+  --sanctuary-navy: #081321;
+  --sanctuary-teal: #48E1D0;
+  --sanctuary-lavender: #A99AFB;
+  font-family: var(--font-sans);
+}
+
+html {
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  letter-spacing: -0.011em;
+  -webkit-overflow-scrolling: touch;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+body {
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  letter-spacing: -0.011em;
+  overflow-x: hidden;
+  max-width: 100vw;
+  min-height: 100%;
+  overscroll-behavior-x: none;
+}
+
+/* Aurora Sanctuary Typography Standard: Headings (h1 through h6) */
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.25 !important;
+  letter-spacing: -0.025em !important;
+}
+
+.font-display,
+[class*="text-xl"],
+[class*="text-2xl"],
+[class*="text-3xl"],
+[class*="text-4xl"],
+[class*="text-5xl"] {
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+}
+
+.text-midnight {
+  color: #081321 !important;
+}
+
+/* Micro-labels, uppercase badges and navigation metadata */
+[class*="uppercase"],
+[class*="tracking-wider"],
+[class*="tracking-widest"] {
+  letter-spacing: 0.05em;
+}
+
+/* Numeric & Monospace displays: preserve alignment without proportional jitter */
+.font-mono,
+[class*="tabular-nums"] {
+  letter-spacing: 0;
+}
+
+/* Universal sleek custom scrollbar for desktop and tablet */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.28) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.45);
+}
+
+/* ========================================================================= */
+/* ENHANCED ACCESSIBLE TYPOGRAPHY & CONTRAST (DARK MODE DEFAULT)             */
+/* WCAG 2.2 AA / AAA compliant readability on Aurora Sanctuary surfaces     */
+/* ========================================================================= */
+.theme-dark,
+html:not(.theme-light) {
+  color-scheme: dark;
+  background-color: #081321;
+}
+
+/* Aurora Sanctuary Base Surface Remapping (Midnight Navy #081321) */
+.theme-dark .bg-slate-950,
+html:not(.theme-light) .bg-slate-950,
+.theme-dark [class*="bg-slate-950"],
+html:not(.theme-light) [class*="bg-slate-950"] {
+  background-color: #081321 !important;
+}
+
+/* Secondary Elevation Surface (#0c1b2e) */
+.theme-dark .bg-slate-900,
+html:not(.theme-light) .bg-slate-900 {
+  background-color: #0c1b2e !important;
+}
+
+/* Midnight Navy border framing */
+.theme-dark .border-slate-800,
+html:not(.theme-light) .border-slate-800 {
+  border-color: #172c47 !important;
+}
+
+.theme-dark .border-slate-800\/80,
+html:not(.theme-light) .border-slate-800\/80,
+.theme-dark .border-slate-800\/70,
+html:not(.theme-light) .border-slate-800\/70 {
+  border-color: rgba(23, 44, 71, 0.8) !important;
+}
+
+/* Aurora Teal Primary Interactive Accents (#48E1D0) */
+.theme-dark .text-sky-400,
+html:not(.theme-light) .text-sky-400 {
+  color: #48E1D0 !important;
+}
+
+.theme-dark .hover\:text-sky-300:hover,
+html:not(.theme-light) .hover\:text-sky-300:hover {
+  color: #72ecdf !important;
+}
+
+.theme-dark .bg-sky-500,
+html:not(.theme-light) .bg-sky-500 {
+  background-color: #48E1D0 !important;
+}
+
+.theme-dark .hover\:bg-sky-400:hover,
+html:not(.theme-light) .hover\:bg-sky-400:hover {
+  background-color: #72ecdf !important;
+}
+
+.theme-dark .border-sky-400,
+html:not(.theme-light) .border-sky-400 {
+  border-color: #48E1D0 !important;
+}
+
+/* Cosmic Lavender Secondary Accents (#A99AFB) */
+.theme-dark .text-indigo-400,
+html:not(.theme-light) .text-indigo-400 {
+  color: #A99AFB !important;
+}
+
+.theme-dark .hover\:text-indigo-300:hover,
+html:not(.theme-light) .hover\:text-indigo-300:hover {
+  color: #c4bbfd !important;
+}
+
+.theme-dark .border-indigo-400,
+html:not(.theme-light) .border-indigo-400 {
+  border-color: #A99AFB !important;
+}
+
+/* Ensure solid Aurora Teal buttons use Midnight Navy ink text for WCAG AAA 12.8:1 contrast */
+.theme-dark .text-slate-950,
+html:not(.theme-light) .text-slate-950 {
+  color: #081321 !important;
+}
+
+/* Selection highlight in Aurora Teal */
+::selection {
+  background-color: rgba(72, 225, 208, 0.28);
+  color: #ffffff;
+}
+
+/* Ensure secondary text in dark mode has crisp 5.5:1+ contrast */
+.theme-dark .text-slate-400,
+html:not(.theme-light) .text-slate-400 {
+  color: #94a3b8; /* Slate-400 with boosted luminance */
+}
+
+.theme-dark .text-slate-500,
+html:not(.theme-light) .text-slate-500 {
+  color: #94a3b8; /* Replaced washed out gray with legible slate */
+}
+
+.theme-dark .text-slate-600,
+html:not(.theme-light) .text-slate-600 {
+  color: #64748b; /* Readable medium slate */
+}
+
+.theme-dark .text-slate-300,
+html:not(.theme-light) .text-slate-300 {
+  color: #cbd5e1;
+}
+
+/* Small text legibility boost across all viewports */
+.text-\[9px\] {
+  font-size: 0.6875rem !important; /* Upgraded to 11px for accessibility */
+  line-height: 1rem !important;
+  font-weight: 500;
+  letter-spacing: 0.015em;
+}
+
+.text-\[10px\] {
+  font-size: 0.72rem !important; /* ~11.5px */
+  line-height: 1.05rem !important;
+  font-weight: 500;
+  letter-spacing: 0.015em;
+}
+
+.text-\[11px\] {
+  font-size: 0.75rem !important; /* 12px */
+  line-height: 1.15rem !important;
+  letter-spacing: 0.015em;
+}
+
+/* ========================================================================= */
+/* LIGHT SERENITY MODE (THEME-LIGHT)                                         */
+/* Celestial Kyoto Dawn & Alabaster Sanctuary: Luminous, Serene & Tactile    */
+/* ========================================================================= */
+.theme-light {
+  color-scheme: light;
+  background-color: #f6f8f7;
+  background-image: 
+    radial-gradient(ellipse at 12% 0%, rgba(125, 211, 252, 0.25) 0%, transparent 55%),
+    radial-gradient(ellipse at 88% 8%, rgba(253, 230, 138, 0.28) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 92%, rgba(167, 243, 208, 0.24) 0%, transparent 60%),
+    linear-gradient(180deg, #fdfcf9 0%, #f6f8f7 40%, #eff4f2 100%);
+  background-attachment: fixed;
+  color: #0f172a;
+}
+
+.theme-light body {
+  background-color: #f6f8f7;
+  background-image: 
+    radial-gradient(ellipse at 12% 0%, rgba(125, 211, 252, 0.25) 0%, transparent 55%),
+    radial-gradient(ellipse at 88% 8%, rgba(253, 230, 138, 0.28) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 92%, rgba(167, 243, 208, 0.24) 0%, transparent 60%),
+    linear-gradient(180deg, #fdfcf9 0%, #f6f8f7 40%, #eff4f2 100%);
+  background-attachment: fixed;
+  color: #0f172a;
+}
+
+/* Main background wrappers */
+.theme-light .bg-slate-950,
+.theme-light .bg-slate-900,
+.theme-light [class*="bg-slate-950"],
+.theme-light [class*="bg-slate-900"],
+.theme-light [class*="bg-indigo-950"],
+.theme-light [class*="bg-purple-950"],
+.theme-light [class*="bg-violet-950"],
+.theme-light [class*="bg-amber-950"],
+.theme-light [class*="bg-emerald-950"],
+.theme-light [class*="bg-sky-950"],
+.theme-light [class*="bg-teal-950"],
+.theme-light [class*="bg-zinc-950"] {
+  background-color: #ffffff !important;
+  color: #1c1917 !important;
+  border-color: #e7e0d5 !important;
+  box-shadow: 0 4px 20px -2px rgba(120, 80, 20, 0.03);
+}
+
+.theme-light .bg-slate-850,
+.theme-light .bg-slate-800,
+.theme-light [class*="bg-slate-850"],
+.theme-light [class*="bg-slate-800"],
+.theme-light [class*="bg-indigo-900"],
+.theme-light [class*="bg-purple-900"] {
+  background-color: #f5f0e8 !important;
+  color: #292524 !important;
+  border-color: #ded6cb !important;
+}
+
+/* Transform dark gradients into soft, elegant light pearl cards */
+.theme-light [class*="from-slate-9"],
+.theme-light [class*="via-slate-9"],
+.theme-light [class*="to-slate-9"],
+.theme-light [class*="from-amber-950"],
+.theme-light [class*="via-amber-950"],
+.theme-light [class*="to-amber-950"],
+.theme-light [class*="from-indigo-950"],
+.theme-light [class*="via-indigo-950"],
+.theme-light [class*="to-indigo-950"],
+.theme-light [class*="from-purple-950"],
+.theme-light [class*="via-purple-950"],
+.theme-light [class*="to-purple-950"],
+.theme-light [class*="from-emerald-950"],
+.theme-light [class*="via-emerald-950"],
+.theme-light [class*="to-emerald-950"],
+.theme-light [class*="from-sky-950"],
+.theme-light [class*="via-sky-950"],
+.theme-light [class*="to-sky-950"] {
+  background-color: #ffffff !important;
+  background-image: linear-gradient(to bottom, #ffffff, #faf6ef) !important;
+  border-color: #e7e0d5 !important;
+}
+
+/* Modals & Dialog overlays in Light Mode */
+.theme-light [role="dialog"] > div {
+  background-color: #ffffff !important;
+  border-color: #e2dbce !important;
+  color: #1c1917 !important;
+  box-shadow: 0 25px 50px -12px rgba(80, 50, 20, 0.15) !important;
+}
+
+/* Headers and Navigation */
+.theme-light header {
+  background-color: rgba(253, 251, 247, 0.94) !important;
+  border-color: #e7e0d5 !important;
+}
+
+.theme-light footer {
+  background-color: rgba(250, 247, 242, 0.96) !important;
+  border-color: #e7e0d5 !important;
+  color: #57534e !important;
+}
+
+/* Text color overrides for Light Mode: High Contrast Ink */
+.theme-light .text-slate-100 {
+  color: #0f172a !important; /* Deepest ink black for main titles */
+}
+
+.theme-light .text-slate-200 {
+  color: #1e293b !important;
+}
+
+.theme-light .text-slate-300 {
+  color: #334155 !important; /* Slate-700 for optimal reading */
+}
+
+.theme-light .text-slate-400 {
+  color: #475569 !important; /* Slate-600 for high-contrast secondary */
+}
+
+.theme-light .text-slate-500 {
+  color: #475569 !important;
+}
+
+.theme-light .text-slate-600 {
+  color: #64748b !important;
+}
+
+/* Ensure pale accent colors have deep, crisp, readable contrast against light backgrounds */
+.theme-light .text-sky-100,
+.theme-light .text-sky-200,
+.theme-light .text-sky-300,
+.theme-light .text-sky-400 {
+  color: #0369a1 !important; /* Rich deep ocean navy */
+}
+
+.theme-light .text-indigo-100,
+.theme-light .text-indigo-200,
+.theme-light .text-indigo-300,
+.theme-light .text-indigo-400 {
+  color: #3730a3 !important; /* Deep royal indigo */
+}
+
+.theme-light .text-amber-100,
+.theme-light .text-amber-200,
+.theme-light .text-amber-300,
+.theme-light .text-amber-400 {
+  color: #92400e !important; /* Deep warm amber/cinnamon */
+}
+
+.theme-light .text-emerald-100,
+.theme-light .text-emerald-200,
+.theme-light .text-emerald-300,
+.theme-light .text-emerald-400 {
+  color: #065f46 !important; /* Deep pine emerald */
+}
+
+.theme-light .text-rose-100,
+.theme-light .text-rose-200,
+.theme-light .text-rose-300,
+.theme-light .text-rose-400 {
+  color: #9f1239 !important; /* Deep rich rose */
+}
+
+.theme-light .text-purple-100,
+.theme-light .text-purple-200,
+.theme-light .text-purple-300,
+.theme-light .text-purple-400 {
+  color: #6b21a8 !important; /* Deep rich purple */
+}
+
+/* Translucent Highlighted Boxes, Badges & Pills in Light Mode:
+   Convert low-contrast pastel containers to crisp, legible tinted cards with high-contrast text */
+.theme-light [class*="bg-sky-500/"],
+.theme-light [class*="bg-sky-400/"],
+.theme-light [class*="bg-sky-600/"] {
+  background-color: rgba(224, 242, 254, 0.95) !important; /* sky-100 */
+  border-color: #7dd3fc !important; /* sky-300 */
+  color: #0369a1 !important; /* sky-700 */
+}
+
+.theme-light [class*="bg-indigo-500/"],
+.theme-light [class*="bg-indigo-400/"],
+.theme-light [class*="bg-indigo-600/"],
+.theme-light [class*="bg-indigo-950/"] {
+  background-color: rgba(238, 242, 255, 0.95) !important; /* indigo-50 */
+  border-color: #a5b4fc !important; /* indigo-300 */
+  color: #3730a3 !important; /* indigo-700 */
+}
+
+.theme-light [class*="bg-emerald-500/"],
+.theme-light [class*="bg-emerald-400/"],
+.theme-light [class*="bg-emerald-600/"] {
+  background-color: rgba(236, 253, 245, 0.95) !important; /* emerald-50 */
+  border-color: #6ee7b7 !important; /* emerald-300 */
+  color: #065f46 !important; /* emerald-700 */
+}
+
+.theme-light [class*="bg-amber-500/"],
+.theme-light [class*="bg-amber-400/"],
+.theme-light [class*="bg-amber-600/"] {
+  background-color: rgba(254, 243, 199, 0.95) !important; /* amber-100 */
+  border-color: #fcd34d !important; /* amber-300 */
+  color: #92400e !important; /* amber-800 */
+}
+
+.theme-light [class*="bg-rose-500/"],
+.theme-light [class*="bg-rose-400/"],
+.theme-light [class*="bg-rose-600/"] {
+  background-color: rgba(255, 241, 242, 0.95) !important; /* rose-50 */
+  border-color: #fda4af !important; /* rose-300 */
+  color: #9f1239 !important; /* rose-700 */
+}
+
+.theme-light [class*="bg-purple-500/"],
+.theme-light [class*="bg-purple-400/"],
+.theme-light [class*="bg-purple-600/"] {
+  background-color: rgba(250, 245, 255, 0.95) !important; /* purple-50 */
+  border-color: #d8b4fe !important; /* purple-300 */
+  color: #6b21a8 !important; /* purple-700 */
+}
+
+/* ========================================================================= */
+/* BUTTONS & INTERACTIVE ELEMENTS CONTRAST SYSTEM (LIGHT MODE)              */
+/* ========================================================================= */
+
+/* 1. Saturated dark & gradient action buttons: MUST have pure, crisp white text */
+.theme-light button.bg-indigo-600,
+.theme-light button.bg-indigo-700,
+.theme-light button.bg-purple-600,
+.theme-light button.bg-purple-700,
+.theme-light button.bg-violet-600,
+.theme-light button.bg-violet-700,
+.theme-light button.bg-sky-600,
+.theme-light button.bg-sky-700,
+.theme-light button.bg-emerald-600,
+.theme-light button.bg-emerald-700,
+.theme-light button.bg-rose-600,
+.theme-light button.bg-rose-700,
+.theme-light button[class*="from-indigo-6"],
+.theme-light button[class*="from-indigo-5"],
+.theme-light button[class*="from-purple-6"],
+.theme-light button[class*="from-purple-5"],
+.theme-light button[class*="from-violet-6"],
+.theme-light a[class*="from-indigo-6"],
+.theme-light a[class*="from-indigo-5"],
+.theme-light a[class*="from-purple-6"],
+.theme-light a[class*="from-purple-5"] {
+  color: #ffffff !important;
+}
+
+.theme-light button.bg-indigo-600 *,
+.theme-light button.bg-indigo-700 *,
+.theme-light button.bg-purple-600 *,
+.theme-light button.bg-purple-700 *,
+.theme-light button.bg-violet-600 *,
+.theme-light button.bg-violet-700 *,
+.theme-light button.bg-sky-600 *,
+.theme-light button.bg-sky-700 *,
+.theme-light button.bg-emerald-600 *,
+.theme-light button.bg-emerald-700 *,
+.theme-light button.bg-rose-600 *,
+.theme-light button.bg-rose-700 *,
+.theme-light button[class*="from-indigo-6"] *,
+.theme-light button[class*="from-indigo-5"] *,
+.theme-light button[class*="from-purple-6"] *,
+.theme-light button[class*="from-purple-5"] *,
+.theme-light button[class*="from-violet-6"] *,
+.theme-light a[class*="from-indigo-6"] *,
+.theme-light a[class*="from-indigo-5"] *,
+.theme-light a[class*="from-purple-6"] *,
+.theme-light a[class*="from-purple-5"] * {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* 2. Bright action buttons (Amber, Gold, Bright Sky, Cyan gradients): MUST have deep black ink text */
+.theme-light button.bg-amber-400,
+.theme-light button.bg-amber-300,
+.theme-light button.bg-amber-500,
+.theme-light button.bg-sky-400,
+.theme-light button.bg-sky-500,
+.theme-light button[class*="from-amber-400"],
+.theme-light button[class*="from-sky-400"],
+.theme-light a.bg-amber-400,
+.theme-light a.bg-sky-400,
+.theme-light a[class*="from-amber-400"],
+.theme-light a[class*="from-sky-400"],
+.theme-light .text-slate-950,
+.theme-light [class*="text-slate-950"] {
+  color: #020617 !important; /* Deepest coal-black ink */
+  font-weight: 700 !important;
+}
+
+.theme-light button.bg-amber-400 *,
+.theme-light button.bg-amber-300 *,
+.theme-light button.bg-amber-500 *,
+.theme-light button.bg-sky-400 *,
+.theme-light button.bg-sky-500 *,
+.theme-light button[class*="from-amber-400"] *,
+.theme-light button[class*="from-sky-400"] *,
+.theme-light a.bg-amber-400 *,
+.theme-light a.bg-sky-400 *,
+.theme-light a[class*="from-amber-400"] *,
+.theme-light a[class*="from-sky-400"] * {
+  color: #020617 !important;
+  stroke: #020617 !important;
+}
+
+/* 3. Slate & Neutral Buttons in Light Mode: Crisp tactile white cards with dark slate text and clear borders */
+.theme-light button[class*="bg-slate-800"],
+.theme-light button[class*="bg-slate-850"],
+.theme-light button[class*="bg-slate-900"],
+.theme-light button[class*="bg-slate-950"],
+.theme-light [role="button"][class*="bg-slate-800"],
+.theme-light [role="button"][class*="bg-slate-850"],
+.theme-light [role="button"][class*="bg-slate-900"],
+.theme-light [role="button"][class*="bg-slate-950"] {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08) !important;
+}
+
+.theme-light button[class*="bg-slate-800"]:hover,
+.theme-light button[class*="bg-slate-850"]:hover,
+.theme-light button[class*="bg-slate-900"]:hover,
+.theme-light button[class*="bg-slate-950"]:hover,
+.theme-light [role="button"][class*="bg-slate-800"]:hover,
+.theme-light [role="button"][class*="bg-slate-850"]:hover,
+.theme-light [role="button"][class*="bg-slate-900"]:hover,
+.theme-light [role="button"][class*="bg-slate-950"]:hover {
+  background-color: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+  color: #020617 !important;
+}
+
+.theme-light button[class*="bg-slate-800"] span,
+.theme-light button[class*="bg-slate-850"] span,
+.theme-light button[class*="bg-slate-900"] span,
+.theme-light button[class*="bg-slate-950"] span,
+.theme-light [role="button"][class*="bg-slate-800"] span,
+.theme-light [role="button"][class*="bg-slate-850"] span,
+.theme-light [role="button"][class*="bg-slate-900"] span,
+.theme-light [role="button"][class*="bg-slate-950"] span {
+  color: inherit !important;
+}
+
+/* Ensure colorful icons in Light Mode retain their distinctive palette */
+.theme-light button svg.text-sky-400,
+.theme-light button svg.text-sky-300,
+.theme-light nav svg.text-sky-400,
+.theme-light nav svg.text-sky-300 {
+  color: #0284c7 !important;
+}
+
+.theme-light button svg.text-amber-400,
+.theme-light button svg.text-amber-300,
+.theme-light nav svg.text-amber-400,
+.theme-light nav svg.text-amber-300 {
+  color: #d97706 !important;
+}
+
+.theme-light button svg.text-emerald-400,
+.theme-light button svg.text-emerald-300,
+.theme-light nav svg.text-emerald-400,
+.theme-light nav svg.text-emerald-300 {
+  color: #059669 !important;
+}
+
+.theme-light button svg.text-indigo-400,
+.theme-light button svg.text-indigo-300,
+.theme-light nav svg.text-indigo-400,
+.theme-light nav svg.text-indigo-300 {
+  color: #4f46e5 !important;
+}
+
+.theme-light button svg.text-rose-400,
+.theme-light button svg.text-rose-300,
+.theme-light nav svg.text-rose-400,
+.theme-light nav svg.text-rose-300 {
+  color: #e11d48 !important;
+}
+
+.theme-light button svg.text-purple-400,
+.theme-light button svg.text-purple-300,
+.theme-light nav svg.text-purple-400,
+.theme-light nav svg.text-purple-300 {
+  color: #9333ea !important;
+}
+
+/* 4. Translucent Tinted Buttons & Action Badges in Light Mode */
+.theme-light button[class*="bg-sky-500/"],
+.theme-light button[class*="bg-sky-400/"] {
+  background-color: #e0f2fe !important;
+  border-color: #38bdf8 !important;
+  color: #0369a1 !important;
+}
+.theme-light button[class*="bg-sky-500/"]:hover,
+.theme-light button[class*="bg-sky-400/"]:hover {
+  background-color: #bae6fd !important;
+  color: #0284c7 !important;
+}
+
+.theme-light button[class*="bg-indigo-500/"],
+.theme-light button[class*="bg-indigo-400/"] {
+  background-color: #eef2ff !important;
+  border-color: #818cf8 !important;
+  color: #312e81 !important;
+}
+.theme-light button[class*="bg-indigo-500/"]:hover,
+.theme-light button[class*="bg-indigo-400/"]:hover {
+  background-color: #e0e7ff !important;
+  color: #1e1b4b !important;
+}
+
+.theme-light button[class*="bg-emerald-500/"],
+.theme-light button[class*="bg-emerald-400/"] {
+  background-color: #ecfdf5 !important;
+  border-color: #34d399 !important;
+  color: #064e3b !important;
+}
+.theme-light button[class*="bg-emerald-500/"]:hover,
+.theme-light button[class*="bg-emerald-400/"]:hover {
+  background-color: #d1fae5 !important;
+  color: #022c22 !important;
+}
+
+.theme-light button[class*="bg-amber-500/"],
+.theme-light button[class*="bg-amber-400/"] {
+  background-color: #fffbeb !important;
+  border-color: #f59e0b !important;
+  color: #78350f !important;
+}
+.theme-light button[class*="bg-amber-500/"]:hover,
+.theme-light button[class*="bg-amber-400/"]:hover {
+  background-color: #fef3c7 !important;
+  color: #451a03 !important;
+}
+
+.theme-light button[class*="bg-rose-500/"],
+.theme-light button[class*="bg-rose-400/"] {
+  background-color: #fff1f2 !important;
+  border-color: #fb7185 !important;
+  color: #881337 !important;
+}
+.theme-light button[class*="bg-rose-500/"]:hover,
+.theme-light button[class*="bg-rose-400/"]:hover {
+  background-color: #ffe4e6 !important;
+  color: #4c0519 !important;
+}
+
+/* ========================================================================= */
+/* HIGHLIGHTED BOXES, CALLOUTS, BLOCKQUOTES & NOTICES IN LIGHT MODE         */
+/* ========================================================================= */
+
+/* Blockquotes & Left-Border Callouts */
+.theme-light blockquote,
+.theme-light [class*="border-l-4"] {
+  background-color: #f8fafc !important;
+  border-left-color: #0284c7 !important;
+  color: #0f172a !important;
+  font-weight: 500 !important;
+}
+.theme-light blockquote *,
+.theme-light [class*="border-l-4"] * {
+  color: #0f172a !important;
+}
+
+/* Translucent Tinted Highlighted Box Containers */
+.theme-light div[class*="bg-sky-500/"],
+.theme-light div[class*="bg-sky-400/"],
+.theme-light div[class*="bg-sky-950/"] {
+  background-color: #f0f9ff !important;
+  border-color: #7dd3fc !important;
+  color: #0369a1 !important;
+}
+.theme-light div[class*="bg-sky-500/"] p,
+.theme-light div[class*="bg-sky-500/"] span,
+.theme-light div[class*="bg-sky-950/"] p,
+.theme-light div[class*="bg-sky-950/"] span {
+  color: #0c4a6e !important;
+}
+
+.theme-light div[class*="bg-indigo-500/"],
+.theme-light div[class*="bg-indigo-400/"],
+.theme-light div[class*="bg-indigo-950/"] {
+  background-color: #f5f7ff !important;
+  border-color: #a5b4fc !important;
+  color: #312e81 !important;
+}
+.theme-light div[class*="bg-indigo-500/"] p,
+.theme-light div[class*="bg-indigo-500/"] span,
+.theme-light div[class*="bg-indigo-950/"] p,
+.theme-light div[class*="bg-indigo-950/"] span {
+  color: #1e1b4b !important;
+}
+
+.theme-light div[class*="bg-emerald-500/"],
+.theme-light div[class*="bg-emerald-400/"],
+.theme-light div[class*="bg-emerald-950/"] {
+  background-color: #f0fdf4 !important;
+  border-color: #86efac !important;
+  color: #064e3b !important;
+}
+.theme-light div[class*="bg-emerald-500/"] p,
+.theme-light div[class*="bg-emerald-500/"] span,
+.theme-light div[class*="bg-emerald-950/"] p,
+.theme-light div[class*="bg-emerald-950/"] span {
+  color: #022c22 !important;
+}
+
+.theme-light div[class*="bg-amber-500/"],
+.theme-light div[class*="bg-amber-400/"],
+.theme-light div[class*="bg-amber-950/"] {
+  background-color: #fffdf5 !important;
+  border-color: #fcd34d !important;
+  color: #78350f !important;
+}
+.theme-light div[class*="bg-amber-500/"] p,
+.theme-light div[class*="bg-amber-500/"] span,
+.theme-light div[class*="bg-amber-950/"] p,
+.theme-light div[class*="bg-amber-950/"] span {
+  color: #451a03 !important;
+}
+
+.theme-light div[class*="bg-rose-500/"],
+.theme-light div[class*="bg-rose-400/"],
+.theme-light div[class*="bg-rose-950/"] {
+  background-color: #fff5f5 !important;
+  border-color: #fda4af !important;
+  color: #881337 !important;
+}
+.theme-light div[class*="bg-rose-500/"] p,
+.theme-light div[class*="bg-rose-500/"] span,
+.theme-light div[class*="bg-rose-950/"] p,
+.theme-light div[class*="bg-rose-950/"] span {
+  color: #4c0519 !important;
+}
+
+.theme-light div[class*="bg-purple-500/"],
+.theme-light div[class*="bg-purple-400/"],
+.theme-light div[class*="bg-purple-950/"] {
+  background-color: #faf5ff !important;
+  border-color: #d8b4fe !important;
+  color: #581c87 !important;
+}
+.theme-light div[class*="bg-purple-500/"] p,
+.theme-light div[class*="bg-purple-500/"] span,
+.theme-light div[class*="bg-purple-950/"] p,
+.theme-light div[class*="bg-purple-950/"] span {
+  color: #3b0764 !important;
+}
+
+/* Neutral Highlighted Boxes with dark slate outlines */
+.theme-light div[class*="bg-slate-950/"],
+.theme-light div[class*="bg-slate-900/"] {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.theme-light div[class*="bg-slate-950/"] p,
+.theme-light div[class*="bg-slate-900/"] p,
+.theme-light div[class*="bg-slate-950/"] div,
+.theme-light div[class*="bg-slate-900/"] div {
+  color: #1e293b;
+}
+
+/* General text-white: becomes dark ink black on body/cards, but NEVER on solid buttons */
+.theme-light .text-white:not(button):not([role="button"]):not([class*="bg-indigo"]):not([class*="bg-purple"]):not([class*="from-indigo"]):not([class*="from-purple"]) {
+  color: #0f172a;
+}
+
+/* Border overrides */
+.theme-light .border-slate-800,
+.theme-light .border-slate-700,
+.theme-light .border-slate-750,
+.theme-light .border-slate-850 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Input fields in Light Mode */
+.theme-light input,
+.theme-light textarea,
+.theme-light select {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+.theme-light input::placeholder,
+.theme-light textarea::placeholder {
+  color: #64748b !important;
+}
+
+/* Cards & Badges in Light Mode */
+.theme-light .bg-slate-900\/50,
+.theme-light .bg-slate-950\/50 {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Bottom Persistent Player Bar in Light Mode */
+.theme-light aside[role="region"] {
+  background-color: rgba(255, 255, 255, 0.96) !important;
+  border-top-color: #cbd5e1 !important;
+  box-shadow: 0 -8px 25px -4px rgba(15, 23, 42, 0.12) !important;
+}
+
+/* Gradient Hero adjustments in Light Mode */
+.theme-light .from-slate-900\/95 {
+  --tw-gradient-from: #ffffff !important;
+}
+.theme-light .via-slate-900\/75 {
+  --tw-gradient-via: #f8fafc !important;
+}
+.theme-light .to-indigo-950\/35 {
+  --tw-gradient-to: #e0e7ff !important;
+}
+
+/* ========================================================================= */
+/* PRINT STYLESHEET: CLEAN, HIGH-CONTRAST, PAPER-FRIENDLY POLICY & ARTICLES  */
+/* ========================================================================= */
+@media print {
+  /* Hide all interactive, audio, fixed and non-printable elements */
+  header,
+  footer,
+  aside,
+  nav,
+  .no-print,
+  button,
+  input,
+  select,
+  textarea,
+  canvas,
+  .fixed.bottom-0,
+  .pointer-events-none,
+  [aria-label="Persistent bottom audio player controls"],
+  [title="Return to Sanctuary Home Player"],
+  .adsense-slot,
+  .adsense-gutter {
+    display: none !important;
+  }
+
+  /* When printing an active modal or document container, hide non-modal page siblings */
+  body:has(.print-clean-container) #root > div > *:not(:has(.print-clean-container)):not(.print-clean-container),
+  body:has(.print-clean-container) #root > *:not(:has(.print-clean-container)):not(.print-clean-container) {
+    display: none !important;
+  }
+
+  body:has(.print-clean-container) {
+    background: #ffffff !important;
+  }
+
+  body:has(.print-clean-container) #root,
+  body:has(.print-clean-container) #root > div {
+    background: #ffffff !important;
+    min-height: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Expand collapsible content during print (e.g. EULA and legal policies) */
+  .print-expand-all,
+  .print\:block {
+    display: block !important;
+  }
+
+  /* Reset document for clean white paper printing */
+  html, body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 11pt !important;
+    line-height: 1.6 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Clean modal printing: unfix viewport constraints and remove dark container styling */
+  [role="dialog"],
+  .fixed.inset-0:has(.print-clean-container),
+  .fixed.inset-0 {
+    position: static !important;
+    inset: auto !important;
+    display: block !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    border: none !important;
+  }
+
+  [role="dialog"] > div,
+  .print-clean-container {
+    position: static !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Force all printed text to high-contrast dark gray / black */
+  p, h1, h2, h3, h4, h5, h6, span, div, li, strong, b {
+    color: #0f172a !important;
+    text-shadow: none !important;
+  }
+
+  /* Muted metadata prints in crisp readable charcoal */
+  .text-slate-400,
+  .text-slate-500,
+  .text-slate-600 {
+    color: #334155 !important;
+  }
+
+  /* Links show in clean blue or underline */
+  a {
+    color: #0369a1 !important;
+    text-decoration: underline !important;
+  }
+
+  /* Borders print with soft subtle hairline rules */
+  .border, .border-t, .border-b, .border-slate-800, .border-slate-700 {
+    border-color: #cbd5e1 !important;
+  }
+
+  /* Avoid breaking pages inside cards and articles */
+  article, .print-avoid-break, blockquote, .p-4, .p-5, .p-6 {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Clear article headings on print */
+  h1, h2, h3 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+}
+
+/* Hardware accelerated compositor promotion for smooth 60/120fps scrolling */
+.smooth-scroll-layer {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Offscreen content rendering optimization */
+.content-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 500px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Hide scrollbar for Chrome, Safari, Edge, Opera, and Firefox */
+.scrollbar-none::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.scrollbar-none,
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Subtle GPU-Composited CSS Animations for Soundscape Buttons in NatureMixer */
+@keyframes soundscapePulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.95;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+@keyframes soundscapeIconWave {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.06) rotate(-2deg);
+  }
+  75% {
+    transform: scale(1.06) rotate(2deg);
+  }
+}
+
+@keyframes soundscapeArmedSteady {
+  0%, 100% {
+    opacity: 0.88;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-soundscape-active {
+  animation: soundscapePulse 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: transform, opacity;
+}
+
+.animate-soundscape-icon {
+  animation: soundscapeIconWave 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: transform;
+}
+
+.animate-soundscape-armed {
+  animation: soundscapeArmedSteady 3s ease-in-out infinite;
+  will-change: opacity;
+}
+
+/* GPU layer promotion for Tailwind continuous animations to avoid non-composited animations */
+.animate-pulse {
+  transform: translateZ(0);
+  will-change: opacity;
+  backface-visibility: hidden;
+}
+
+.animate-ping {
+  transform: translateZ(0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-soundscape-active,
+  .animate-soundscape-icon,
+  .animate-soundscape-armed,
+  .animate-fade-in,
+  .animate-pulse,
+  .animate-ping,
+  .animate-spin {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ========================================================================= */
+/* UNIVERSAL ICON HOVER DELIGHT & TACTILE RESPONSIVENESS                     */
+/* All interactive icons smoothly elevate, rotate, and scale on mouse hover  */
+/* ========================================================================= */
+button svg,
+a svg,
+[role="button"] svg,
+.icon-hover-target svg {
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+              color 0.18s ease,
+              opacity 0.18s ease;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+button:hover svg:not(.animate-spin):not(.no-hover-anim),
+a:hover svg:not(.animate-spin):not(.no-hover-anim),
+[role="button"]:hover svg:not(.animate-spin):not(.no-hover-anim),
+.group:hover svg:not(.animate-spin):not(.no-hover-anim) {
+  transform: scale(1.18);
+}
+
+/* Ensure no horizontal scroll across navigation bars & headers */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ========================================================================= */
+/* UNIVERSAL RESPONSIVE POPUP, MODAL & TOAST SIZING SYSTEM                   */
+/* Perfect ergonomic fit for Mobile & Tablet (Vertical & Horizontal views)   */
+/* ========================================================================= */
+
+/* Background Body Scroll Lock when ANY Modal Dialog is active */
+body:has([role="dialog"]) {
+  overflow: hidden !important;
+  touch-action: none;
+}
+body:has([role="dialog"]) [role="dialog"] {
+  touch-action: pan-y;
+}
+
+/* 1. Modal Overlay Viewport Protection: Always centered with safe padding */
+.fixed.inset-0:has([role="dialog"]),
+div[role="dialog"].fixed.inset-0 {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding: clamp(0.625rem, 2.5vw, 1.5rem) !important;
+}
+
+/* 2. Modal Dialog Content Cards: Strictly fit within viewport dynamic height & scroll cleanly */
+[role="dialog"] > div {
+  max-height: 92dvh !important;
+  max-width: min(100%, calc(100vw - 1.25rem)) !important;
+  box-sizing: border-box !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* 3. Horizontal (Landscape) Orientation on Mobile & Tablet */
+@media (orientation: landscape) and (max-height: 600px) {
+  [role="dialog"] > div {
+    max-height: calc(100dvh - 1rem) !important;
+    margin-top: auto !important;
+    margin-bottom: auto !important;
+    padding-top: max(0.75rem, env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* Compact header in landscape so dialog body gets maximum height */
+  [role="dialog"] > div > div:first-child {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+}
+
+/* Landscape on phones and tablets with notches/Dynamic Island */
+@media (orientation: landscape) {
+  :root {
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+/* 4. Universal Toast & Popup Messages */
+[role="status"],
+[role="alert"] {
+  max-width: min(92vw, 480px) !important;
+  box-sizing: border-box !important;
+  word-break: break-word !important;
+}
+
+/* ========================================================================= */
+/* GPU-COMPOSITED ANIMATIONS & HARDWARE ACCELERATION                         */
+/* Enforces transform and opacity compositing to prevent layout thrashing     */
+/* ========================================================================= */
+.animate-ping,
+.animate-pulse,
+.animate-soundscape-active,
+.animate-soundscape-icon {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* ========================================================================= */
+/* ACCESSIBILITY: VISIBLE FOCUS OUTLINES & REDUCED MOTION                    */
+/* WCAG 2.2 AA visible focus indicators & vestibular motion sensitivity      */
+/* ========================================================================= */
+:focus-visible {
+  outline: 2px solid #38bdf8 !important;
+  outline-offset: 2px !important;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid #38bdf8 !important;
+  outline-offset: 2px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

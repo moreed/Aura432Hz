@@ -1,0 +1,95 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email == 'moreed.raouf@gmail.com' ||
+        (exists(/databases/{database}/documents/users/$(request.auth.uid)) &&
+         get(/databases/{database}/documents/users/$(request.auth.uid)).data.email == 'moreed.raouf@gmail.com' &&
+         get(/databases/{database}/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+
+    // User profiles: allow reading directory and profile creation/updates
+    match /users/{userId} {
+      allow read: if true;
+      allow create, update: if true;
+      allow delete: if isAdmin();
+    }
+
+    // Visit and usage event logs: allow audit trail reads and logging from any visitor
+    match /visit_logs/{logId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+
+    // System configuration settings
+    match /system_settings/{settingId} {
+      allow read, write: if true;
+    }
+
+    // Contact Us inquiries: allow anyone to create/send; admins can read & manage
+    match /contact_messages/{messageId} {
+      allow create: if true;
+      allow read: if true;
+      allow update, delete: if isAdmin();
+    }
+
+    // Live Sanctuary Chat: allow participants to read & send messages
+    match /chat_messages/{messageId} {
+      allow read, create: if true;
+      allow update, delete: if isAdmin();
+    }
+
+    // Welcome Emails delivered to new registered users
+    match /welcome_emails/{emailId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+
+    // Monthly Sanctuary Newsletter Subscribers
+    match /newsletter_subscribers/{subscriberId} {
+      allow read: if true;
+      allow create, update: if true;
+      allow delete: if isAdmin();
+    }
+
+    // Construction waitlist subscribers
+    match /construction_subscribers/{subscriberId} {
+      allow read: if true;
+      allow create, update: if true;
+      allow delete: if isAdmin();
+    }
+
+    // Monthly Sanctuary Newsletters (Bulletins with updates, presets, products, articles)
+    match /monthly_newsletters/{newsletterId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Commission-based Earnings (affiliate gear, partner referrals, custom client commissions)
+    match /commission_earnings/{earningId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Operating Expenses (ads, hosting, domain fees, software, subscriptions)
+    match /operating_expenses/{expenseId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
+

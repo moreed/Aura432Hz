@@ -1,0 +1,33 @@
+{
+  "id": "/",
+  "name": "Aura 432Hz — Harmonic Resonance & Ambient Meditation Sanctuary",
+  "short_name": "Aura 432Hz",
+  "description": "432Hz Alpha Waves ambient relaxation soundscapes, harmonic breath pacer, interactive crystal sound harp, sacred visualizer animations, nature mixer, and offline meditation sanctuary.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#030712",
+  "background_color": "#020617",
+  "categories": ["lifestyle", "music", "meditation"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

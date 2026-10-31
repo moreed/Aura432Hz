@@ -1,0 +1,218 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Registered user profile with role permissions and usage metrics",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Unique Firebase Authentication User ID" },
+        "email": { "type": "string", "description": "Email address of the user" },
+        "displayName": { "type": "string", "description": "Display name of the user" },
+        "photoURL": { "type": "string", "description": "Avatar photo URL" },
+        "role": { "type": "string", "enum": ["admin", "user"], "description": "Role permission level" },
+        "status": { "type": "string", "enum": ["active", "suspended"], "description": "Account status" },
+        "totalVisits": { "type": "number", "description": "Total visits logged" },
+        "totalDurationSeconds": { "type": "number", "description": "Total meditation duration in seconds" },
+        "createdAt": { "type": "string", "description": "ISO timestamp of account creation" },
+        "lastLoginAt": { "type": "string", "description": "ISO timestamp of last login" },
+        "lifetimeWavTracksDownloaded": { "type": "number", "description": "Total lifetime WAV tracks exported (max 5)" },
+        "lifetimeWavMinutesDownloaded": { "type": "number", "description": "Total lifetime WAV minutes exported (max 50)" },
+        "lastWavDownloadAt": { "type": "string", "description": "ISO timestamp of last offline WAV export" }
+      },
+      "required": ["uid", "email", "displayName", "role", "status", "createdAt", "lastLoginAt"]
+    },
+    "VisitLog": {
+      "title": "VisitLog",
+      "description": "Log entry tracking application visit and acoustic healing feature usage",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Firebase Auth UID or guest identifier" },
+        "userName": { "type": "string", "description": "User display name" },
+        "userEmail": { "type": "string", "description": "User email address" },
+        "role": { "type": "string", "description": "User role at time of visit" },
+        "action": { "type": "string", "description": "Event action recorded" },
+        "feature": { "type": "string", "description": "Feature navigated or used" },
+        "frequencyHz": { "type": "number", "description": "Acoustic frequency tuned" },
+        "brainwaveMode": { "type": "string", "description": "Brainwave entrainment mode" },
+        "durationSeconds": { "type": "number", "description": "Duration spent in seconds" },
+        "timestamp": { "type": "string", "description": "ISO timestamp of the event" },
+        "userAgent": { "type": "string", "description": "Browser user agent" }
+      },
+      "required": ["userId", "userName", "action", "feature", "timestamp"]
+    },
+    "SystemSetting": {
+      "title": "SystemSetting",
+      "description": "Global administrator configuration settings",
+      "type": "object",
+      "properties": {
+        "siteTitle": { "type": "string", "description": "Site header title" },
+        "defaultFrequency": { "type": "number", "description": "Default tuning frequency" },
+        "allowGuestAccess": { "type": "boolean", "description": "Whether guest usage is permitted" },
+        "maintenanceMode": { "type": "boolean", "description": "Maintenance mode flag" },
+        "updatedAt": { "type": "string", "description": "ISO timestamp of last configuration update" },
+        "updatedBy": { "type": "string", "description": "Admin UID who updated settings" }
+      },
+      "required": ["defaultFrequency", "allowGuestAccess", "maintenanceMode"]
+    },
+    "ContactMessage": {
+      "title": "ContactMessage",
+      "description": "User feedback, technical support inquiry, or sanctuary message",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Sender full name" },
+        "email": { "type": "string", "description": "Sender email" },
+        "subject": { "type": "string", "description": "Inquiry subject line" },
+        "category": { "type": "string", "description": "Category: general, support, sound_therapy, feature, bug" },
+        "message": { "type": "string", "description": "Full message text" },
+        "status": { "type": "string", "enum": ["new", "read", "resolved"], "description": "Processing status" },
+        "createdAt": { "type": "string", "description": "ISO timestamp of creation" },
+        "userId": { "type": "string", "description": "Firebase Auth UID or guest ID" }
+      },
+      "required": ["name", "email", "subject", "message", "createdAt"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Live sanctuary support chat interaction message",
+      "type": "object",
+      "properties": {
+        "channelId": { "type": "string", "description": "Chat session identifier" },
+        "senderId": { "type": "string", "description": "Sender UID or guest identifier" },
+        "senderName": { "type": "string", "description": "Display name of sender" },
+        "senderRole": { "type": "string", "enum": ["user", "agent", "concierge"], "description": "Role of the sender" },
+        "text": { "type": "string", "description": "Message content" },
+        "timestamp": { "type": "string", "description": "ISO timestamp of transmission" }
+      },
+      "required": ["channelId", "senderId", "senderName", "senderRole", "text", "timestamp"]
+    },
+    "WelcomeEmail": {
+      "title": "WelcomeEmail",
+      "description": "Personalized welcome email sent to newly registered members",
+      "type": "object",
+      "properties": {
+        "recipientUid": { "type": "string", "description": "UID of the registered user" },
+        "recipientEmail": { "type": "string", "description": "Email address of the recipient" },
+        "recipientName": { "type": "string", "description": "Recipient display name" },
+        "subject": { "type": "string", "description": "Email subject line" },
+        "textContent": { "type": "string", "description": "Plain text email content" },
+        "htmlContent": { "type": "string", "description": "HTML email template content" },
+        "status": { "type": "string", "enum": ["sent", "delivered", "opened"], "description": "Delivery status" },
+        "sentAt": { "type": "string", "description": "ISO timestamp when the email was dispatched" }
+      },
+      "required": ["recipientUid", "recipientEmail", "subject", "status", "sentAt"]
+    },
+    "NewsletterSubscriber": {
+      "title": "NewsletterSubscriber",
+      "description": "Subscriber profile for the monthly sanctuary newsletter",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "description": "Subscriber email address" },
+        "name": { "type": "string", "description": "Subscriber name if provided" },
+        "status": { "type": "string", "enum": ["subscribed", "unsubscribed"], "description": "Subscription status" },
+        "subscribedAt": { "type": "string", "description": "ISO timestamp of subscription" },
+        "source": { "type": "string", "description": "Registration source or signup location" }
+      },
+      "required": ["email", "status", "subscribedAt"]
+    },
+    "MonthlyNewsletter": {
+      "title": "MonthlyNewsletter",
+      "description": "Monthly sanctuary digest featuring updates, presets, products, and articles",
+      "type": "object",
+      "properties": {
+        "editionTitle": { "type": "string", "description": "Title of the monthly edition" },
+        "editionMonth": { "type": "string", "description": "Month name" },
+        "year": { "type": "number", "description": "Publication year" },
+        "subject": { "type": "string", "description": "Newsletter subject line" },
+        "headline": { "type": "string", "description": "Main announcement headline" },
+        "introMessage": { "type": "string", "description": "Introduction message from the sanctuary creator" },
+        "status": { "type": "string", "enum": ["draft", "published", "sent"], "description": "Publishing status" },
+        "publishedAt": { "type": "string", "description": "ISO timestamp of publication" },
+        "sentAt": { "type": "string", "description": "ISO timestamp when sent to subscribers" },
+        "recipientCount": { "type": "number", "description": "Total subscribers sent to" }
+      },
+      "required": ["editionTitle", "editionMonth", "year", "subject", "status"]
+    },
+    "CommissionEarning": {
+      "title": "CommissionEarning",
+      "description": "Commission revenue record from affiliate store gear, partner referrals, or custom client commissions",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Title or item description" },
+        "type": { "type": "string", "enum": ["affiliate_store", "partner_referral", "custom_external"], "description": "Commission category" },
+        "partnerOrPlatform": { "type": "string", "description": "Platform or partner name" },
+        "orderReference": { "type": "string", "description": "Order or invoice reference identifier" },
+        "saleAmount": { "type": "number", "description": "Gross sales value" },
+        "commissionRate": { "type": "number", "description": "Commission percentage rate" },
+        "netEarnings": { "type": "number", "description": "Net commission amount earned" },
+        "currency": { "type": "string", "description": "Three-letter ISO currency code" },
+        "status": { "type": "string", "enum": ["received", "pending", "refunded"], "description": "Payment receipt status" },
+        "date": { "type": "string", "description": "Transaction date (YYYY-MM-DD)" },
+        "notes": { "type": "string", "description": "Internal notes or tracking remarks" },
+        "createdAt": { "type": "string", "description": "ISO timestamp of creation" }
+      },
+      "required": ["title", "type", "partnerOrPlatform", "saleAmount", "netEarnings", "currency", "status", "date", "createdAt"]
+    },
+    "OperatingExpense": {
+      "title": "OperatingExpense",
+      "description": "Operating expense record for ads, cloud hosting, domain registrations, software, or audio production",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Expense item title" },
+        "category": { "type": "string", "enum": ["ads", "hosting", "domain", "software", "production", "other"], "description": "Cost category" },
+        "costType": { "type": "string", "enum": ["recurring_subscription", "one_off"], "description": "Expense commitment type" },
+        "billingCycle": { "type": "string", "enum": ["monthly", "yearly", "one_time"], "description": "Billing cadence" },
+        "amount": { "type": "number", "description": "Expense amount" },
+        "currency": { "type": "string", "description": "Three-letter ISO currency code" },
+        "status": { "type": "string", "enum": ["paid", "pending", "scheduled"], "description": "Payment status" },
+        "vendor": { "type": "string", "description": "Vendor or service provider" },
+        "date": { "type": "string", "description": "Billing date (YYYY-MM-DD)" },
+        "renewalDate": { "type": "string", "description": "Next scheduled renewal date" },
+        "invoiceRef": { "type": "string", "description": "Receipt or invoice reference ID" },
+        "notes": { "type": "string", "description": "Internal tracking notes" },
+        "createdAt": { "type": "string", "description": "ISO timestamp of creation" }
+      },
+      "required": ["title", "category", "costType", "billingCycle", "amount", "currency", "status", "vendor", "date", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile documents keyed by Firebase Auth UID"
+    },
+    "/visit_logs/{logId}": {
+      "schema": "VisitLog",
+      "description": "Audit trail of visits, sessions, and feature usages"
+    },
+    "/system_settings/{settingId}": {
+      "schema": "SystemSetting",
+      "description": "Global administration system configuration"
+    },
+    "/contact_messages/{messageId}": {
+      "schema": "ContactMessage",
+      "description": "Support inquiries and feedback messages from users"
+    },
+    "/chat_messages/{messageId}": {
+      "schema": "ChatMessage",
+      "description": "Live concierge chat conversation messages"
+    },
+    "/welcome_emails/{emailId}": {
+      "schema": "WelcomeEmail",
+      "description": "Welcome emails delivered to new registered users"
+    },
+    "/newsletter_subscribers/{subscriberId}": {
+      "schema": "NewsletterSubscriber",
+      "description": "Subscribers for monthly sanctuary news and updates"
+    },
+    "/monthly_newsletters/{newsletterId}": {
+      "schema": "MonthlyNewsletter",
+      "description": "Monthly sanctuary newsletters featuring updates, presets, products, and articles"
+    },
+    "/commission_earnings/{earningId}": {
+      "schema": "CommissionEarning",
+      "description": "Commission revenue ledger records"
+    },
+    "/operating_expenses/{expenseId}": {
+      "schema": "OperatingExpense",
+      "description": "Operating expenses and costs ledger records"
+    }
+  }
+}

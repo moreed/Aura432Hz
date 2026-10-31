@@ -1,0 +1,9 @@
+name = "aura432hz-edge-proxy"
+main = "worker.js"
+compatibility_date = "2024-09-23"
+account_id = "276fd4c1809c05056b1ff2fa8d9908e8"
+
+routes = [
+  { pattern = "aura432hz.com/*", zone_name = "aura432hz.com" },
+  { pattern = "www.aura432hz.com/*", zone_name = "aura432hz.com" }
+]

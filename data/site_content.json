@@ -1,0 +1,35 @@
+{
+  "social": {
+    "facebookUrl": "https://facebook.com/aura432hz",
+    "instagramUrl": "https://instagram.com/aura432hz",
+    "tiktokUrl": "https://tiktok.com/@aura432hz",
+    "youtubeUrl": "https://www.youtube.com/@Aura432Hz-d1g",
+    "twitterUrl": "https://x.com/aura432hz",
+    "telegramUrl": "https://t.me/aura432hz",
+    "socialHeadline": "Connect with the Global Sacred Community",
+    "socialSubtext": "",
+    "customLinks": [
+      {
+        "id": "custom_1",
+        "label": "Spotify Sanctuary",
+        "url": "https://open.spotify.com/artist/aura432hz",
+        "visible": true
+      }
+    ]
+  },
+  "socialVisibility": {
+    "facebook": true,
+    "instagram": true,
+    "tiktok": true,
+    "youtube": true,
+    "twitter": true,
+    "telegram": false
+  },
+  "underConstruction": {
+    "enabled": false,
+    "showSocialBanner": true,
+    "socialHeadline": "Connect with our Sanctuary Community • Follow our Reopening Journey"
+  },
+  "updatedAt": "2026-10-23T09:03:19.652Z",
+  "flags": {}
+}

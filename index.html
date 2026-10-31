@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en" class="dark theme-dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <title>Aura 432Hz — Harmonic Resonance &amp; Ambient Meditation Sanctuary</title>
+    <meta name="description" content="432Hz Alpha Waves ambient relaxation soundscapes, harmonic breath pacer, interactive crystal sound harp, sacred visualizer animations, nature mixer, and offline meditation sanctuary." />
+    <meta name="keywords" content="432Hz, alpha waves, ambient relaxation, harmonic breath pacer, crystal sound harp, nature mixer, meditation sanctuary, solfeggio frequencies, acoustic resonance" />
+    <meta name="author" content="Aura 432Hz Sanctuary" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="theme-color" content="#081321" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Aura 432Hz" />
+    <link rel="canonical" href="https://aura432hz.com" />
+
+    <!-- Self-Hosted Inter Variable Font Preload for Immediate Rendering -->
+    <link rel="preload" href="/fonts/inter-variable.woff2" as="font" type="font/woff2" crossorigin />
+
+    <!-- Force HTTPS Redirect for all non-localhost production & preview environments -->
+    <script>
+      (function() {
+        try {
+          if (location.protocol === 'http:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1' && !location.hostname.endsWith('.internal')) {
+            location.replace('https:' + window.location.href.substring(window.location.protocol.length));
+          }
+        } catch (e) {}
+      })();
+    </script>
+
+    <!-- Instant Theme Synchronization: Dark mode is default across all users, browsers & system settings -->
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('aura_theme_manual');
+          // Dark mode is default for all users, browsers, and system settings unless explicitly opted into light
+          var isLight = saved === 'light';
+          var root = document.documentElement;
+          if (isLight) {
+            root.classList.add('theme-light');
+            root.classList.remove('theme-dark', 'dark');
+            root.style.colorScheme = 'light';
+            var meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', '#f6f8f7');
+          } else {
+            root.classList.add('dark', 'theme-dark');
+            root.classList.remove('theme-light');
+            root.style.colorScheme = 'dark';
+            var meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', '#081321');
+          }
+        } catch(e) {}
+      })();
+    </script>
+
+    <!-- Performance & Preconnect Hints -->
+    <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
+    <link rel="dns-prefetch" href="https://images.unsplash.com" />
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+    <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
+
+    <!-- OpenGraph Social Sharing Metadata for 'Aura 432Hz' -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Aura 432Hz" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:title" content="Aura 432Hz — Harmonic Resonance &amp; Ambient Meditation Sanctuary" />
+    <meta property="og:description" content="432Hz Alpha Waves ambient relaxation soundscapes, harmonic breath pacer, interactive crystal sound harp, sacred visualizer animations, nature mixer, and offline meditation sanctuary." />
+    <meta property="og:url" content="https://aura432hz.com" />
+    <meta property="og:image" content="https://aura432hz.com/og-preview.webp" />
+    <meta property="og:image:secure_url" content="https://aura432hz.com/og-preview.webp" />
+    <meta property="og:image:type" content="image/webp" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Aura 432Hz Harmonic Resonance &amp; Ambient Meditation Sanctuary" />
+    <!-- Legacy PNG fallback for scrapers lacking WebP decoding -->
+    <meta property="og:image" content="https://aura432hz.com/og-preview.png" />
+    <meta property="og:image:type" content="image/png" />
+
+    <!-- Twitter / X Card Metadata for 'Aura 432Hz' -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@aura432hz" />
+    <meta name="twitter:creator" content="@aura432hz" />
+    <meta name="twitter:title" content="Aura 432Hz — Harmonic Resonance &amp; Ambient Meditation Sanctuary" />
+    <meta name="twitter:description" content="432Hz Alpha Waves ambient relaxation soundscapes, harmonic breath pacer, interactive crystal sound harp, sacred visualizer animations, nature mixer, and offline meditation sanctuary." />
+    <meta name="twitter:image" content="https://aura432hz.com/og-preview.webp" />
+    <meta name="twitter:image:alt" content="Aura 432Hz Harmonic Resonance &amp; Ambient Meditation Sanctuary" />
+
+    <!-- Schema.org JSON-LD Structured Data for Enhanced Rich Snippets -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://aura432hz.com/#website",
+            "url": "https://aura432hz.com",
+            "name": "Aura 432Hz — Harmonic Resonance & Ambient Meditation Sanctuary",
+            "description": "432Hz Alpha Waves ambient relaxation soundscapes, harmonic breath pacer, interactive crystal sound harp, sacred visualizer animations, nature mixer, and offline meditation sanctuary.",
+            "inLanguage": "en-US"
+          },
+          {
+            "@type": "Organization",
+            "@id": "https://aura432hz.com/#organization",
+            "name": "Aura 432Hz",
+            "url": "https://aura432hz.com",
+            "logo": "https://aura432hz.com/icon.svg",
+            "description": "Acoustic wellness audio, Solfeggio harmonics, and ambient soundscape synthesis."
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "https://aura432hz.com/#app",
+            "name": "Aura 432Hz — Harmonic Resonance & Ambient Meditation Sanctuary",
+            "url": "https://aura432hz.com",
+            "applicationCategory": "LifestyleApplication",
+            "applicationSubCategory": "Meditation & Acoustic Wellness",
+            "operatingSystem": "All modern browsers, iOS Safari, Android Chrome, macOS, Windows",
+            "browserRequirements": "Requires Web Audio API support",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            },
+            "featureList": [
+              "432Hz Pure Sine & Solfeggio Harmonic Synthesizer",
+              "Alpha, Theta, Delta Brainwave Entrainment",
+              "Procedural Multi-Track Nature Soundscapes",
+              "Harmonic Breathwork Pacer",
+              "Interactive Crystal Sound Harp",
+              "Offline Session Recording & Audio Export",
+              "EBU R128 Decibel Normalization & Safety Limiting"
+            ],
+            "description": "Browser-based Web Audio synthesizer generating 432Hz Solfeggio harmonics, binaural beats, and multi-track organic nature soundscapes."
+          },
+          {
+            "@type": "SiteNavigationElement",
+            "name": "Sanctuary Navigation",
+            "hasPart": [
+              { "@type": "WebPage", "name": "Sanctuary Player", "url": "https://aura432hz.com/" },
+              { "@type": "WebPage", "name": "Soundscapes Mixer", "url": "https://aura432hz.com/mixer" },
+              { "@type": "WebPage", "name": "Breathwork Pacer", "url": "https://aura432hz.com/breath" },
+              { "@type": "WebPage", "name": "Sound Harp", "url": "https://aura432hz.com/musical" },
+              { "@type": "WebPage", "name": "Aura Shop", "url": "https://aura432hz.com/gear" },
+              { "@type": "WebPage", "name": "Community", "url": "https://aura432hz.com/community" },
+              { "@type": "WebPage", "name": "Science & Blog", "url": "https://aura432hz.com/blog" },
+              { "@type": "WebPage", "name": "Contact", "url": "https://aura432hz.com/contact" }
+            ]
+          },
+          {
+            "@type": "AudioObject",
+            "name": "Aura 432Hz Ambient Soundscape Synthesizer",
+            "description": "Pure 432Hz acoustic harmonic resonance and procedural nature soundscape generator for personal relaxation and meditation.",
+            "encodingFormat": "audio/wav",
+            "contentUrl": "https://aura432hz.com",
+            "genre": "Ambient Wellness Audio"
+          },
+          {
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "What is 432 Hz tuning compared to standard 440 Hz?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "432 Hz tuning (also historically known as Verdi's Diapason Normale) sets the musical pitch of Middle A to 432 cycles per second instead of modern 440 Hz. Listeners report a warmer, less aggressive acoustic quality that promotes calm relaxation."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Are Aura 432Hz soundscapes safe for daily listening?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. All audio in Aura 432Hz is purely mechanical sound waves vibrating gently between 40 Hz and 1200 Hz, with zero electromagnetic radio frequency (0.00 MHz RF). Built-in studio volume normalization and dynamic safety limiting protect against sudden acoustic shocks."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can I use headphones with binaural beats?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Stereo headphones are recommended for binaural beats (which require independent frequencies in each ear). However, Aura 432Hz also includes built-in isochronic pulse modulation that works over room speakers without headphones."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

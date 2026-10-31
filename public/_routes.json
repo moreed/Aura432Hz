@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "include": [
+    "/*"
+  ],
+  "exclude": [
+    "/assets/*",
+    "/fonts/*",
+    "/icon*.png",
+    "/icon*.webp",
+    "/apple-touch-icon*.png",
+    "/apple-touch-icon*.webp",
+    "/og-preview*.png",
+    "/og-preview*.webp",
+    "/icon.svg",
+    "/robots.txt",
+    "/sitemap.xml",
+    "/manifest.webmanifest"
+  ]
+}
