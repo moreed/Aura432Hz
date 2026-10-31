@@ -18,7 +18,7 @@ pattern = "www.aura432hz.com"
 custom_domain = true
 
 [vars]
-NODE_VERSION = "20"
+NODE_VERSION = "22"
 ENVIRONMENT = "production"
 PRIMARY_DOMAIN = "aura432hz.com"
 ALT_DOMAIN = "www.aura432hz.com"
