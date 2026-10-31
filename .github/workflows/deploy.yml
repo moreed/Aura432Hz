@@ -32,7 +32,6 @@ jobs:
             echo "::error::CLOUDFLARE_API_TOKEN is missing! Please add it in your GitHub Repository under: Settings > Secrets and variables > Actions > New repository secret (Name: CLOUDFLARE_API_TOKEN)."
             exit 1
           fi
-          # Automatically override stale account ID from legacy secrets
           if [ "$CLOUDFLARE_ACCOUNT_ID" = "bdba88cf8dff708a3826b9884c4bc2b9" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
             export CLOUDFLARE_ACCOUNT_ID="276fd4c1809c05056b1ff2fa8d9908e8"
           fi
