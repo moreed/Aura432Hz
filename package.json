@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build && cp dist/index.html dist/404.html && rm -f dist/_redirects",
+    "build": "vite build && cp dist/index.html dist/404.html",
     "start": "node server.ts",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
-    "pages:deploy": "wrangler pages deploy dist --project-name=aura432hz",
+    "deploy": "npx wrangler pages deploy dist",
+    "pages:deploy": "npx wrangler pages deploy dist",
     "lint": "tsc --noEmit"
   },
   "dependencies": {

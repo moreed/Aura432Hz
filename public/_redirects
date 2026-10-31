@@ -1,0 +1,28 @@
+# Cloudflare Pages Redirects & Rewrites
+# ==============================================================================
+# Canonical Apex Domain 301 Redirect (force non-www)
+https://www.aura432hz.com/* https://aura432hz.com/:splat 301!
+
+# Section Aliases & Legacy Route 301 Redirects
+/shop /gear 301
+/store /gear 301
+/soundscapes /mixer 301
+/breathwork /breath 301
+/harp /musical 301
+/science /blog 301
+/research /blog 301
+/support /contact 301
+
+# SPA Route Rewrites
+# Explicit non-recursive 200 rewrites for application tabs.
+# Avoids '/* /index.html 200' which causes infinite loops and conflicts with /assets/*
+/player /index.html 200
+/mixer /index.html 200
+/breath /index.html 200
+/musical /index.html 200
+/gear /index.html 200
+/community /index.html 200
+/blog /index.html 200
+/contact /index.html 200
+/admin /index.html 200
+/a432hz_admin /index.html 200

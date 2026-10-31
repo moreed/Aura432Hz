@@ -2,6 +2,9 @@ name = "aura432hz"
 compatibility_date = "2026-02-01"
 compatibility_flags = ["nodejs_compat"]
 
+[build]
+command = "npm run build"
+
 [assets]
 directory = "./dist"
 not_found_handling = "single-page-application"
@@ -16,6 +19,6 @@ custom_domain = true
 
 [vars]
 NODE_VERSION = "20"
-
-[observability]
-enabled = false
+ENVIRONMENT = "production"
+PRIMARY_DOMAIN = "aura432hz.com"
+ALT_DOMAIN = "www.aura432hz.com"

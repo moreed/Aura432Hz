@@ -88,11 +88,11 @@ jobs:
           cache: 'npm'
       - run: npm ci || npm install
       - run: npm run build
-      - uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: \${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: '${AURA_CLOUDFLARE_CONFIG.accountId}'
-          command: pages deploy dist --project-name=aura432hz --commit-dirty=true`,
+      - name: Deploy to Cloudflare Pages
+        run: npx wrangler pages deploy dist
+        env:
+          CLOUDFLARE_API_TOKEN: \${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: '${AURA_CLOUDFLARE_CONFIG.accountId}'`,
 
     worker: `/**
  * cloudflare/worker.js
@@ -134,7 +134,23 @@ export default {
 
     redirects: `https://www.aura432hz.com/* https://aura432hz.com/:splat 301!
 /shop /gear 301
-/* /index.html 200`,
+/store /gear 301
+/soundscapes /mixer 301
+/breathwork /breath 301
+/harp /musical 301
+/science /blog 301
+/research /blog 301
+/support /contact 301
+/player /index.html 200
+/mixer /index.html 200
+/breath /index.html 200
+/musical /index.html 200
+/gear /index.html 200
+/community /index.html 200
+/blog /index.html 200
+/contact /index.html 200
+/admin /index.html 200
+/a432hz_admin /index.html 200`,
   };
 
   return (
