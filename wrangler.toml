@@ -16,3 +16,6 @@ custom_domain = true
 
 [vars]
 NODE_VERSION = "20"
+
+[observability]
+enabled = false
