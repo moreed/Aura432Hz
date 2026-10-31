@@ -32,8 +32,17 @@ jobs:
             echo "::error::CLOUDFLARE_API_TOKEN is missing! Please add it in your GitHub Repository under: Settings > Secrets and variables > Actions > New repository secret (Name: CLOUDFLARE_API_TOKEN)."
             exit 1
           fi
-          npx wrangler pages deploy dist --project-name="${CLOUDFLARE_PROJECT_NAME:-aura432hz}"
+          # Automatically override stale account ID from legacy secrets
+          if [ "$CLOUDFLARE_ACCOUNT_ID" = "bdba88cf8dff708a3826b9884c4bc2b9" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            export CLOUDFLARE_ACCOUNT_ID="276fd4c1809c05056b1ff2fa8d9908e8"
+          fi
+          PROJECT_NAME="${CLOUDFLARE_PROJECT_NAME:-aura432hz}"
+          echo "Ensuring Cloudflare Pages project '$PROJECT_NAME' exists..."
+          npx wrangler pages project create "$PROJECT_NAME" --production-branch=main 2>&1 || true
+
+          echo "Deploying to Cloudflare Pages project '$PROJECT_NAME' under account $CLOUDFLARE_ACCOUNT_ID..."
+          npx wrangler pages deploy dist --project-name="$PROJECT_NAME"
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN || secrets.CF_API_TOKEN || secrets.CLOUDFLARE_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || secrets.CF_ACCOUNT_ID || 'bdba88cf8dff708a3826b9884c4bc2b9' }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || '276fd4c1809c05056b1ff2fa8d9908e8' }}
           CLOUDFLARE_PROJECT_NAME: ${{ secrets.CLOUDFLARE_PROJECT_NAME || secrets.PAGES_PROJECT_NAME || 'aura432hz' }}
