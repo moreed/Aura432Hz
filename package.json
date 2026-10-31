@@ -9,7 +9,7 @@
     "start": "node server.ts",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
-    "deploy": "npx wrangler pages deploy dist --project-name=aura432hz",
+    "deploy": "npx wrangler deploy --assets=./dist",
     "pages:deploy": "npx wrangler pages deploy dist --project-name=aura432hz",
     "lint": "tsc --noEmit"
   },

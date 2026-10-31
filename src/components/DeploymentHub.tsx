@@ -88,8 +88,8 @@ jobs:
           cache: 'npm'
       - run: npm ci || npm install
       - run: npm run build
-      - name: Deploy to Cloudflare Pages
-        run: npx wrangler pages deploy dist --project-name=aura432hz
+      - name: Deploy to Cloudflare
+        run: npx wrangler deploy --assets=./dist
         env:
           CLOUDFLARE_API_TOKEN: \${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: '${AURA_CLOUDFLARE_CONFIG.accountId}'`,

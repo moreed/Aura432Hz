@@ -1,4 +1,4 @@
-name: Deploy to Cloudflare Pages
+name: Deploy to Cloudflare
 
 on:
   push:
@@ -26,7 +26,7 @@ jobs:
       - name: Build application
         run: npm run build
 
-      - name: Deploy to Cloudflare Pages
+      - name: Deploy to Cloudflare
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
             echo "::error::CLOUDFLARE_API_TOKEN is missing! Please add it in your GitHub Repository under: Settings > Secrets and variables > Actions > New repository secret (Name: CLOUDFLARE_API_TOKEN)."
@@ -36,13 +36,8 @@ jobs:
           if [ "$CLOUDFLARE_ACCOUNT_ID" = "bdba88cf8dff708a3826b9884c4bc2b9" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
             export CLOUDFLARE_ACCOUNT_ID="276fd4c1809c05056b1ff2fa8d9908e8"
           fi
-          PROJECT_NAME="${CLOUDFLARE_PROJECT_NAME:-aura432hz}"
-          echo "Ensuring Cloudflare Pages project '$PROJECT_NAME' exists..."
-          npx wrangler pages project create "$PROJECT_NAME" --production-branch=main 2>&1 || true
-
-          echo "Deploying to Cloudflare Pages project '$PROJECT_NAME' under account $CLOUDFLARE_ACCOUNT_ID..."
-          npx wrangler pages deploy dist --project-name="$PROJECT_NAME"
+          echo "Deploying to Cloudflare under account $CLOUDFLARE_ACCOUNT_ID..."
+          npx wrangler deploy --assets=./dist
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN || secrets.CF_API_TOKEN || secrets.CLOUDFLARE_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || '276fd4c1809c05056b1ff2fa8d9908e8' }}
-          CLOUDFLARE_PROJECT_NAME: ${{ secrets.CLOUDFLARE_PROJECT_NAME || secrets.PAGES_PROJECT_NAME || 'aura432hz' }}
