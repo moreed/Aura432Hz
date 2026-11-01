@@ -24,7 +24,7 @@ import {
   Music,
 } from 'lucide-react';
 import { audioEngine, NatureSoundState, BrainwaveMode } from '../services/audioEngine';
-import { UserProfile } from '../services/firebase';
+import type { UserProfile } from '../services/sessionAuth';
 import {
   UserWavQuota,
   LIFETIME_MAX_TRACKS,
@@ -80,9 +80,13 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
 
   // Determine user tier: admin (unlimited), member (50m pool), guest (10m trial)
   const userTier: 'admin' | 'member' | 'guest' = useMemo(() => {
-    if (isAdmin) return 'admin';
-    if (isLoggedIn && currentUser && !isGuestUser(currentUser)) return 'member';
-    return 'guest';
+    try {
+      if (isAdmin) return 'admin';
+      if (isLoggedIn && currentUser && !isGuestUser(currentUser)) return 'member';
+      return 'guest';
+    } catch {
+      return 'guest';
+    }
   }, [isAdmin, isLoggedIn, currentUser]);
 
   const maxPoolMinutes =
@@ -109,18 +113,21 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
       };
     }
     try {
-      return getLocalUserWavQuota(currentUser?.uid);
-    } catch {
-      return {
-        userId: currentUser?.uid || 'guest',
-        lifetimeWavTracksDownloaded: 0,
-        lifetimeWavMinutesDownloaded: 0,
-        remainingMinutes: maxPoolMinutes,
-        remainingTracks: maxPoolTracks,
-        downloadHistory: [],
-        isGuest: userTier === 'guest',
-      };
+      const uid = typeof currentUser?.uid === 'string' ? currentUser.uid : undefined;
+      const initial = getLocalUserWavQuota(uid);
+      if (initial && typeof initial === 'object') return initial;
+    } catch (e) {
+      console.debug('Failed to get initial local quota:', e);
     }
+    return {
+      userId: typeof currentUser?.uid === 'string' && currentUser.uid ? currentUser.uid : 'guest',
+      lifetimeWavTracksDownloaded: 0,
+      lifetimeWavMinutesDownloaded: 0,
+      remainingMinutes: maxPoolMinutes,
+      remainingTracks: maxPoolTracks,
+      downloadHistory: [],
+      isGuest: userTier === 'guest',
+    };
   });
 
   // Safe numeric derivations to guarantee zero crashes on undefined/null/NaN
@@ -165,50 +172,63 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
     }
 
     try {
-      const initial = getLocalUserWavQuota(currentUser?.uid);
-      setQuota(initial);
+      const uid = typeof currentUser?.uid === 'string' ? currentUser.uid : undefined;
+      const initial = getLocalUserWavQuota(uid);
+      if (initial && typeof initial === 'object') setQuota(initial);
     } catch (e) {
       console.debug('Failed to get initial local quota:', e);
     }
 
-    if (userTier === 'member' && currentUser?.uid) {
+    if (userTier === 'member' && typeof currentUser?.uid === 'string' && currentUser.uid) {
       fetchUserWavQuota(currentUser.uid)
         .then((q) => {
-          if (q) setQuota(q);
+          if (q && typeof q === 'object') setQuota(q);
         })
         .catch(console.debug);
     }
 
     const handleQuotaChange = (e: Event) => {
-      const customEvent = e as CustomEvent<UserWavQuota>;
-      if (customEvent.detail && typeof customEvent.detail === 'object') {
-        if (userTier === 'member' && customEvent.detail.userId === currentUser?.uid) {
-          setQuota(customEvent.detail);
-        } else if (userTier === 'guest' && customEvent.detail.isGuest) {
-          setQuota(customEvent.detail);
+      try {
+        const customEvent = e as CustomEvent<UserWavQuota>;
+        if (customEvent.detail && typeof customEvent.detail === 'object') {
+          if (userTier === 'member' && customEvent.detail.userId === currentUser?.uid) {
+            setQuota(customEvent.detail);
+          } else if (userTier === 'guest' && customEvent.detail.isGuest) {
+            setQuota(customEvent.detail);
+          }
         }
-      }
+      } catch {}
     };
 
-    window.addEventListener('aura-wav-quota-changed', handleQuotaChange);
-    return () => {
-      window.removeEventListener('aura-wav-quota-changed', handleQuotaChange);
-    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('aura-wav-quota-changed', handleQuotaChange);
+      return () => {
+        window.removeEventListener('aura-wav-quota-changed', handleQuotaChange);
+      };
+    }
   }, [currentUser?.uid, userTier]);
 
   // Max selectable duration
   const effectiveMaxDuration = useMemo(() => {
     if (userTier === 'admin') return ADMIN_MAX_SINGLE_TRACK_MINUTES;
-    return Math.max(0.5, Math.min(singleTrackLimit, safeRemainingMinutes));
+    const limit = typeof singleTrackLimit === 'number' && !isNaN(singleTrackLimit) ? singleTrackLimit : 5;
+    const remain = typeof safeRemainingMinutes === 'number' && !isNaN(safeRemainingMinutes) ? safeRemainingMinutes : limit;
+    return Math.max(0.5, Math.min(limit, remain));
   }, [userTier, singleTrackLimit, safeRemainingMinutes]);
 
   const [durationMinutes, setDurationMinutes] = useState<number>(() => {
     const defaultDuration = userTier === 'guest' ? 3 : 5;
-    return Math.min(defaultDuration, effectiveMaxDuration);
+    const maxDur = typeof effectiveMaxDuration === 'number' && !isNaN(effectiveMaxDuration) ? effectiveMaxDuration : 5;
+    return Math.max(0.5, Math.min(defaultDuration, maxDur));
   });
 
+  const safeDurationMinutes =
+    typeof durationMinutes === 'number' && !isNaN(durationMinutes) && durationMinutes > 0
+      ? durationMinutes
+      : (userTier === 'guest' ? 3 : 5);
+
   useEffect(() => {
-    if (userTier !== 'admin' && durationMinutes > effectiveMaxDuration) {
+    if (userTier !== 'admin' && typeof durationMinutes === 'number' && durationMinutes > effectiveMaxDuration) {
       setDurationMinutes(Math.max(0.5, Number(effectiveMaxDuration.toFixed(1))));
     }
   }, [effectiveMaxDuration, userTier, durationMinutes]);
@@ -236,47 +256,79 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
   const isMountedRef = useRef<boolean>(true);
   const downloadUrlRef = useRef<string | null>(null);
 
-  // Refresh vault tracks
+  // Refresh vault tracks safely
   const refreshVault = useCallback(() => {
-    const tracks = offlineVault.getTracks();
-    setVaultTracks(tracks);
+    try {
+      const tracks = offlineVault.getTracks();
+      setVaultTracks(Array.isArray(tracks) ? tracks : []);
+    } catch (e) {
+      console.warn('Failed to refresh vault tracks:', e);
+      setVaultTracks([]);
+    }
   }, []);
 
   useEffect(() => {
     isMountedRef.current = true;
-    if (typeof navigator !== 'undefined' && typeof (navigator as any).canShare === 'function') {
-      setCanShare(true);
-    }
+    try {
+      if (typeof navigator !== 'undefined' && typeof (navigator as any).canShare === 'function') {
+        setCanShare(true);
+      }
+    } catch {}
     refreshVault();
     return () => {
       isMountedRef.current = false;
       if (downloadUrlRef.current) {
-        URL.revokeObjectURL(downloadUrlRef.current);
+        try {
+          URL.revokeObjectURL(downloadUrlRef.current);
+        } catch {}
         downloadUrlRef.current = null;
       }
       if (vaultAudioUrl) {
-        URL.revokeObjectURL(vaultAudioUrl);
+        try {
+          URL.revokeObjectURL(vaultAudioUrl);
+        } catch {}
       }
     };
-  }, [refreshVault]);
+  }, [refreshVault, vaultAudioUrl]);
 
-  // Lock background scroll
+  // Safe background scroll lock with guarded element access
   useEffect(() => {
-    if (isOpen) {
-      const originalOverflow = document.body.style.overflow;
-      const originalPaddingRight = document.body.style.paddingRight;
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-      if (scrollbarWidth > 0) {
-        document.body.style.paddingRight = `${scrollbarWidth}px`;
+    if (!isOpen) return;
+    try {
+      if (typeof document !== 'undefined' && document.body && document.documentElement) {
+        const originalOverflow = document.body.style.overflow;
+        const originalPaddingRight = document.body.style.paddingRight;
+        const scrollbarWidth = (window.innerWidth || 0) - (document.documentElement.clientWidth || 0);
+        if (scrollbarWidth > 0) {
+          document.body.style.paddingRight = `${scrollbarWidth}px`;
+        }
+        document.body.style.overflow = 'hidden';
+        return () => {
+          try {
+            document.body.style.overflow = originalOverflow;
+            document.body.style.paddingRight = originalPaddingRight;
+          } catch {}
+        };
       }
-      document.body.style.overflow = 'hidden';
-      refreshVault();
-      return () => {
-        document.body.style.overflow = originalOverflow;
-        document.body.style.paddingRight = originalPaddingRight;
-      };
+    } catch (e) {
+      console.warn('Scroll lock notice:', e);
     }
-  }, [isOpen, refreshVault]);
+  }, [isOpen]);
+
+  // Safe prop derivations
+  const safeBaseFreq = typeof baseFreq === 'number' && !isNaN(baseFreq) && baseFreq > 0 ? baseFreq : 432;
+  const safeBrainwaveModeName = typeof brainwaveModeName === 'string' && brainwaveModeName.trim()
+    ? brainwaveModeName
+    : 'Alpha Harmonic';
+  const safePresetName = typeof activePresetName === 'string' && activePresetName.trim()
+    ? activePresetName
+    : 'Sanctuary Mix';
+  const safeVaultTracks = Array.isArray(vaultTracks)
+    ? vaultTracks.filter((t) => t && typeof t === 'object' && typeof t.id === 'string')
+    : [];
+  const safeActiveNatureSounds = Array.isArray(activeNatureSounds)
+    ? activeNatureSounds.filter((s) => s && typeof s === 'object')
+    : [];
 
   if (!isOpen) return null;
 
@@ -284,11 +336,11 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
   const isQuotaDepleted =
     userTier !== 'admin' && (safeRemainingTracks <= 0 || safeRemainingMinutes <= 0);
   const isSelectedDurationExceeding =
-    userTier !== 'admin' && durationMinutes > safeRemainingMinutes;
+    userTier !== 'admin' && safeDurationMinutes > safeRemainingMinutes;
 
   // File size estimate
   const estimatedMb = useMemo(() => {
-    const durationSeconds = Math.max(1, (durationMinutes || 1) * 60);
+    const durationSeconds = Math.max(1, safeDurationMinutes * 60);
     if (exportFormat === 'mp3') {
       // 128 kbps = 16,000 bytes/sec
       return ((durationSeconds * 16000) / (1024 * 1024)).toFixed(1);
@@ -296,7 +348,7 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
     // WAV 16-bit 44.1kHz stereo = 176,400 bytes/sec
     const totalBytes = durationSeconds * 44100 * 2 * 2;
     return (totalBytes / (1024 * 1024)).toFixed(1);
-  }, [durationMinutes, exportFormat]);
+  }, [safeDurationMinutes, exportFormat]);
 
   // Execute Offline Synthesis
   const handleExport = async () => {
@@ -312,14 +364,12 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
     setProgress(5);
     setErrorMessage(null);
 
-    const activeList = Array.isArray(activeNatureSounds)
-      ? activeNatureSounds
-          .filter((s) => s && s.enabled)
-          .map((s) => ({ id: s.id, volume: s.volume }))
-      : [];
+    const activeList = safeActiveNatureSounds
+      .filter((s) => s && s.enabled)
+      .map((s) => ({ id: s.id, volume: s.volume }));
 
     try {
-      const durationSeconds = Math.round(durationMinutes * 60);
+      const durationSeconds = Math.round(safeDurationMinutes * 60);
       const renderResult = await audioEngine.renderOfflineAudio(
         durationSeconds,
         activeList,
@@ -328,7 +378,7 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
         },
         {
           format: exportFormat,
-          baseFreq,
+          baseFreq: safeBaseFreq,
           brainwaveMode,
         }
       );
@@ -337,17 +387,19 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
       const formatUsed = renderResult.format;
 
       if (downloadUrlRef.current) {
-        URL.revokeObjectURL(downloadUrlRef.current);
+        try {
+          URL.revokeObjectURL(downloadUrlRef.current);
+        } catch {}
       }
 
       const url = URL.createObjectURL(blob);
       downloadUrlRef.current = url;
 
-      const cleanPresetName = (activePresetName || 'SanctuarySession')
+      const cleanPresetName = (safePresetName || 'SanctuarySession')
         .replace(/[^a-zA-Z0-9]/g, '_')
         .slice(0, 24);
       const ext = formatUsed === 'mp3' ? 'mp3' : 'wav';
-      const fileName = `Aura432Hz-${cleanPresetName}-${baseFreq}Hz-${durationMinutes}m.${ext}`;
+      const fileName = `Aura432Hz-${cleanPresetName}-${safeBaseFreq}Hz-${safeDurationMinutes}m.${ext}`;
       const sizeMb = (blob.size / (1024 * 1024)).toFixed(1);
 
       if (isMountedRef.current) {
@@ -362,14 +414,14 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
       try {
         await offlineVault.saveTrack(
           {
-            title: activePresetName
-              ? `${activePresetName} (${baseFreq}Hz)`
-              : `Sacred ${baseFreq}Hz Session`,
+            title: safePresetName
+              ? `${safePresetName} (${safeBaseFreq}Hz)`
+              : `Sacred ${safeBaseFreq}Hz Session`,
             format: formatUsed,
             durationSeconds,
-            presetName: activePresetName,
-            baseFreq,
-            brainwaveMode: brainwaveModeName,
+            presetName: safePresetName,
+            baseFreq: safeBaseFreq,
+            brainwaveMode: safeBrainwaveModeName,
           },
           blob
         );
@@ -743,9 +795,9 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
             >
               <HardDrive className="w-3.5 h-3.5" />
               <span>Offline Vault</span>
-              {vaultTracks.length > 0 && (
-                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-slate-800 text-aurora-teal border border-slate-700">
-                  {vaultTracks.length}
+              {safeVaultTracks.length > 0 && (
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-slate-800 text-aurora-teal border border-slate-700">
+                  {safeVaultTracks.length}
                 </span>
               )}
             </button>
@@ -1061,7 +1113,7 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
                       </label>
                       <div className="text-right">
                         <span className="text-sm font-mono font-bold text-aurora-teal">
-                          {Math.floor(durationMinutes)}m {Math.round((durationMinutes % 1) * 60)}s
+                          {Math.floor(safeDurationMinutes)}m {Math.round((safeDurationMinutes % 1) * 60)}s
                         </span>
                         <span className="text-[10px] text-slate-400 ml-1.5 font-mono">
                           (~{estimatedMb} MB)
@@ -1075,10 +1127,13 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
                         id="duration-slider"
                         type="range"
                         min="0.5"
-                        max={Math.max(0.5, effectiveMaxDuration)}
+                        max={Math.max(0.5, effectiveMaxDuration || 5)}
                         step="0.5"
-                        value={durationMinutes}
-                        onChange={(e) => setDurationMinutes(parseFloat(e.target.value))}
+                        value={safeDurationMinutes}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          if (!isNaN(val) && val > 0) setDurationMinutes(val);
+                        }}
                         disabled={isRendering || isQuotaDepleted}
                         className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-aurora-teal"
                         aria-label="Track length in minutes"
@@ -1109,7 +1164,7 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
                             disabled={isRendering || isExceeding || isQuotaDepleted}
                             onClick={() => setDurationMinutes(d)}
                             className={`py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer ${
-                              durationMinutes === d
+                              safeDurationMinutes === d
                                 ? 'bg-aurora-teal/20 border-aurora-teal text-aurora-teal font-semibold shadow-xs'
                                 : isExceeding
                                 ? 'bg-slate-900/40 border-slate-800 text-slate-600 cursor-not-allowed opacity-50'
@@ -1131,7 +1186,7 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
                           <strong className="text-slate-200">
                             {Math.max(
                               0,
-                              Number((safeRemainingMinutes - durationMinutes).toFixed(1))
+                              Number((safeRemainingMinutes - safeDurationMinutes).toFixed(1))
                             )}
                             m
                           </strong>{' '}
@@ -1146,18 +1201,13 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
                     <div className="flex items-center justify-between text-slate-300">
                       <span className="text-slate-400">Composition:</span>
                       <span className="font-semibold text-aurora-teal">
-                        {baseFreq}Hz &bull; {brainwaveModeName}
+                        {safeBaseFreq}Hz &bull; {safeBrainwaveModeName}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-slate-300">
                       <span className="text-slate-400">Nature Layers:</span>
                       <span className="text-slate-200 truncate max-w-[220px]">
-                        {Array.isArray(activeNatureSounds)
-                          ? activeNatureSounds
-                              .filter((s) => s && s.enabled)
-                              .map((s) => s.name || s.id || 'Layer')
-                              .join(', ') || 'Pure Frequency'
-                          : 'Pure Frequency'}
+                        {safeActiveNatureSounds.filter((s) => s && s.enabled).map((s) => s.name || s.id || 'Layer').join(', ') || 'Pure Frequency'}
                       </span>
                     </div>
                   </div>
@@ -1241,7 +1291,7 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
                   </p>
                 </div>
 
-                {vaultTracks.length > 0 && (
+                {safeVaultTracks.length > 0 && (
                   <button
                     type="button"
                     onClick={handleClearAllVault}
@@ -1284,7 +1334,7 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
               )}
 
               {/* Vault Track List */}
-              {vaultTracks.length === 0 ? (
+              {safeVaultTracks.length === 0 ? (
                 <div className="p-8 text-center rounded-2xl bg-slate-950/40 border border-dashed border-slate-800 space-y-3">
                   <div className="w-12 h-12 rounded-2xl bg-slate-800/80 text-slate-500 flex items-center justify-center mx-auto">
                     <FolderDown className="w-6 h-6" />
@@ -1306,9 +1356,14 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
                 </div>
               ) : (
                 <div className="space-y-2 max-h-[50dvh] overflow-y-auto pr-1">
-                  {vaultTracks.map((track) => {
+                  {safeVaultTracks.map((track) => {
+                    if (!track || typeof track !== 'object' || !track.id) return null;
                     const isCurrentPlaying = vaultPlayingId === track.id;
                     const isLoadingThis = vaultLoadingId === track.id;
+                    const trackFormat = track.format === 'mp3' ? 'mp3' : 'wav';
+                    const trackTitle = track.title || 'Sanctuary Track';
+                    const trackDuration = typeof track.durationSeconds === 'number' && !isNaN(track.durationSeconds) ? track.durationSeconds : 0;
+                    const trackBytes = typeof track.fileSizeBytes === 'number' && !isNaN(track.fileSizeBytes) ? track.fileSizeBytes : 0;
 
                     return (
                       <div
@@ -1322,23 +1377,23 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-semibold text-xs text-slate-200 truncate">
-                              {track.title}
+                              {trackTitle}
                             </span>
                             <span
-                              className={`text-[9px] font-mono px-1.5 py-0.2 rounded-sm uppercase ${
-                                track.format === 'mp3'
+                              className={`text-[9px] font-mono px-1.5 py-0.5 rounded-sm uppercase ${
+                                trackFormat === 'mp3'
                                   ? 'bg-emerald-950 border border-emerald-500/40 text-emerald-300'
                                   : 'bg-sky-950 border border-sky-500/40 text-sky-300'
                               }`}
                             >
-                              {track.format}
+                              {trackFormat}
                             </span>
                           </div>
 
                           <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5 font-mono">
-                            <span>{offlineVault.formatDuration(track.durationSeconds)}</span>
+                            <span>{offlineVault.formatDuration(trackDuration)}</span>
                             <span>&bull;</span>
-                            <span>{offlineVault.formatBytes(track.fileSizeBytes)}</span>
+                            <span>{offlineVault.formatBytes(trackBytes)}</span>
                             {track.baseFreq && (
                               <>
                                 <span>&bull;</span>

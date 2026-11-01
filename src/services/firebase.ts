@@ -107,9 +107,44 @@ export const db = firebaseConfig.firestoreDatabaseId
   ? getFirestore(app, firebaseConfig.firestoreDatabaseId)
   : getFirestore(app);
 
-export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({ prompt: 'select_account' });
+let _auth: ReturnType<typeof getAuth> | null = null;
+export function getSanctuaryAuth() {
+  if (!_auth) {
+    _auth = getAuth(app);
+  }
+  return _auth;
+}
+
+export const auth = new Proxy({} as ReturnType<typeof getAuth>, {
+  get(_target, prop) {
+    const inst = getSanctuaryAuth();
+    const val = (inst as any)[prop];
+    if (typeof val === 'function') {
+      return val.bind(inst);
+    }
+    return val;
+  },
+});
+
+let _googleProvider: GoogleAuthProvider | null = null;
+export function getGoogleProvider(): GoogleAuthProvider {
+  if (!_googleProvider) {
+    _googleProvider = new GoogleAuthProvider();
+    _googleProvider.setCustomParameters({ prompt: 'select_account' });
+  }
+  return _googleProvider;
+}
+
+export const googleProvider = new Proxy({} as GoogleAuthProvider, {
+  get(_target, prop) {
+    const inst = getGoogleProvider();
+    const val = (inst as any)[prop];
+    if (typeof val === 'function') {
+      return val.bind(inst);
+    }
+    return val;
+  },
+});
 
 // Owner email has automatic super-admin rights
 const OWNER_EMAIL = 'moreed.raouf@gmail.com';

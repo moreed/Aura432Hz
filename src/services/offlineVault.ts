@@ -22,6 +22,7 @@ export class OfflineVaultService {
   public getTracks(): VaultTrack[] {
     if (typeof window === 'undefined') return [];
     try {
+      if (typeof localStorage === 'undefined') return [];
       const raw = localStorage.getItem(VAULT_META_KEY);
       if (!raw || raw === 'null' || raw === 'undefined') return [];
       const parsed = JSON.parse(raw);
@@ -36,7 +37,9 @@ export class OfflineVaultService {
   private saveMeta(tracks: VaultTrack[]): void {
     if (typeof window === 'undefined') return;
     try {
-      localStorage.setItem(VAULT_META_KEY, JSON.stringify(tracks));
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(VAULT_META_KEY, JSON.stringify(Array.isArray(tracks) ? tracks : []));
+      }
     } catch (e) {
       console.warn('Failed to save offline vault meta to localStorage:', e);
     }

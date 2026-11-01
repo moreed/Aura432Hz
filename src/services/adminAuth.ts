@@ -5,9 +5,6 @@
  * and Emergency Recovery Codes.
  */
 
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from './firebase';
-
 export const AUTHORIZED_ADMIN_EMAIL = 'moreed.raouf@gmail.com';
 
 const ADMIN_SESSION_STORAGE_KEY = 'aura_secure_admin_session';
@@ -200,6 +197,8 @@ export async function getAdminSecurityConfig(): Promise<AdminSecurityConfig> {
   };
 
   try {
+    const { doc, getDoc } = await import('firebase/firestore');
+    const { db } = await import('./firebase');
     const docRef = doc(db, 'system_settings', 'admin_auth');
     const snap = await getDoc(docRef);
     if (snap.exists()) {
@@ -246,6 +245,8 @@ export async function updateAdminCredentials(newPassword?: string, newSecret?: s
   } catch {}
 
   try {
+    const { doc, setDoc } = await import('firebase/firestore');
+    const { db } = await import('./firebase');
     const docRef = doc(db, 'system_settings', 'admin_auth');
     await setDoc(docRef, updated, { merge: true });
     return true;

@@ -84,7 +84,6 @@ import { FloatingCookieButton } from './components/FloatingCookieButton';
 import type { LegalTabType } from './components/TrustAndLegalModal';
 import { applyPageSeo } from './services/seo';
 
-import { OfflineExportModal } from './components/OfflineExportModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Performance optimization: code-split secondary tab views & on-demand modals
@@ -110,6 +109,7 @@ const WelcomeLetterModal = React.lazy(() => import('./components/WelcomeLetterMo
 const CookieSettingsModal = React.lazy(() => import('./components/CookieSettingsModal').then((m) => ({ default: m.CookieSettingsModal })));
 const SanctuarySearchModal = React.lazy(() => import('./components/SanctuarySearchModal').then((m) => ({ default: m.SanctuarySearchModal })));
 const AudioRegressionTestSuite = React.lazy(() => import('./components/AudioRegressionTestSuite').then((m) => ({ default: m.AudioRegressionTestSuite })));
+const OfflineExportModal = React.lazy(() => import('./components/OfflineExportModal').then((m) => ({ default: m.OfflineExportModal })));
 import { UnderConstructionPage } from './components/UnderConstructionPage';
 const FloatingAdminMaintenanceBar = React.lazy(() => import('./components/FloatingAdminMaintenanceBar').then((m) => ({ default: m.FloatingAdminMaintenanceBar })));
 import { AUTHORIZED_ADMIN_EMAIL, isAuthorizedAdminEmail, getActiveAdminSession } from './services/adminAuth';
@@ -1083,23 +1083,30 @@ export default function App() {
               }}
             />
           )}
-          <ErrorBoundary fallbackMessage="The offline audio exporter encountered an unexpected condition. Your session is unaffected.">
-            <OfflineExportModal
-              isOpen={isExportModalOpen}
+          {isExportModalOpen && (
+            <ErrorBoundary
+              fallbackMessage="The offline audio exporter encountered an unexpected condition. Your session is unaffected."
               onClose={() => setIsExportModalOpen(false)}
-              baseFreq={baseFreq || 432}
-              brainwaveMode={brainwaveMode}
-              brainwaveModeName={currentBrainwave?.name || BRAINWAVE_MODES[brainwaveMode]?.name || 'Alpha Harmonic'}
-              activeNatureSounds={Array.isArray(natureSounds) ? natureSounds : []}
-              currentUser={currentUser}
-              isLoggedIn={Boolean(currentUser) || isAdmin}
-              isAdmin={isAdmin}
-              isBuiltInPresetActive={isBuiltInPresetActive}
-              activePresetName={activePresetName}
-              onOpenLogin={() => setIsLoginModalOpen(true)}
-              onDuplicateAsCustom={handleDuplicateActivePresetAsCustom}
-            />
-          </ErrorBoundary>
+            >
+              <React.Suspense fallback={null}>
+                <OfflineExportModal
+                  isOpen={isExportModalOpen}
+                  onClose={() => setIsExportModalOpen(false)}
+                  baseFreq={baseFreq || 432}
+                  brainwaveMode={brainwaveMode}
+                  brainwaveModeName={currentBrainwave?.name || BRAINWAVE_MODES[brainwaveMode]?.name || 'Alpha Harmonic'}
+                  activeNatureSounds={Array.isArray(natureSounds) ? natureSounds : []}
+                  currentUser={currentUser}
+                  isLoggedIn={Boolean(currentUser) || isAdmin}
+                  isAdmin={isAdmin}
+                  isBuiltInPresetActive={isBuiltInPresetActive}
+                  activePresetName={activePresetName}
+                  onOpenLogin={() => setIsLoginModalOpen(true)}
+                  onDuplicateAsCustom={handleDuplicateActivePresetAsCustom}
+                />
+              </React.Suspense>
+            </ErrorBoundary>
+          )}
           <TrustAndLegalModal
             isOpen={isLegalModalOpen}
             onClose={() => setIsLegalModalOpen(false)}
@@ -2747,23 +2754,30 @@ export default function App() {
         />
 
         {/* Offline Export Modal (Member-Gated for Logged-In Users & Protected Presets) */}
-        <ErrorBoundary fallbackMessage="The offline audio exporter encountered an unexpected condition. Your playback and sanctuary session are unaffected.">
-          <OfflineExportModal
-            isOpen={isExportModalOpen}
+        {isExportModalOpen && (
+          <ErrorBoundary
+            fallbackMessage="The offline audio exporter encountered an unexpected condition. Your playback and sanctuary session are unaffected."
             onClose={() => setIsExportModalOpen(false)}
-            baseFreq={baseFreq || 432}
-            brainwaveMode={brainwaveMode}
-            brainwaveModeName={currentBrainwave?.name || BRAINWAVE_MODES[brainwaveMode]?.name || 'Alpha Harmonic'}
-            activeNatureSounds={Array.isArray(natureSounds) ? natureSounds : []}
-            currentUser={currentUser}
-            isLoggedIn={Boolean(currentUser) || isAdmin}
-            isAdmin={isAdmin}
-            isBuiltInPresetActive={isBuiltInPresetActive}
-            activePresetName={activePresetName}
-            onOpenLogin={() => setIsLoginModalOpen(true)}
-            onDuplicateAsCustom={handleDuplicateActivePresetAsCustom}
-          />
-        </ErrorBoundary>
+          >
+            <React.Suspense fallback={null}>
+              <OfflineExportModal
+                isOpen={isExportModalOpen}
+                onClose={() => setIsExportModalOpen(false)}
+                baseFreq={baseFreq || 432}
+                brainwaveMode={brainwaveMode}
+                brainwaveModeName={currentBrainwave?.name || BRAINWAVE_MODES[brainwaveMode]?.name || 'Alpha Harmonic'}
+                activeNatureSounds={Array.isArray(natureSounds) ? natureSounds : []}
+                currentUser={currentUser}
+                isLoggedIn={Boolean(currentUser) || isAdmin}
+                isAdmin={isAdmin}
+                isBuiltInPresetActive={isBuiltInPresetActive}
+                activePresetName={activePresetName}
+                onOpenLogin={() => setIsLoginModalOpen(true)}
+                onDuplicateAsCustom={handleDuplicateActivePresetAsCustom}
+              />
+            </React.Suspense>
+          </ErrorBoundary>
+        )}
 
         {/* Social Media Share Modal */}
         <SocialShareModal

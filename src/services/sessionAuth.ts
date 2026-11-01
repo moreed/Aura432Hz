@@ -70,7 +70,6 @@ export function subscribeToSanctuaryAuth(
   // 4. Defer Firebase initialization until first user interaction or explicit trigger
   // Completely unblocks the main thread and network during initial page parse, LCP, and early INP
   let hasTriggered = false;
-  let fallbackTimerId: any = null;
 
   const triggerFirebaseInit = async () => {
     if (hasTriggered || isCancelled) return;
@@ -116,7 +115,7 @@ export function subscribeToSanctuaryAuth(
     }
   };
 
-  const interactionEvents = ['pointerdown', 'touchstart', 'keydown', 'scroll'];
+  const interactionEvents = ['pointerdown', 'touchstart', 'keydown', 'scroll', 'click'];
   const onInteraction = () => {
     triggerFirebaseInit();
   };
@@ -126,10 +125,6 @@ export function subscribeToSanctuaryAuth(
       interactionEvents.forEach((evt) => {
         window.removeEventListener(evt, onInteraction);
       });
-      if (fallbackTimerId) {
-        clearTimeout(fallbackTimerId);
-        fallbackTimerId = null;
-      }
     }
   };
 
@@ -137,14 +132,6 @@ export function subscribeToSanctuaryAuth(
     interactionEvents.forEach((evt) => {
       window.addEventListener(evt, onInteraction, { passive: true, once: true });
     });
-    // Generous 4000ms idle fallback so background sync still happens if user just stares at the screen
-    fallbackTimerId = setTimeout(() => {
-      if ('requestIdleCallback' in window) {
-        (window as any).requestIdleCallback(() => triggerFirebaseInit());
-      } else {
-        triggerFirebaseInit();
-      }
-    }, 4000);
   }
 
   return () => {

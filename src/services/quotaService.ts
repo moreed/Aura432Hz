@@ -1,6 +1,3 @@
-import { db } from './firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-
 export const LIFETIME_MAX_TRACKS = 5;
 export const LIFETIME_MAX_MINUTES = 50;
 export const MAX_SINGLE_TRACK_MINUTES = 9.5; // Strictly less than 10 minutes maximum
@@ -39,10 +36,11 @@ const GUEST_QUOTA_STORAGE_KEY = 'aura_wav_quota_guest';
  * Determine if a user object is a guest or not logged in.
  */
 export function isGuestUser(user: { uid?: string; isGuest?: boolean; email?: string | null } | null | undefined): boolean {
-  if (!user || !user.uid) return true;
+  if (!user || typeof user !== 'object') return true;
+  if (!user.uid || typeof user.uid !== 'string') return true;
   if (user.isGuest === true) return true;
   if (user.uid.startsWith('guest_') || user.uid === 'guest') return true;
-  if (user.email && user.email.includes('@aura432.sanctuary')) return true;
+  if (typeof user.email === 'string' && user.email.includes('@aura432.sanctuary')) return true;
   return false;
 }
 
@@ -51,32 +49,34 @@ export function isGuestUser(user: { uid?: string; isGuest?: boolean; email?: str
  * Supports visitor/guest quota (10 mins / 2 tracks) and member quota (50 mins / 5 tracks).
  */
 export function getLocalUserWavQuota(userId?: string | null): UserWavQuota {
-  const isGuest = !userId || userId === 'guest' || userId.startsWith('guest_');
+  const isGuest = !userId || typeof userId !== 'string' || userId === 'guest' || userId.startsWith('guest_');
 
   if (isGuest) {
     try {
-      const raw = localStorage.getItem(GUEST_QUOTA_STORAGE_KEY);
-      if (raw && raw !== 'null' && raw !== 'undefined') {
-        const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === 'object') {
-          const rawTracks = typeof parsed.lifetimeWavTracksDownloaded === 'number' && !isNaN(parsed.lifetimeWavTracksDownloaded)
-            ? parsed.lifetimeWavTracksDownloaded
-            : 0;
-          const rawMins = typeof parsed.lifetimeWavMinutesDownloaded === 'number' && !isNaN(parsed.lifetimeWavMinutesDownloaded)
-            ? parsed.lifetimeWavMinutesDownloaded
-            : 0;
-          const tracks = Math.min(GUEST_MAX_TRACKS, Math.max(0, rawTracks));
-          const mins = Math.min(GUEST_MAX_MINUTES, Math.max(0, rawMins));
-          return {
-            userId: 'guest',
-            lifetimeWavTracksDownloaded: tracks,
-            lifetimeWavMinutesDownloaded: mins,
-            remainingMinutes: Math.max(0, Number((GUEST_MAX_MINUTES - mins).toFixed(1))),
-            remainingTracks: Math.max(0, GUEST_MAX_TRACKS - tracks),
-            lastDownloadedAt: typeof parsed.lastDownloadedAt === 'string' ? parsed.lastDownloadedAt : undefined,
-            downloadHistory: Array.isArray(parsed.downloadHistory) ? parsed.downloadHistory : [],
-            isGuest: true,
-          };
+      if (typeof localStorage !== 'undefined') {
+        const raw = localStorage.getItem(GUEST_QUOTA_STORAGE_KEY);
+        if (raw && raw !== 'null' && raw !== 'undefined') {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            const rawTracks = typeof parsed.lifetimeWavTracksDownloaded === 'number' && !isNaN(parsed.lifetimeWavTracksDownloaded)
+              ? parsed.lifetimeWavTracksDownloaded
+              : 0;
+            const rawMins = typeof parsed.lifetimeWavMinutesDownloaded === 'number' && !isNaN(parsed.lifetimeWavMinutesDownloaded)
+              ? parsed.lifetimeWavMinutesDownloaded
+              : 0;
+            const tracks = Math.min(GUEST_MAX_TRACKS, Math.max(0, rawTracks));
+            const mins = Math.min(GUEST_MAX_MINUTES, Math.max(0, rawMins));
+            return {
+              userId: 'guest',
+              lifetimeWavTracksDownloaded: tracks,
+              lifetimeWavMinutesDownloaded: mins,
+              remainingMinutes: Math.max(0, Number((GUEST_MAX_MINUTES - mins).toFixed(1))),
+              remainingTracks: Math.max(0, GUEST_MAX_TRACKS - tracks),
+              lastDownloadedAt: typeof parsed.lastDownloadedAt === 'string' ? parsed.lastDownloadedAt : undefined,
+              downloadHistory: Array.isArray(parsed.downloadHistory) ? parsed.downloadHistory : [],
+              isGuest: true,
+            };
+          }
         }
       }
     } catch (e) {
@@ -95,28 +95,30 @@ export function getLocalUserWavQuota(userId?: string | null): UserWavQuota {
   }
 
   try {
-    const raw = localStorage.getItem(`${QUOTA_CACHE_PREFIX}${userId}`);
-    if (raw && raw !== 'null' && raw !== 'undefined') {
-      const parsed = JSON.parse(raw);
-      if (parsed && typeof parsed === 'object') {
-        const rawTracks = typeof parsed.lifetimeWavTracksDownloaded === 'number' && !isNaN(parsed.lifetimeWavTracksDownloaded)
-          ? parsed.lifetimeWavTracksDownloaded
-          : 0;
-        const rawMins = typeof parsed.lifetimeWavMinutesDownloaded === 'number' && !isNaN(parsed.lifetimeWavMinutesDownloaded)
-          ? parsed.lifetimeWavMinutesDownloaded
-          : 0;
-        const tracks = Math.min(LIFETIME_MAX_TRACKS, Math.max(0, rawTracks));
-        const mins = Math.min(LIFETIME_MAX_MINUTES, Math.max(0, rawMins));
-        return {
-          userId,
-          lifetimeWavTracksDownloaded: tracks,
-          lifetimeWavMinutesDownloaded: mins,
-          remainingMinutes: Math.max(0, Number((LIFETIME_MAX_MINUTES - mins).toFixed(1))),
-          remainingTracks: Math.max(0, LIFETIME_MAX_TRACKS - tracks),
-          lastDownloadedAt: typeof parsed.lastDownloadedAt === 'string' ? parsed.lastDownloadedAt : undefined,
-          downloadHistory: Array.isArray(parsed.downloadHistory) ? parsed.downloadHistory : [],
-          isGuest: false,
-        };
+    if (typeof localStorage !== 'undefined') {
+      const raw = localStorage.getItem(`${QUOTA_CACHE_PREFIX}${userId}`);
+      if (raw && raw !== 'null' && raw !== 'undefined') {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          const rawTracks = typeof parsed.lifetimeWavTracksDownloaded === 'number' && !isNaN(parsed.lifetimeWavTracksDownloaded)
+            ? parsed.lifetimeWavTracksDownloaded
+            : 0;
+          const rawMins = typeof parsed.lifetimeWavMinutesDownloaded === 'number' && !isNaN(parsed.lifetimeWavMinutesDownloaded)
+            ? parsed.lifetimeWavMinutesDownloaded
+            : 0;
+          const tracks = Math.min(LIFETIME_MAX_TRACKS, Math.max(0, rawTracks));
+          const mins = Math.min(LIFETIME_MAX_MINUTES, Math.max(0, rawMins));
+          return {
+            userId: typeof userId === 'string' ? userId : 'guest',
+            lifetimeWavTracksDownloaded: tracks,
+            lifetimeWavMinutesDownloaded: mins,
+            remainingMinutes: Math.max(0, Number((LIFETIME_MAX_MINUTES - mins).toFixed(1))),
+            remainingTracks: Math.max(0, LIFETIME_MAX_TRACKS - tracks),
+            lastDownloadedAt: typeof parsed.lastDownloadedAt === 'string' ? parsed.lastDownloadedAt : undefined,
+            downloadHistory: Array.isArray(parsed.downloadHistory) ? parsed.downloadHistory : [],
+            isGuest: false,
+          };
+        }
       }
     }
   } catch (e) {
@@ -124,7 +126,7 @@ export function getLocalUserWavQuota(userId?: string | null): UserWavQuota {
   }
 
   return {
-    userId,
+    userId: typeof userId === 'string' ? userId : 'guest',
     lifetimeWavTracksDownloaded: 0,
     lifetimeWavMinutesDownloaded: 0,
     remainingMinutes: LIFETIME_MAX_MINUTES,
@@ -139,11 +141,15 @@ export function getLocalUserWavQuota(userId?: string | null): UserWavQuota {
  */
 function cacheUserWavQuota(quota: UserWavQuota): void {
   try {
-    const storageKey = quota.isGuest || quota.userId === 'guest' || quota.userId.startsWith('guest_')
+    if (!quota || typeof quota !== 'object') return;
+    const isGuest = quota.isGuest || !quota.userId || typeof quota.userId !== 'string' || quota.userId === 'guest' || quota.userId.startsWith('guest_');
+    const storageKey = isGuest
       ? GUEST_QUOTA_STORAGE_KEY
       : `${QUOTA_CACHE_PREFIX}${quota.userId}`;
 
-    localStorage.setItem(storageKey, JSON.stringify(quota));
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(storageKey, JSON.stringify(quota));
+    }
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('aura-wav-quota-changed', { detail: quota }));
     }
@@ -160,6 +166,8 @@ export async function fetchUserWavQuota(userId?: string | null): Promise<UserWav
   if (!userId || userId === 'guest' || userId.startsWith('guest_')) return local;
 
   try {
+    const { doc, getDoc } = await import('firebase/firestore');
+    const { db } = await import('./firebase');
     const userRef = doc(db, 'users', userId);
     const snap = await getDoc(userRef);
     if (snap.exists()) {
@@ -260,6 +268,8 @@ export async function recordWavDownload(
   // Background Firestore synchronization ONLY for signed-in registered members
   if (!isGuest && userId) {
     try {
+      const { doc, setDoc } = await import('firebase/firestore');
+      const { db } = await import('./firebase');
       const userRef = doc(db, 'users', userId);
       await setDoc(
         userRef,

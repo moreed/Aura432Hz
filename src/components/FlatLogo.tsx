@@ -49,12 +49,12 @@ export const FlatLogo: React.FC<FlatLogoProps> = ({
         <picture className="w-full h-full flex items-center justify-center">
           <source
             type="image/webp"
-            srcSet="/icon-192.webp 192w, /icon-512.webp 512w"
+            srcSet="/icon-64.webp 64w, /icon-96.webp 96w, /icon-128.webp 128w, /icon-192.webp 192w"
             sizes={`${size}px`}
           />
           <img
-            src="/icon-512.png"
-            srcSet="/icon-192.png 192w, /icon-512.png 512w"
+            src="/icon-96.webp"
+            srcSet="/icon-64.webp 64w, /icon-96.webp 96w, /icon-128.webp 128w, /icon-192.webp 192w"
             sizes={`${size}px`}
             alt="Aura 432Hz Official Logo"
             width={size}
