@@ -6,7 +6,7 @@
  * SEE /DESIGN_SYSTEM_LOCKED.md FOR FULL SPECIFICATIONS.
  * ============================================================================
  */
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   Play,
   Pause,
@@ -973,6 +973,33 @@ export default function App() {
   };
 
   const currentBrainwave = BRAINWAVE_MODES[brainwaveMode];
+
+  // Subtle BPM-synced breathing cycle duration based on selected Alpha/Theta/Delta brainwave frequency
+  const brainwavePulseDuration = useMemo(() => {
+    switch (brainwaveMode) {
+      case 'delta_sleep':
+        // 3.5Hz Delta: 8.0s restorative sleep respiration cycle (7.5 breaths/min)
+        return 8.0;
+      case 'theta_meditation':
+        // 6.0Hz Theta: 6.0s deep meditative & autonomic heart-rate coherence (10.0 breaths/min)
+        return 6.0;
+      case 'alpha_flow':
+        // 8.5Hz Low-Alpha: 4.8s rhythmic flow state & calm respiration (12.5 breaths/min)
+        return 4.8;
+      case 'alpha_healing':
+        // 10.0Hz Alpha: 4.0s soothing alpha relaxation breath (15.0 breaths/min)
+        return 4.0;
+      case 'pure_432':
+      default:
+        // Pure 432Hz: 5.5s golden-ratio harmonic coherence breath (10.9 breaths/min)
+        return 5.5;
+    }
+  }, [brainwaveMode]);
+
+  const brainwaveBpm = useMemo(() => {
+    return Math.round((60 / brainwavePulseDuration) * 10) / 10;
+  }, [brainwavePulseDuration]);
+
   const currentSolfeggio = SOLFEGGIO_FREQUENCIES.find((s) => s.freq === baseFreq);
   const solfeggioShortName = currentSolfeggio
     ? (baseFreq === 432 ? 'Sanctuary' : currentSolfeggio.name.split('/')[0].split('&')[0].trim())
@@ -1823,27 +1850,52 @@ export default function App() {
                       </span>
                     </button>
 
-                    {/* 3. Begin 432Hz Sanctuary Primary Action Button */}
+                    {/* 3. Begin 432Hz Sanctuary Primary Action Button with BPM-synced brainwave pulse */}
                     <button
                       type="button"
                       onClick={handleTogglePlay}
-                      className={`px-6 sm:px-8 py-3.5 rounded-2xl font-bold text-xs sm:text-sm transition-all shadow-xl flex items-center justify-center gap-2.5 active:scale-95 cursor-pointer shrink-0 ${
+                      style={
                         isPlaying
-                          ? 'bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-400 hover:to-pink-500 text-white shadow-rose-500/25 ring-1 ring-rose-300/40'
+                          ? {
+                              animation: `sanctuaryBreathPulse ${brainwavePulseDuration}s ease-in-out infinite`,
+                            }
+                          : undefined
+                      }
+                      className={`relative px-6 sm:px-8 py-3.5 rounded-2xl font-bold text-xs sm:text-sm transition-all shadow-xl flex items-center justify-center gap-2.5 active:scale-95 cursor-pointer shrink-0 ${
+                        isPlaying
+                          ? 'animate-sanctuary-pulse transform-gpu bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-400 hover:to-pink-500 text-white shadow-rose-500/25 ring-1 ring-rose-300/40'
                           : 'bg-gradient-to-r from-aurora-teal via-teal-300 to-cosmic-lavender hover:from-teal-300 hover:to-purple-300 text-midnight shadow-aurora-teal/35 ring-1 ring-aurora-teal/60'
                       }`}
-                      title={isPlaying ? `Pause ${baseFreq === 432 ? '432Hz Sanctuary' : `${baseFreq}Hz ${solfeggioShortName}`}` : `Begin ${baseFreq === 432 ? '432Hz Sanctuary' : `${baseFreq}Hz ${solfeggioShortName}`}`}
+                      title={
+                        isPlaying
+                          ? `Pause ${baseFreq === 432 ? '432Hz Sanctuary' : `${baseFreq}Hz ${solfeggioShortName}`} • ${currentBrainwave.name} Pulse (${brainwaveBpm} BPM Coherence)`
+                          : `Begin ${baseFreq === 432 ? '432Hz Sanctuary' : `${baseFreq}Hz ${solfeggioShortName}`}`
+                      }
                       aria-label={isPlaying ? 'Pause Sanctuary Audio' : 'Begin 432Hz Sanctuary'}
                     >
+                      {/* Ethereal BPM-synced ambient aura glow behind button */}
+                      {isPlaying && (
+                        <span
+                          aria-hidden="true"
+                          className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-rose-500/35 via-pink-500/30 to-rose-400/35 blur-sm pointer-events-none transform-gpu"
+                          style={{
+                            animation: `sanctuaryGlowHalo ${brainwavePulseDuration}s ease-in-out infinite`,
+                          }}
+                        />
+                      )}
                       {isPlaying ? (
                         <>
-                          <Pause className="w-5 h-5 fill-current" />
-                          <span>Pause {baseFreq === 432 ? '432Hz Sanctuary' : `${baseFreq}Hz ${solfeggioShortName}`}</span>
+                          <Pause className="w-5 h-5 fill-current relative z-10" />
+                          <span className="relative z-10">
+                            Pause {baseFreq === 432 ? '432Hz Sanctuary' : `${baseFreq}Hz ${solfeggioShortName}`}
+                          </span>
                         </>
                       ) : (
                         <>
-                          <Play className="w-5 h-5 fill-current" />
-                          <span>Begin {baseFreq === 432 ? '432Hz Sanctuary' : `${baseFreq}Hz ${solfeggioShortName}`}</span>
+                          <Play className="w-5 h-5 fill-current relative z-10" />
+                          <span className="relative z-10">
+                            Begin {baseFreq === 432 ? '432Hz Sanctuary' : `${baseFreq}Hz ${solfeggioShortName}`}
+                          </span>
                         </>
                       )}
                     </button>
@@ -2871,6 +2923,7 @@ export default function App() {
           isMusicalMode={isMusicalMode}
           onToggleMusicalMode={handleToggleMusicalMode}
           onOpenExportAudio={() => setIsExportModalOpen(true)}
+          brainwavePulseDuration={brainwavePulseDuration}
         />
       )}
 

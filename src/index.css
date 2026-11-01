@@ -1082,6 +1082,34 @@ html:not(.theme-light) .text-slate-300 {
   will-change: opacity;
 }
 
+/* Subtle BPM-Synced Brainwave Breathing Pulse Animation for Primary Sanctuary Button */
+@keyframes sanctuaryBreathPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 10px 25px -5px rgba(244, 63, 94, 0.35), 0 0 14px 1px rgba(251, 113, 133, 0.25);
+  }
+  50% {
+    transform: scale(1.032);
+    box-shadow: 0 18px 36px -4px rgba(244, 63, 94, 0.65), 0 0 28px 4px rgba(251, 113, 133, 0.55);
+  }
+}
+
+@keyframes sanctuaryGlowHalo {
+  0%, 100% {
+    opacity: 0.25;
+    transform: scale(0.98);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.07);
+  }
+}
+
+.animate-sanctuary-pulse {
+  will-change: transform, box-shadow;
+  transform: translateZ(0);
+}
+
 /* GPU layer promotion for Tailwind continuous animations to avoid non-composited animations */
 .animate-pulse {
   transform: translateZ(0);
@@ -1099,6 +1127,7 @@ html:not(.theme-light) .text-slate-300 {
   .animate-soundscape-active,
   .animate-soundscape-icon,
   .animate-soundscape-armed,
+  .animate-sanctuary-pulse,
   .animate-fade-in,
   .animate-pulse,
   .animate-ping,

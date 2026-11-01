@@ -36,6 +36,7 @@ interface GlobalBottomPlayerBarProps {
   onToggleMusicalMode?: () => void;
   onOpenExportAudio?: () => void;
   onOpenExportModal?: () => void;
+  brainwavePulseDuration?: number;
 }
 
 export const GlobalBottomPlayerBar: React.FC<GlobalBottomPlayerBarProps> = ({
@@ -60,6 +61,7 @@ export const GlobalBottomPlayerBar: React.FC<GlobalBottomPlayerBarProps> = ({
   onToggleMusicalMode,
   onOpenExportAudio,
   onOpenExportModal,
+  brainwavePulseDuration = 5.5,
 }) => {
   const handleOpenExport = onOpenExportModal || onOpenExportAudio;
   const isMuted = masterVolume === 0;
@@ -187,9 +189,16 @@ export const GlobalBottomPlayerBar: React.FC<GlobalBottomPlayerBarProps> = ({
           <div className="flex items-center gap-1.5">
             <button
               onClick={onTogglePlay}
+              style={
+                isPlaying
+                  ? {
+                      animation: `sanctuaryBreathPulse ${brainwavePulseDuration}s ease-in-out infinite`,
+                    }
+                  : undefined
+              }
               className={`px-3.5 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-2xl font-bold text-xs sm:text-sm transition-all shadow-lg flex items-center gap-1.5 sm:gap-2 active:scale-95 cursor-pointer shrink-0 ${
                 isPlaying
-                  ? 'bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-400 hover:to-pink-500 text-white shadow-rose-500/25'
+                  ? 'animate-sanctuary-pulse transform-gpu bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-400 hover:to-pink-500 text-white shadow-rose-500/25 ring-1 ring-rose-300/40'
                   : 'bg-gradient-to-r from-aurora-teal via-teal-300 to-cosmic-lavender hover:from-teal-300 hover:to-purple-300 text-midnight shadow-md shadow-aurora-teal/30'
               }`}
               title={isPlaying ? 'Pause audio' : 'Play audio'}
