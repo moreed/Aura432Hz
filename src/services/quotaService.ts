@@ -56,20 +56,28 @@ export function getLocalUserWavQuota(userId?: string | null): UserWavQuota {
   if (isGuest) {
     try {
       const raw = localStorage.getItem(GUEST_QUOTA_STORAGE_KEY);
-      if (raw) {
+      if (raw && raw !== 'null' && raw !== 'undefined') {
         const parsed = JSON.parse(raw);
-        const tracks = Math.min(GUEST_MAX_TRACKS, Math.max(0, parsed.lifetimeWavTracksDownloaded || 0));
-        const mins = Math.min(GUEST_MAX_MINUTES, Math.max(0, parsed.lifetimeWavMinutesDownloaded || 0));
-        return {
-          userId: 'guest',
-          lifetimeWavTracksDownloaded: tracks,
-          lifetimeWavMinutesDownloaded: mins,
-          remainingMinutes: Math.max(0, Number((GUEST_MAX_MINUTES - mins).toFixed(1))),
-          remainingTracks: Math.max(0, GUEST_MAX_TRACKS - tracks),
-          lastDownloadedAt: parsed.lastDownloadedAt,
-          downloadHistory: Array.isArray(parsed.downloadHistory) ? parsed.downloadHistory : [],
-          isGuest: true,
-        };
+        if (parsed && typeof parsed === 'object') {
+          const rawTracks = typeof parsed.lifetimeWavTracksDownloaded === 'number' && !isNaN(parsed.lifetimeWavTracksDownloaded)
+            ? parsed.lifetimeWavTracksDownloaded
+            : 0;
+          const rawMins = typeof parsed.lifetimeWavMinutesDownloaded === 'number' && !isNaN(parsed.lifetimeWavMinutesDownloaded)
+            ? parsed.lifetimeWavMinutesDownloaded
+            : 0;
+          const tracks = Math.min(GUEST_MAX_TRACKS, Math.max(0, rawTracks));
+          const mins = Math.min(GUEST_MAX_MINUTES, Math.max(0, rawMins));
+          return {
+            userId: 'guest',
+            lifetimeWavTracksDownloaded: tracks,
+            lifetimeWavMinutesDownloaded: mins,
+            remainingMinutes: Math.max(0, Number((GUEST_MAX_MINUTES - mins).toFixed(1))),
+            remainingTracks: Math.max(0, GUEST_MAX_TRACKS - tracks),
+            lastDownloadedAt: typeof parsed.lastDownloadedAt === 'string' ? parsed.lastDownloadedAt : undefined,
+            downloadHistory: Array.isArray(parsed.downloadHistory) ? parsed.downloadHistory : [],
+            isGuest: true,
+          };
+        }
       }
     } catch (e) {
       console.debug('Failed to parse local guest quota:', e);
@@ -88,20 +96,28 @@ export function getLocalUserWavQuota(userId?: string | null): UserWavQuota {
 
   try {
     const raw = localStorage.getItem(`${QUOTA_CACHE_PREFIX}${userId}`);
-    if (raw) {
+    if (raw && raw !== 'null' && raw !== 'undefined') {
       const parsed = JSON.parse(raw);
-      const tracks = Math.min(LIFETIME_MAX_TRACKS, Math.max(0, parsed.lifetimeWavTracksDownloaded || 0));
-      const mins = Math.min(LIFETIME_MAX_MINUTES, Math.max(0, parsed.lifetimeWavMinutesDownloaded || 0));
-      return {
-        userId,
-        lifetimeWavTracksDownloaded: tracks,
-        lifetimeWavMinutesDownloaded: mins,
-        remainingMinutes: Math.max(0, Number((LIFETIME_MAX_MINUTES - mins).toFixed(1))),
-        remainingTracks: Math.max(0, LIFETIME_MAX_TRACKS - tracks),
-        lastDownloadedAt: parsed.lastDownloadedAt,
-        downloadHistory: Array.isArray(parsed.downloadHistory) ? parsed.downloadHistory : [],
-        isGuest: false,
-      };
+      if (parsed && typeof parsed === 'object') {
+        const rawTracks = typeof parsed.lifetimeWavTracksDownloaded === 'number' && !isNaN(parsed.lifetimeWavTracksDownloaded)
+          ? parsed.lifetimeWavTracksDownloaded
+          : 0;
+        const rawMins = typeof parsed.lifetimeWavMinutesDownloaded === 'number' && !isNaN(parsed.lifetimeWavMinutesDownloaded)
+          ? parsed.lifetimeWavMinutesDownloaded
+          : 0;
+        const tracks = Math.min(LIFETIME_MAX_TRACKS, Math.max(0, rawTracks));
+        const mins = Math.min(LIFETIME_MAX_MINUTES, Math.max(0, rawMins));
+        return {
+          userId,
+          lifetimeWavTracksDownloaded: tracks,
+          lifetimeWavMinutesDownloaded: mins,
+          remainingMinutes: Math.max(0, Number((LIFETIME_MAX_MINUTES - mins).toFixed(1))),
+          remainingTracks: Math.max(0, LIFETIME_MAX_TRACKS - tracks),
+          lastDownloadedAt: typeof parsed.lastDownloadedAt === 'string' ? parsed.lastDownloadedAt : undefined,
+          downloadHistory: Array.isArray(parsed.downloadHistory) ? parsed.downloadHistory : [],
+          isGuest: false,
+        };
+      }
     }
   } catch (e) {
     console.debug('Failed to parse local member quota cache:', e);

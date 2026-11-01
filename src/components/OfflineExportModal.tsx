@@ -46,10 +46,10 @@ export type ExportAudioFormat = 'wav' | 'mp3';
 interface OfflineExportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  baseFreq: number;
+  baseFreq?: number;
   brainwaveMode?: BrainwaveMode;
-  brainwaveModeName: string;
-  activeNatureSounds: NatureSoundState[];
+  brainwaveModeName?: string;
+  activeNatureSounds?: NatureSoundState[];
   currentUser?: UserProfile | null;
   isLoggedIn?: boolean;
   isAdmin?: boolean;
@@ -62,10 +62,10 @@ interface OfflineExportModalProps {
 export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
   isOpen,
   onClose,
-  baseFreq,
-  brainwaveMode,
-  brainwaveModeName,
-  activeNatureSounds,
+  baseFreq = 432,
+  brainwaveMode = 'alpha_healing',
+  brainwaveModeName = 'Alpha Harmonic',
+  activeNatureSounds = [],
   currentUser,
   isLoggedIn = false,
   isAdmin = false,
@@ -108,8 +108,46 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
         isGuest: false,
       };
     }
-    return getLocalUserWavQuota(currentUser?.uid);
+    try {
+      return getLocalUserWavQuota(currentUser?.uid);
+    } catch {
+      return {
+        userId: currentUser?.uid || 'guest',
+        lifetimeWavTracksDownloaded: 0,
+        lifetimeWavMinutesDownloaded: 0,
+        remainingMinutes: maxPoolMinutes,
+        remainingTracks: maxPoolTracks,
+        downloadHistory: [],
+        isGuest: userTier === 'guest',
+      };
+    }
   });
+
+  // Safe numeric derivations to guarantee zero crashes on undefined/null/NaN
+  const safeRemainingMinutes = Math.max(
+    0,
+    typeof quota?.remainingMinutes === 'number' && !isNaN(quota.remainingMinutes)
+      ? quota.remainingMinutes
+      : maxPoolMinutes
+  );
+  const safeRemainingTracks = Math.max(
+    0,
+    typeof quota?.remainingTracks === 'number' && !isNaN(quota.remainingTracks)
+      ? quota.remainingTracks
+      : maxPoolTracks
+  );
+  const safeDownloadedTracks = Math.max(
+    0,
+    typeof quota?.lifetimeWavTracksDownloaded === 'number' && !isNaN(quota.lifetimeWavTracksDownloaded)
+      ? quota.lifetimeWavTracksDownloaded
+      : 0
+  );
+  const safeDownloadedMinutes = Math.max(
+    0,
+    typeof quota?.lifetimeWavMinutesDownloaded === 'number' && !isNaN(quota.lifetimeWavMinutesDownloaded)
+      ? quota.lifetimeWavMinutesDownloaded
+      : 0
+  );
 
   // Sync quota reactively
   useEffect(() => {
@@ -126,18 +164,24 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
       return;
     }
 
-    const initial = getLocalUserWavQuota(currentUser?.uid);
-    setQuota(initial);
+    try {
+      const initial = getLocalUserWavQuota(currentUser?.uid);
+      setQuota(initial);
+    } catch (e) {
+      console.debug('Failed to get initial local quota:', e);
+    }
 
     if (userTier === 'member' && currentUser?.uid) {
-      fetchUserWavQuota(currentUser.uid).then((q) => {
-        setQuota(q);
-      });
+      fetchUserWavQuota(currentUser.uid)
+        .then((q) => {
+          if (q) setQuota(q);
+        })
+        .catch(console.debug);
     }
 
     const handleQuotaChange = (e: Event) => {
       const customEvent = e as CustomEvent<UserWavQuota>;
-      if (customEvent.detail) {
+      if (customEvent.detail && typeof customEvent.detail === 'object') {
         if (userTier === 'member' && customEvent.detail.userId === currentUser?.uid) {
           setQuota(customEvent.detail);
         } else if (userTier === 'guest' && customEvent.detail.isGuest) {
@@ -155,8 +199,8 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
   // Max selectable duration
   const effectiveMaxDuration = useMemo(() => {
     if (userTier === 'admin') return ADMIN_MAX_SINGLE_TRACK_MINUTES;
-    return Math.max(0.5, Math.min(singleTrackLimit, quota.remainingMinutes));
-  }, [userTier, singleTrackLimit, quota.remainingMinutes]);
+    return Math.max(0.5, Math.min(singleTrackLimit, safeRemainingMinutes));
+  }, [userTier, singleTrackLimit, safeRemainingMinutes]);
 
   const [durationMinutes, setDurationMinutes] = useState<number>(() => {
     const defaultDuration = userTier === 'guest' ? 3 : 5;
@@ -238,13 +282,13 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
 
   // Quota status
   const isQuotaDepleted =
-    userTier !== 'admin' && (quota.remainingTracks <= 0 || quota.remainingMinutes <= 0);
+    userTier !== 'admin' && (safeRemainingTracks <= 0 || safeRemainingMinutes <= 0);
   const isSelectedDurationExceeding =
-    userTier !== 'admin' && durationMinutes > quota.remainingMinutes;
+    userTier !== 'admin' && durationMinutes > safeRemainingMinutes;
 
   // File size estimate
   const estimatedMb = useMemo(() => {
-    const durationSeconds = durationMinutes * 60;
+    const durationSeconds = Math.max(1, (durationMinutes || 1) * 60);
     if (exportFormat === 'mp3') {
       // 128 kbps = 16,000 bytes/sec
       return ((durationSeconds * 16000) / (1024 * 1024)).toFixed(1);
@@ -602,15 +646,18 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
 
   // Quota styling
   const remainingColorClass =
-    quota.remainingMinutes > maxPoolMinutes * 0.4
+    safeRemainingMinutes > maxPoolMinutes * 0.4
       ? 'text-emerald-400'
-      : quota.remainingMinutes > maxPoolMinutes * 0.2
+      : safeRemainingMinutes > maxPoolMinutes * 0.2
       ? 'text-amber-400'
       : 'text-rose-400';
 
   const progressPercent = Math.min(
     100,
-    Math.round(((maxPoolMinutes - quota.remainingMinutes) / maxPoolMinutes) * 100)
+    Math.max(
+      0,
+      Math.round(((maxPoolMinutes - safeRemainingMinutes) / (maxPoolMinutes || 1)) * 100)
+    )
   );
 
   return (
@@ -728,7 +775,7 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
                       </span>
                     </span>
                     <span className="text-xs font-mono font-bold">
-                      <span className={remainingColorClass}>{quota.remainingMinutes.toFixed(1)}</span>
+                      <span className={remainingColorClass}>{safeRemainingMinutes.toFixed(1)}</span>
                       <span className="text-slate-400 font-normal"> / {maxPoolMinutes} mins</span>
                     </span>
                   </div>
@@ -737,9 +784,9 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
                   <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden p-0.5 border border-slate-700/60">
                     <div
                       className={`h-full rounded-full transition-all duration-500 ${
-                        quota.remainingMinutes > maxPoolMinutes * 0.4
+                        safeRemainingMinutes > maxPoolMinutes * 0.4
                           ? 'bg-gradient-to-r from-aurora-teal to-emerald-400'
-                          : quota.remainingMinutes > maxPoolMinutes * 0.2
+                          : safeRemainingMinutes > maxPoolMinutes * 0.2
                           ? 'bg-gradient-to-r from-amber-500 to-yellow-400'
                           : 'bg-gradient-to-r from-rose-500 to-amber-500'
                       }`}
@@ -753,19 +800,19 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
                       <span>Tracks left:</span>
                       <strong
                         className={
-                          quota.remainingTracks > 0
+                          safeRemainingTracks > 0
                             ? 'text-aurora-teal font-mono'
                             : 'text-rose-400 font-mono'
                         }
                       >
-                        {quota.remainingTracks} of {maxPoolTracks}
+                        {safeRemainingTracks} of {maxPoolTracks}
                       </strong>
                       <div className="flex items-center gap-1 ml-1">
-                        {Array.from({ length: maxPoolTracks }).map((_, idx) => (
+                        {Array.from({ length: Math.min(20, Math.max(1, maxPoolTracks)) }).map((_, idx) => (
                           <span
                             key={idx}
                             className={`w-2 h-2 rounded-full ${
-                              idx < quota.lifetimeWavTracksDownloaded
+                              idx < safeDownloadedTracks
                                 ? 'bg-slate-700 border border-slate-600'
                                 : 'bg-aurora-teal shadow-[0_0_4px_rgba(72,225,208,0.8)]'
                             }`}
@@ -778,7 +825,7 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
                     <span>
                       Used:{' '}
                       <strong className="text-slate-200">
-                        {quota.lifetimeWavMinutesDownloaded.toFixed(1)}m
+                        {safeDownloadedMinutes.toFixed(1)}m
                       </strong>
                     </span>
                   </div>
@@ -1054,7 +1101,7 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
                         ? [1, 3, 5, 7, 9.5]
                         : [1, 2, 3, 4, 5]
                       ).map((d) => {
-                        const isExceeding = userTier !== 'admin' && d > quota.remainingMinutes;
+                        const isExceeding = userTier !== 'admin' && d > safeRemainingMinutes;
                         return (
                           <button
                             key={d}
@@ -1084,11 +1131,11 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
                           <strong className="text-slate-200">
                             {Math.max(
                               0,
-                              Number((quota.remainingMinutes - durationMinutes).toFixed(1))
+                              Number((safeRemainingMinutes - durationMinutes).toFixed(1))
                             )}
                             m
                           </strong>{' '}
-                          remaining ({Math.max(0, quota.remainingTracks - 1)} tracks left)
+                          remaining ({Math.max(0, safeRemainingTracks - 1)} tracks left)
                         </span>
                       </div>
                     )}
@@ -1105,8 +1152,12 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
                     <div className="flex items-center justify-between text-slate-300">
                       <span className="text-slate-400">Nature Layers:</span>
                       <span className="text-slate-200 truncate max-w-[220px]">
-                        {activeNatureSounds.filter((s) => s.enabled).map((s) => s.name).join(', ') ||
-                          'Pure Frequency'}
+                        {Array.isArray(activeNatureSounds)
+                          ? activeNatureSounds
+                              .filter((s) => s && s.enabled)
+                              .map((s) => s.name || s.id || 'Layer')
+                              .join(', ') || 'Pure Frequency'
+                          : 'Pure Frequency'}
                       </span>
                     </div>
                   </div>

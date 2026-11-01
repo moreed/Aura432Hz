@@ -23,9 +23,10 @@ export class OfflineVaultService {
     if (typeof window === 'undefined') return [];
     try {
       const raw = localStorage.getItem(VAULT_META_KEY);
-      if (!raw) return [];
+      if (!raw || raw === 'null' || raw === 'undefined') return [];
       const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter((t) => t && typeof t === 'object' && typeof t.id === 'string');
     } catch (e) {
       console.warn('Failed to parse offline vault tracks from localStorage:', e);
       return [];
@@ -143,16 +144,18 @@ export class OfflineVaultService {
     return true;
   }
 
-  public formatBytes(bytes: number): string {
-    if (!bytes || bytes <= 0) return '0 B';
+  public formatBytes(bytes?: number): string {
+    if (!bytes || typeof bytes !== 'number' || isNaN(bytes) || bytes <= 0) return '0 B';
     const k = 1024;
     const dm = 1;
     const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    const i = Math.min(sizes.length - 1, Math.floor(Math.log(bytes) / Math.log(k)));
+    if (i < 0) return '0 B';
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
   }
 
-  public formatDuration(seconds: number): string {
+  public formatDuration(seconds?: number): string {
+    if (typeof seconds !== 'number' || isNaN(seconds) || seconds <= 0) return '0 min';
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     if (mins === 0) return `${secs}s`;
