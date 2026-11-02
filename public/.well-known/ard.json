@@ -1,0 +1,79 @@
+{
+  "$schema": "https://agentic-resource-discovery.org/schema/v1/ard.json",
+  "version": "1.0.0",
+  "name": "Aura 432Hz Sanctuary",
+  "description": "Harmonic resonance & ambient meditation sanctuary producing 432Hz Solfeggio soundscapes, breath pacing, and acoustic wellness tools.",
+  "url": "https://aura432hz.com",
+  "provider": {
+    "name": "Aura 432Hz Sanctuary",
+    "url": "https://aura432hz.com",
+    "contactEmail": "moreed.raouf@gmail.com"
+  },
+  "capabilities": [
+    {
+      "id": "soundscape_synthesis",
+      "name": "432Hz Soundscape Synthesis",
+      "description": "Procedural real-time Web Audio API synthesizer for 432Hz harmonic sine waves and brainwave entrainment.",
+      "type": "audio/web-audio",
+      "url": "https://aura432hz.com/"
+    },
+    {
+      "id": "nature_mixer",
+      "name": "Harmonic Nature Mixer",
+      "description": "Multi-track procedural soundscape mixer for rain, ocean, wind, campfire, and singing bowls.",
+      "type": "audio/mixer",
+      "url": "https://aura432hz.com/mixer"
+    },
+    {
+      "id": "breath_pacing",
+      "name": "Harmonic Breath Pacer",
+      "description": "Audio-guided autonomic nervous system coherent breathing pacer with customizable breathing cycles.",
+      "type": "interactive/utility",
+      "url": "https://aura432hz.com/breath"
+    },
+    {
+      "id": "crystal_harp",
+      "name": "Interactive Crystal Sound Harp",
+      "description": "Pentatonic crystal sound harp tuned to 432Hz natural pitch for mindful improvisation.",
+      "type": "interactive/instrument",
+      "url": "https://aura432hz.com/musical"
+    },
+    {
+      "id": "research_archive",
+      "name": "Acoustic Science & Research Archive",
+      "description": "Peer-reviewed acoustic literature, 1884 Diapason Normale history, and vagal entrainment studies.",
+      "type": "document/archive",
+      "url": "https://aura432hz.com/blog"
+    }
+  ],
+  "resources": [
+    {
+      "name": "llms.txt",
+      "type": "text/markdown",
+      "url": "https://aura432hz.com/llms.txt",
+      "description": "Curated LLM context and sanctuary index."
+    },
+    {
+      "name": "llms-full.txt",
+      "type": "text/markdown",
+      "url": "https://aura432hz.com/llms-full.txt",
+      "description": "Full LLM technical documentation and acoustic frequency guide."
+    },
+    {
+      "name": "sitemap",
+      "type": "application/xml",
+      "url": "https://aura432hz.com/sitemap.xml",
+      "description": "XML sitemap of public routes."
+    },
+    {
+      "name": "ard-manifest",
+      "type": "application/json",
+      "url": "https://aura432hz.com/.well-known/ard.json",
+      "description": "Agentic Resource Discovery manifest."
+    }
+  ],
+  "links": {
+    "privacyPolicy": "https://aura432hz.com/legal/privacy",
+    "termsOfService": "https://aura432hz.com/legal/terms"
+  }
+}

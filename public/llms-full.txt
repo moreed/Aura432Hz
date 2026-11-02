@@ -1,0 +1,60 @@
+# Aura 432Hz Sanctuary — Comprehensive Knowledge Base & Technical Documentation
+
+> Detailed technical guide and frequency documentation for Aura 432Hz (https://aura432hz.com).
+
+## Table of Contents
+- [Sanctuary Architecture](#sanctuary-architecture)
+- [Acoustic Physics & Verdi Diapason Normale (432Hz)](#acoustic-physics--verdi-diapason-normale-432hz)
+- [Solfeggio Frequency Mathematics](#solfeggio-frequency-mathematics)
+- [Binaural Beats & Brainwave Entrainment](#binaural-beats--brainwave-entrainment)
+- [Safety & Acoustic Normalization Standards](#safety--acoustic-normalization-standards)
+- [Sanctuary URLs & Navigation Elements](#sanctuary-urls--navigation-elements)
+
+## Sanctuary Architecture
+Aura 432Hz is built entirely on modern web standards, featuring:
+- Web Audio API real-time synthesis (no pre-recorded compressed audio artifacts).
+- Zero electromagnetic radiation: all sound generated is purely acoustic mechanical vibrations between 40 Hz and 1200 Hz.
+- Procedural multi-track audio nodes for nature soundscapes (rain, forest, ocean, singing bowls).
+- Offline export via in-browser WAV rendering and offline vault storage.
+
+## Acoustic Physics & Verdi Diapason Normale (432Hz)
+In 1884, Giuseppe Verdi and the Congress of Italian Musicians advocated for a standardized pitch of A = 432 Hz, mathematically grounded in integer harmonic ratios with middle C = 256 Hz (the scientific or Sauveur pitch). In contrast to the modern ISO standard (A = 440 Hz adopted in 1953), 432 Hz tuning produces round, resonant integer overtone series that listeners report as softer, less shrill, and calming to the human auditory cortex and autonomic nervous system.
+
+## Solfeggio Frequency Mathematics
+The Sanctuary includes the 9 core Solfeggio frequencies:
+1. 174 Hz — Foundation & grounding frequency.
+2. 285 Hz — Cellular rejuvenation & spatial perception.
+3. 396 Hz — Liberation from guilt, anxiety, and grief.
+4. 417 Hz — Dissolving emotional stagnation & facilitating change.
+5. 528 Hz — Transformation, harmonic resonance, and heart-center coherence.
+6. 639 Hz — Relational harmony, empathy, and interpersonal connection.
+7. 741 Hz — Intuitive awakening & clarity of mind.
+8. 852 Hz — Spiritual order & returning to pure awareness.
+9. 963 Hz — Pure consciousness & universal connectedness.
+
+## Binaural Beats & Brainwave Entrainment
+Binaural beats occur when two slightly different frequencies are presented separately to each ear via stereo headphones. The superior olivary complex in the brainstem integrates the two tones and perceives a rhythmic third beat equal to the frequency difference:
+- Delta (0.5 – 4 Hz): Deep non-REM sleep and physical recovery.
+- Theta (4 – 8 Hz): Deep meditation, twilight states, and emotional processing.
+- Alpha (8 – 13 Hz): Calm alertness, stress relief, and parasympathetic tone.
+- Beta (13 – 30 Hz): Cognitive processing and analytical tasks.
+- Gamma (30 – 50 Hz): High-level information binding and insight.
+
+## Safety & Acoustic Normalization Standards
+- EBU R128 Loudness Normalization: Prevents ear fatigue and harsh dynamic jumps.
+- Peak Dynamic Limiter: Hard-limits output to -1.0 dBFS to prevent digital clipping on mobile speakers.
+- RF Safety: 0.00 MHz radio frequencies. 100% mechanical pressure waves.
+
+## Sanctuary URLs & Navigation Elements
+- Sanctuary Home: https://aura432hz.com/
+- Nature Mixer: https://aura432hz.com/mixer
+- Breathwork Pacer: https://aura432hz.com/breath
+- Sound Harp: https://aura432hz.com/musical
+- Gear Shop: https://aura432hz.com/gear
+- Community Wall: https://aura432hz.com/community
+- Science Blog: https://aura432hz.com/blog
+- Contact Form: https://aura432hz.com/contact
+- Privacy Policy: https://aura432hz.com/legal/privacy
+- Terms & EULA: https://aura432hz.com/legal/terms
+- ARD Discovery: https://aura432hz.com/.well-known/ard.json
+- LLM Index: https://aura432hz.com/llms.txt

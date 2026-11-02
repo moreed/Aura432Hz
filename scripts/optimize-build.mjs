@@ -35,7 +35,31 @@ if (cssMatch) {
 html = html.replace(/<link\s+rel="preconnect"\s+href="https:\/\/firestore\.googleapis\.com"[^>]*>\s*/gi, '');
 html = html.replace(/<link\s+rel="preconnect"\s+href="https:\/\/images\.unsplash\.com"[^>]*>\s*/gi, '');
 
-// 3. Write back optimized index.html and sync to 404.html
+// 3. Ensure .well-known directory and ard.json are copied to dist
+const publicWellKnown = path.resolve(__dirname, '../public/.well-known');
+const distWellKnown = path.resolve(distDir, '.well-known');
+if (fs.existsSync(publicWellKnown)) {
+  if (!fs.existsSync(distWellKnown)) {
+    fs.mkdirSync(distWellKnown, { recursive: true });
+  }
+  const ardSrc = path.resolve(publicWellKnown, 'ard.json');
+  if (fs.existsSync(ardSrc)) {
+    fs.copyFileSync(ardSrc, path.resolve(distWellKnown, 'ard.json'));
+    console.log('[optimize-build] Synced .well-known/ard.json to dist');
+  }
+}
+
+// Ensure llms.txt & llms-full.txt are in dist
+const publicLlms = path.resolve(__dirname, '../public/llms.txt');
+if (fs.existsSync(publicLlms)) {
+  fs.copyFileSync(publicLlms, path.resolve(distDir, 'llms.txt'));
+}
+const publicLlmsFull = path.resolve(__dirname, '../public/llms-full.txt');
+if (fs.existsSync(publicLlmsFull)) {
+  fs.copyFileSync(publicLlmsFull, path.resolve(distDir, 'llms-full.txt'));
+}
+
+// 4. Write back optimized index.html and sync to 404.html
 fs.writeFileSync(indexHtmlPath, html, 'utf-8');
 fs.writeFileSync(fourOhFourPath, html, 'utf-8');
 console.log('[optimize-build] Successfully updated dist/index.html and dist/404.html');

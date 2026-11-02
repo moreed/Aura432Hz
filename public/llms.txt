@@ -1,0 +1,31 @@
+# Aura 432Hz — Harmonic Resonance & Ambient Meditation Sanctuary
+
+> Aura 432Hz is a Web Audio acoustic relaxation sanctuary offering real-time 432Hz Solfeggio soundscape synthesis, brainwave entrainment (Alpha, Theta, Delta), an autonomic breathwork pacer, interactive crystal sound harp, and offline wellness audio.
+
+## Sanctuary Applications & Tools
+
+- [Aura 432Hz Sanctuary Player](https://aura432hz.com/): Real-time Web Audio synthesizer generating pure 432Hz sine harmonics, Solfeggio frequencies (396Hz–963Hz), and binaural beat brainwave entrainment.
+- [Multi-Track Nature Soundscapes Mixer](https://aura432hz.com/mixer): Organic procedural soundscape mixer featuring rain, forest, ocean waves, Tibetan singing bowls, campfire, and wind layers.
+- [Harmonic Breath Pacer](https://aura432hz.com/breath): Coherent respiratory pacer supporting Box Breathing, 4-7-8 Relaxation, and Resonance Frequency breathwork for vagal nerve stimulation.
+- [Interactive Crystal Sound Harp](https://aura432hz.com/musical): Pentatonic crystal sound harp tuned to 432Hz natural pitch for mindful improvisation and tactile stress reduction.
+- [Acoustic Wellness Shop](https://aura432hz.com/gear): Curated collection of handmade Tibetan singing bowls, tuned chime bells, and acoustic sanctuary equipment.
+- [Sanctuary Community Gratitude Wall](https://aura432hz.com/community): Global meditation testimonials, shared listening reflections, and community wellness notes.
+- [Acoustic Science & Research Archive](https://aura432hz.com/blog): Peer-reviewed medical and psychoacoustic studies on 432Hz vs 440Hz autonomic nervous system effects and the 1884 Giuseppe Verdi Diapason Normale.
+- [Sanctuary Contact & Support](https://aura432hz.com/contact): Direct contact form for sanctuary inquiries, audio feedback, and editorial collaboration.
+
+## Technical & Discoverability Resources
+
+- [Agentic Resource Discovery (ARD) Manifest](https://aura432hz.com/.well-known/ard.json): Standard ARD discovery manifest for autonomous AI agents and language model indexers.
+- [Full LLM Knowledge Base](https://aura432hz.com/llms-full.txt): Comprehensive technical documentation on 432Hz tuning mathematics, Solfeggio scales, and acoustic synthesis parameters.
+- [XML Sitemap](https://aura432hz.com/sitemap.xml): Complete search engine sitemap containing all canonical sanctuary URLs and metadata.
+- [Web Application Manifest](https://aura432hz.com/manifest.webmanifest): Progressive Web App manifest for offline installation and home-screen shortcut launch.
+- [Robots Configuration](https://aura432hz.com/robots.txt): Machine crawler access directives and sitemap declarations.
+- [Terms of Service & EULA](https://aura432hz.com/legal/terms): Sanctuary audio licensing, intellectual property rights, and acoustic safety notices.
+- [Privacy Policy](https://aura432hz.com/legal/privacy): Privacy policy outlining zero tracking of health or biometric data and local offline vault storage.
+
+## Core Frequency & Acoustic Specifications
+
+- Fundamental Diapason: 432.00 Hz (Verdi pitch / Diapason Normale)
+- Solfeggio Scale Frequencies: 174 Hz (Foundation), 285 Hz (Cognition), 396 Hz (Liberation), 417 Hz (Change), 528 Hz (Transformation / Harmonic repair), 639 Hz (Connection), 741 Hz (Intuition), 852 Hz (Spiritual Order), 963 Hz (Transcendence).
+- Brainwave Entrainment Bands: Delta (0.5–4 Hz for restorative rest), Theta (4–8 Hz for meditation), Alpha (8–13 Hz for relaxed alertness and calm focus), Beta (13–30 Hz for active focus), Gamma (30–50 Hz for cognitive insight).
+- Audio Safety Protocol: Non-radio-frequency (0.00 MHz RF), pure acoustic mechanical sound waves, strict EBU R128 loudness normalization, and peak dynamic limiting.

@@ -386,6 +386,29 @@ async function startServer() {
     return html + injection;
   }
 
+  // Agentic Resource Discovery (ARD) Manifest Endpoint
+  app.get('/.well-known/ard.json', (_req, res) => {
+    const ardPath = fs.existsSync(path.resolve(distPath, '.well-known/ard.json'))
+      ? path.resolve(distPath, '.well-known/ard.json')
+      : path.resolve(__dirname, 'public/.well-known/ard.json');
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.sendFile(ardPath);
+  });
+
+  // llms.txt & llms-full.txt Endpoints for AI Model & Agent Discoverability
+  app.get(['/llms.txt', '/llms-full.txt'], (req, res) => {
+    const filename = req.path.replace('/', '');
+    const docPath = fs.existsSync(path.resolve(distPath, filename))
+      ? path.resolve(distPath, filename)
+      : path.resolve(__dirname, 'public', filename);
+    res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.sendFile(docPath);
+  });
+
   if (isProduction && hasDist) {
     // Production mode: Serve pre-built static client bundle from dist with immutable caching for assets
     app.use('/assets', express.static(path.resolve(distPath, 'assets'), {
@@ -393,6 +416,7 @@ async function startServer() {
       immutable: true,
     }));
     app.use(express.static(distPath, {
+      dotfiles: 'allow',
       maxAge: '1h',
     }));
     app.get('*', (req, res) => {
