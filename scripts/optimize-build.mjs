@@ -31,6 +31,17 @@ if (cssMatch) {
   console.log(`[optimize-build] Optimized render-blocking CSS: ${cssHref}`);
 }
 
+// 1b. Inject early modulepreload for main JavaScript bundle at the top of <head>
+const mainJsMatch = html.match(/<script\s+type="module"[^>]+src="(\/assets\/index-[^"]+\.js)"[^>]*>/i);
+if (mainJsMatch) {
+  const mainJsHref = mainJsMatch[1];
+  const earlyPreload = `\n    <link rel="modulepreload" href="${mainJsHref}" crossorigin>`;
+  if (!html.includes(`<link rel="modulepreload" href="${mainJsHref}"`)) {
+    html = html.replace(/(<meta\s+name="viewport"[^>]*>)/i, `$1${earlyPreload}`);
+    console.log(`[optimize-build] Injected early modulepreload for main entry: ${mainJsHref}`);
+  }
+}
+
 // 2. Remove any accidental preconnects to firestore or images in dist
 html = html.replace(/<link\s+rel="preconnect"\s+href="https:\/\/firestore\.googleapis\.com"[^>]*>\s*/gi, '');
 html = html.replace(/<link\s+rel="preconnect"\s+href="https:\/\/images\.unsplash\.com"[^>]*>\s*/gi, '');

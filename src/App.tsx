@@ -74,7 +74,6 @@ import {
 import { getRecommendedProductForPreset } from './services/presetProductRecommendations';
 import { useSiteContent } from './services/siteContent';
 import { AudioVisualizer } from './components/AudioVisualizer';
-import { NatureMixer } from './components/NatureMixer';
 import { FlatLogo } from './components/FlatLogo';
 import { SacredSocialLinks } from './components/SacredSocialIcons';
 import { AdSenseBanner } from './components/AdSenseBanner';
@@ -110,7 +109,8 @@ const CookieSettingsModal = React.lazy(() => import('./components/CookieSettings
 const SanctuarySearchModal = React.lazy(() => import('./components/SanctuarySearchModal').then((m) => ({ default: m.SanctuarySearchModal })));
 const AudioRegressionTestSuite = React.lazy(() => import('./components/AudioRegressionTestSuite').then((m) => ({ default: m.AudioRegressionTestSuite })));
 const OfflineExportModal = React.lazy(() => import('./components/OfflineExportModal').then((m) => ({ default: m.OfflineExportModal })));
-import { UnderConstructionPage } from './components/UnderConstructionPage';
+const NatureMixer = React.lazy(() => import('./components/NatureMixer').then((m) => ({ default: m.NatureMixer })));
+const UnderConstructionPage = React.lazy(() => import('./components/UnderConstructionPage').then((m) => ({ default: m.UnderConstructionPage })));
 const FloatingAdminMaintenanceBar = React.lazy(() => import('./components/FloatingAdminMaintenanceBar').then((m) => ({ default: m.FloatingAdminMaintenanceBar })));
 import { AUTHORIZED_ADMIN_EMAIL, isAuthorizedAdminEmail, getActiveAdminSession } from './services/adminAuth';
 import { analytics } from './services/analytics';
@@ -1052,18 +1052,20 @@ export default function App() {
             </div>
           </div>
         )}
-        <UnderConstructionPage
-          isAdmin={isAdmin}
-          isPreview={showAdminPreview}
-          onClosePreview={() => {
-            setShowAdminPreview(false);
-            setForceVisitorMode(false);
-          }}
-          onOpenAdminLogin={() => setIsAdminLoginModalOpen(true)}
-          onOpenLegalModal={openLegalModal}
-          onOpenCookieSettings={() => setIsCookieSettingsOpen(true)}
-          onOpenShareModal={() => setIsShareModalOpen(true)}
-        />
+        <React.Suspense fallback={null}>
+          <UnderConstructionPage
+            isAdmin={isAdmin}
+            isPreview={showAdminPreview}
+            onClosePreview={() => {
+              setShowAdminPreview(false);
+              setForceVisitorMode(false);
+            }}
+            onOpenAdminLogin={() => setIsAdminLoginModalOpen(true)}
+            onOpenLegalModal={openLegalModal}
+            onOpenCookieSettings={() => setIsCookieSettingsOpen(true)}
+            onOpenShareModal={() => setIsShareModalOpen(true)}
+          />
+        </React.Suspense>
         <React.Suspense fallback={null}>
           {isAdminLoginModalOpen && (
             <AdminLoginModal
@@ -2587,26 +2589,28 @@ export default function App() {
 
         {/* VIEW 2: SOUNDSCAPES & 32 SACRED PRESETS MIXER */}
         {activeTab === 'mixer' && (
-          <NatureMixer
-            sounds={natureSounds}
-            onSoundChange={handleNatureSoundChange}
-            onApplyPreset={(preset) => handleApplyPreset(preset, true)}
-            currentPresetId={currentPresetId}
-            isVolumeNormalized={isVolumeNormalized}
-            onToggleVolumeNormalized={handleToggleVolumeNormalized}
-            isPlaying={isPlaying}
-            onTogglePlay={handleTogglePlay}
-            isLoggedIn={Boolean(currentUser)}
-            isAdmin={currentUser?.role === 'admin'}
-            onOpenLogin={handleOpenLoginModal}
-            onExportWavForPreset={handleExportWavForPreset}
-            onOpenShopProduct={handleOpenShopProduct}
-            isMusicalMode={isMusicalMode}
-            onToggleMusicalMode={handleToggleMusicalMode}
-            musicalVolume={musicalVolume}
-            onMusicalVolumeChange={handleMusicalVolumeChange}
-            baseFreq={baseFreq}
-          />
+          <React.Suspense fallback={null}>
+            <NatureMixer
+              sounds={natureSounds}
+              onSoundChange={handleNatureSoundChange}
+              onApplyPreset={(preset) => handleApplyPreset(preset, true)}
+              currentPresetId={currentPresetId}
+              isVolumeNormalized={isVolumeNormalized}
+              onToggleVolumeNormalized={handleToggleVolumeNormalized}
+              isPlaying={isPlaying}
+              onTogglePlay={handleTogglePlay}
+              isLoggedIn={Boolean(currentUser)}
+              isAdmin={currentUser?.role === 'admin'}
+              onOpenLogin={handleOpenLoginModal}
+              onExportWavForPreset={handleExportWavForPreset}
+              onOpenShopProduct={handleOpenShopProduct}
+              isMusicalMode={isMusicalMode}
+              onToggleMusicalMode={handleToggleMusicalMode}
+              musicalVolume={musicalVolume}
+              onMusicalVolumeChange={handleMusicalVolumeChange}
+              baseFreq={baseFreq}
+            />
+          </React.Suspense>
         )}
 
         {/* VIEW 3: BREATH PACER */}
