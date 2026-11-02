@@ -64,6 +64,7 @@ export const FlatLogo: React.FC<FlatLogoProps> = ({
             }`}
             loading="eager"
             decoding="async"
+            fetchPriority="high"
           />
         </picture>
       </div>

@@ -1792,7 +1792,7 @@ export default function App() {
             <div
               ref={visualizerSectionRef}
               id="sanctuary-visualizer-section"
-              className={`bg-gradient-to-b from-slate-900/90 to-slate-950 border border-slate-800 rounded-3xl ${isCompactView ? 'p-3.5 sm:p-5' : 'p-4 sm:p-6 md:p-8'} shadow-2xl relative overflow-hidden`}
+              className={`bg-gradient-to-b from-slate-900/90 to-slate-950 border border-slate-800 rounded-3xl ${isCompactView ? 'p-3.5 sm:p-5' : 'p-4 sm:p-6 md:p-8'} shadow-2xl relative overflow-hidden min-h-[420px] lg:min-h-[460px]`}
             >
               <div className={`grid grid-cols-1 lg:grid-cols-12 ${isCompactView ? 'gap-4 md:gap-5' : 'gap-6 md:gap-8'} items-center`}>
                 {/* Visualizer Column */}
@@ -2292,7 +2292,7 @@ export default function App() {
             </div>
 
             {/* Featured Soundscapes & Nature Layers Bar */}
-            <div className="bg-slate-900/60 border border-slate-800/80 rounded-3xl p-5 shadow-xl space-y-3.5">
+            <div className="bg-slate-900/60 border border-slate-800/80 rounded-3xl p-5 shadow-xl space-y-3.5 cv-auto-section">
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-2.5">
                   <div className="p-2 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400">
@@ -2950,7 +2950,7 @@ export default function App() {
       )}
 
       {/* Minimized, Focused & Attractive Sanctuary Footer (Zero-Scroll Responsive Grid) */}
-      <footer className={`border-t border-slate-800/80 bg-slate-950/80 backdrop-blur-md transition-all overflow-hidden ${shouldShowBottomPlayer ? 'mb-20 sm:mb-24' : ''}`}>
+      <footer className={`border-t border-slate-800/80 bg-slate-950/80 backdrop-blur-md transition-all overflow-hidden cv-auto-footer ${shouldShowBottomPlayer ? 'mb-20 sm:mb-24' : ''}`}>
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-7 space-y-5">
           {/* Top Bar: Brand, Tagline & Sacred Social Community */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-4 border-b border-slate-800/70">

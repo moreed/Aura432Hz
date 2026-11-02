@@ -52,6 +52,17 @@ body {
   overscroll-behavior-x: none;
 }
 
+/* Content Visibility Optimization for Sub-Second Mobile & Desktop Initial Paint */
+.cv-auto-section {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 600px;
+}
+
+.cv-auto-footer {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 400px;
+}
+
 /* Aurora Sanctuary Typography Standard: Headings (h1 through h6) */
 h1, h2, h3, h4, h5, h6 {
   line-height: 1.25 !important;
