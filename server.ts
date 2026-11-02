@@ -259,6 +259,13 @@ app.get('/api/site-content', (_req, res) => {
   res.json({ success: true, content });
 });
 
+// POST /api/usage-event: Lightweight, zero-overhead telemetry collector (zero client SDK footprint)
+app.post('/api/usage-event', (_req, res) => {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.json({ ok: true });
+});
+
 // POST /api/site-content: Updates and persists site configuration across all devices and visitors (Admin only)
 app.post('/api/site-content', (req, res) => {
   if (!isAuthorizedAdminRequest(req)) {

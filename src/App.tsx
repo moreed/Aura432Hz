@@ -627,9 +627,11 @@ export default function App() {
     };
   }, []);
 
-  // Track feature navigation visits
+  // Track feature navigation visits (deferred to idle to eliminate main thread contention during initial paint)
+  const isInitialTabTrackedRef = useRef(false);
   useEffect(() => {
-    if (activeTab) {
+    if (!activeTab) return;
+    const track = () => {
       logUsageEvent({
         userId: currentUser?.uid || 'guest',
         userName: currentUser?.displayName || 'Guest Meditator',
@@ -640,6 +642,17 @@ export default function App() {
         frequencyHz: baseFreq,
         brainwaveMode,
       });
+    };
+
+    if (!isInitialTabTrackedRef.current) {
+      isInitialTabTrackedRef.current = true;
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(track, { timeout: 3500 });
+      } else {
+        setTimeout(track, 3000);
+      }
+    } else {
+      track();
     }
   }, [activeTab]);
 

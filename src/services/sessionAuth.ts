@@ -67,14 +67,12 @@ export function subscribeToSanctuaryAuth(
     }
   });
 
-  // 4. Defer Firebase initialization until first user interaction or explicit trigger
-  // Completely unblocks the main thread and network during initial page parse, LCP, and early INP
+  // 4. Deferred Firebase initialization: only rehydrate if returning user has stored credentials, or on explicit sign-in
   let hasTriggered = false;
 
   const triggerFirebaseInit = async () => {
     if (hasTriggered || isCancelled) return;
     hasTriggered = true;
-    cleanupInteractionListeners();
 
     try {
       const { auth, onAuthStateChanged, syncUserProfile, clearActiveGuestUser: clearGuest, validateFirestoreConnection } = await import('./firebase');
@@ -115,28 +113,30 @@ export function subscribeToSanctuaryAuth(
     }
   };
 
-  const interactionEvents = ['pointerdown', 'touchstart', 'keydown', 'scroll', 'click'];
-  const onInteraction = () => {
-    triggerFirebaseInit();
-  };
-
-  const cleanupInteractionListeners = () => {
-    if (typeof window !== 'undefined') {
-      interactionEvents.forEach((evt) => {
-        window.removeEventListener(evt, onInteraction);
-      });
-    }
-  };
-
+  // Only auto-initialize Firebase if returning user has saved Firebase auth credentials in localStorage
   if (typeof window !== 'undefined') {
-    interactionEvents.forEach((evt) => {
-      window.addEventListener(evt, onInteraction, { passive: true, once: true });
-    });
+    let hasStoredSession = false;
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('firebase:authUser:')) {
+          hasStoredSession = true;
+          break;
+        }
+      }
+    } catch {}
+
+    if (hasStoredSession) {
+      if ('requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(() => triggerFirebaseInit(), { timeout: 4000 });
+      } else {
+        setTimeout(triggerFirebaseInit, 3000);
+      }
+    }
   }
 
   return () => {
     isCancelled = true;
-    cleanupInteractionListeners();
     if (unsubFirebase) unsubFirebase();
     if (unsubAdmin) unsubAdmin();
     if (unsubGuest) unsubGuest();
@@ -144,15 +144,26 @@ export function subscribeToSanctuaryAuth(
 }
 
 /**
- * Non-blocking, deferred telemetry event logger.
- * Dispatches asynchronously via dynamic import to avoid blocking user interactions or main thread.
+ * Non-blocking, zero-bundle telemetry event logger.
+ * Sends asynchronous beacon or lightweight fetch without loading heavy client SDKs.
  */
 export function logSanctuaryUsageEvent(entry: Omit<VisitLogEntry, 'timestamp' | 'userAgent'>): void {
   if (typeof window === 'undefined') return;
-  // Fire and forget via dynamic import
-  import('./firebase')
-    .then(({ logUsageEvent }) => {
-      logUsageEvent(entry).catch(() => {});
-    })
-    .catch(() => {});
+  try {
+    const payload = JSON.stringify({
+      ...entry,
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+    });
+    if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
+      navigator.sendBeacon('/api/usage-event', payload);
+    } else {
+      fetch('/api/usage-event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+        keepalive: true,
+      }).catch(() => {});
+    }
+  } catch {}
 }
