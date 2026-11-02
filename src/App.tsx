@@ -655,34 +655,21 @@ export default function App() {
     };
   }, []);
 
-  // Sync state changes with audio engine
+  // Consolidated audio engine synchronization (skips redundant initial mount tick)
+  const isAudioMountedRef = useRef(false);
   useEffect(() => {
+    if (!isAudioMountedRef.current) {
+      isAudioMountedRef.current = true;
+      return;
+    }
     audioEngine.setBaseFrequency(baseFreq);
-  }, [baseFreq]);
-
-  useEffect(() => {
     audioEngine.setBrainwaveMode(brainwaveMode);
-  }, [brainwaveMode]);
-
-  useEffect(() => {
     audioEngine.setMasterVolume(masterVolume);
-  }, [masterVolume]);
-
-  useEffect(() => {
     audioEngine.setPulseDepth(pulseDepth);
-  }, [pulseDepth]);
-
-  useEffect(() => {
     audioEngine.setSubDrone(subDrone);
-  }, [subDrone]);
-
-  useEffect(() => {
     audioEngine.setHeadphoneBinaural(headphoneBinaural);
-  }, [headphoneBinaural]);
-
-  useEffect(() => {
     audioEngine.setVolumeNormalization(isVolumeNormalized);
-  }, [isVolumeNormalized]);
+  }, [baseFreq, brainwaveMode, masterVolume, pulseDepth, subDrone, headphoneBinaural, isVolumeNormalized]);
 
   // Session Listening Duration Ticker for Milestone Tracking
   useEffect(() => {
@@ -1520,7 +1507,7 @@ export default function App() {
                 className={`group py-1.5 sm:py-2 px-1 sm:px-1.5 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 active:scale-95 text-center cursor-pointer border ${
                   activeTab === 'player'
                     ? 'bg-aurora-teal/20 text-white border-aurora-teal/60 shadow-sm shadow-aurora-teal/20'
-                    : 'bg-slate-900/60 text-slate-300 border border-slate-800/80 hover:bg-slate-850 hover:text-white hover:border-slate-700'
+                    : 'bg-slate-900/80 text-slate-100 border border-slate-700/80 hover:bg-slate-800 hover:text-white hover:border-slate-600'
                 }`}
                 title="Sanctuary Player (432Hz Cosmic Tuning & Ambient Waves)"
               >
@@ -1536,7 +1523,7 @@ export default function App() {
                 className={`group py-1.5 sm:py-2 px-1 sm:px-1.5 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 active:scale-95 text-center relative cursor-pointer border ${
                   activeTab === 'mixer'
                     ? 'bg-aurora-teal/20 text-white border-aurora-teal/60 shadow-sm shadow-aurora-teal/20'
-                    : 'bg-slate-900/60 text-slate-300 border border-slate-800/80 hover:bg-slate-850 hover:text-white hover:border-slate-700'
+                    : 'bg-slate-900/80 text-slate-100 border border-slate-700/80 hover:bg-slate-850 hover:text-white hover:border-slate-600'
                 }`}
                 title="Soundscapes & Multi-track Acoustic Nature Mixer"
               >
@@ -1544,7 +1531,7 @@ export default function App() {
                 <span className="truncate md:hidden">Mixer</span>
                 <span className="hidden md:inline truncate">Soundscapes</span>
                 {natureSounds.filter((s) => s.enabled).length > 0 && (
-                  <span className="text-[9px] px-1 sm:px-1.5 py-0.2 rounded-full bg-aurora-teal/25 text-aurora-teal border border-aurora-teal/40 font-mono font-medium">
+                  <span className="text-[9px] px-1 sm:px-1.5 py-0.2 rounded-full bg-teal-950 text-teal-200 border border-teal-400/60 font-mono font-medium">
                     {natureSounds.filter((s) => s.enabled).length}
                   </span>
                 )}
@@ -1558,7 +1545,7 @@ export default function App() {
                 className={`group py-1.5 sm:py-2 px-1 sm:px-1.5 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 active:scale-95 text-center cursor-pointer border ${
                   activeTab === 'breath'
                     ? 'bg-emerald-500/25 text-emerald-100 border-emerald-400/60 shadow-sm shadow-emerald-500/20'
-                    : 'bg-slate-900/60 text-slate-300 border border-slate-800/80 hover:bg-slate-850 hover:text-white hover:border-slate-700'
+                    : 'bg-slate-900/80 text-slate-100 border border-slate-700/80 hover:bg-slate-850 hover:text-white hover:border-slate-600'
                 }`}
                 title="Breathwork Pacer (4-7-8 Vagal Stimulation & Coherence)"
               >
@@ -1575,7 +1562,7 @@ export default function App() {
                 className={`group py-1.5 sm:py-2 px-1 sm:px-1.5 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 active:scale-95 text-center cursor-pointer border ${
                   activeTab === 'musical'
                     ? 'bg-cosmic-lavender/25 text-white border-cosmic-lavender/60 shadow-sm shadow-cosmic-lavender/20'
-                    : 'bg-slate-900/60 text-slate-300 border border-slate-800/80 hover:bg-slate-850 hover:text-white hover:border-slate-700'
+                    : 'bg-slate-900/80 text-slate-100 border border-slate-700/80 hover:bg-slate-850 hover:text-white hover:border-slate-600'
                 }`}
                 title="Harmonic Sound Harp & Interactive Solfeggio Strings"
               >
@@ -1592,13 +1579,13 @@ export default function App() {
                 className={`group py-1.5 sm:py-2 px-1 sm:px-2 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 active:scale-95 text-center cursor-pointer border relative overflow-visible ${
                   activeTab === 'gear'
                     ? 'bg-amber-500/25 text-amber-100 border-amber-400/60 shadow-sm shadow-amber-500/20'
-                    : 'bg-slate-900/60 text-slate-300 border border-slate-800/80 hover:bg-slate-850 hover:text-white hover:border-slate-700'
+                    : 'bg-slate-900/80 text-slate-100 border border-slate-700/80 hover:bg-slate-850 hover:text-white hover:border-slate-600'
                 }`}
                 title="Aura Shop: Sacred Sound Gear, Singing Bowls & Audio Tools (Launching Soon)"
               >
                 <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 group-hover:scale-125 group-hover:scale-y-130 transition-transform duration-200 shrink-0" />
-                <span className="whitespace-nowrap font-bold text-slate-200 group-hover:text-amber-200">Aura Shop</span>
-                <span className="px-1.5 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[8px] sm:text-[9px] font-black uppercase tracking-wider leading-none shadow-sm shadow-amber-400/40 shrink-0 animate-pulse">
+                <span className="whitespace-nowrap font-bold text-slate-100 group-hover:text-amber-200">Aura Shop</span>
+                <span className="px-1.5 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[8px] sm:text-[9px] font-black uppercase tracking-wider leading-none shadow-sm shadow-amber-400/40 shrink-0">
                   Soon
                 </span>
               </button>
@@ -1611,7 +1598,7 @@ export default function App() {
                 className={`group py-1.5 sm:py-2 px-1 sm:px-1.5 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 active:scale-95 text-center cursor-pointer border ${
                   activeTab === 'community'
                     ? 'bg-rose-500/25 text-rose-100 border-rose-400/60 shadow-sm shadow-rose-500/20'
-                    : 'bg-slate-900/60 text-slate-300 border border-slate-800/80 hover:bg-slate-850 hover:text-white hover:border-slate-700'
+                    : 'bg-slate-900/80 text-slate-100 border border-slate-700/80 hover:bg-slate-850 hover:text-white hover:border-slate-600'
                 }`}
                 title="Sanctuary Global Meditation Community & Intentions"
               >
@@ -1627,7 +1614,7 @@ export default function App() {
                 className={`group py-1.5 sm:py-2 px-1 sm:px-1.5 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 active:scale-95 text-center cursor-pointer border ${
                   activeTab === 'blog'
                     ? 'bg-cosmic-lavender/25 text-white border-cosmic-lavender/60 shadow-sm shadow-cosmic-lavender/20'
-                    : 'bg-slate-900/60 text-slate-300 border border-slate-800/80 hover:bg-slate-850 hover:text-white hover:border-slate-700'
+                    : 'bg-slate-900/80 text-slate-100 border border-slate-700/80 hover:bg-slate-850 hover:text-white hover:border-slate-600'
                 }`}
                 title="Science & Blog: Historical Treatises, Acoustic Research & Clinical Studies"
               >
@@ -1644,13 +1631,13 @@ export default function App() {
                 className={`group py-1.5 sm:py-2 px-1 sm:px-1.5 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 active:scale-95 text-center cursor-pointer border ${
                   activeTab === 'contact'
                     ? 'bg-aurora-teal/20 text-white border-aurora-teal/60 shadow-sm shadow-aurora-teal/20'
-                    : 'bg-slate-900/60 text-slate-300 border border-slate-800/80 hover:bg-slate-850 hover:text-white hover:border-slate-700'
+                    : 'bg-slate-900/80 text-slate-100 border border-slate-700/80 hover:bg-slate-850 hover:text-white hover:border-slate-600'
                 }`}
                 title="Sanctuary Concierge & Community Feedback"
               >
                 <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-aurora-teal group-hover:scale-125 group-hover:rotate-12 transition-transform duration-200 shrink-0" />
                 <span className="truncate">Contact</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse transform-gpu will-change-opacity shrink-0 hidden sm:inline-block" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 hidden sm:inline-block" />
               </button>
 
               {/* 9. Studio Console (Admin Only) */}
@@ -1679,7 +1666,7 @@ export default function App() {
       <div className="w-full bg-gradient-to-r from-amber-500/15 via-slate-900 to-amber-500/15 border-b border-amber-500/30 px-3 py-1.5 sm:py-2 shadow-inner">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-2 sm:gap-4 flex-wrap">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-[10px] sm:text-xs uppercase tracking-wider shadow-sm shrink-0 animate-pulse">
+            <span className="px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-[10px] sm:text-xs uppercase tracking-wider shadow-sm shrink-0">
               Soon
             </span>
             <div className="flex items-center gap-1.5 text-xs sm:text-sm flex-wrap">

@@ -230,18 +230,22 @@ export async function fetchSiteContent(): Promise<SiteContentConfig> {
     console.debug('Server site content fetch notice:', err);
   }
 
-  // 2. Fetch from Firestore system_settings
+  // 2. Fetch from Firestore system_settings ONLY if authorized admin session is active
+  // Normal visitors receive lightweight server API / inlined content without downloading the Firestore SDK
   let firestoreContent: Partial<SiteContentConfig> | null = null;
-  try {
-    const { doc, getDoc } = await import('firebase/firestore');
-    const { db } = await import('./firebase');
-    const docRef = doc(db, 'system_settings', 'site_content');
-    const snap = await getDoc(docRef);
-    if (snap.exists()) {
-      firestoreContent = snap.data() as Partial<SiteContentConfig>;
+  const activeSession = getActiveAdminSession();
+  if (activeSession) {
+    try {
+      const { doc, getDoc } = await import('firebase/firestore');
+      const { db } = await import('./firebase');
+      const docRef = doc(db, 'system_settings', 'site_content');
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        firestoreContent = snap.data() as Partial<SiteContentConfig>;
+      }
+    } catch (e) {
+      console.debug('Firestore site content fetch notice:', e);
     }
-  } catch (e) {
-    console.debug('Firestore site content fetch notice:', e);
   }
 
   const remote = {
