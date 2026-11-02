@@ -1,4 +1,3 @@
-import type { UserProfile, VisitLogEntry } from './firebase';
 import {
   getActiveGuestUser,
   clearActiveGuestUser,
@@ -11,7 +10,48 @@ import {
   AUTHORIZED_ADMIN_EMAIL,
 } from './adminAuth';
 
-export type { UserProfile, VisitLogEntry };
+export type UserRole = 'admin' | 'team' | 'user';
+
+export type UserPermission =
+  | 'manage_content'
+  | 'manage_soundscapes'
+  | 'export_audio'
+  | 'manage_newsletter'
+  | 'moderate_community'
+  | 'view_analytics'
+  | 'manage_users';
+
+export interface UserProfile {
+  uid: string;
+  email: string;
+  displayName: string;
+  photoURL: string;
+  role: UserRole;
+  permissions?: UserPermission[];
+  status: 'active' | 'suspended';
+  totalVisits: number;
+  totalDurationSeconds: number;
+  createdAt: string;
+  lastLoginAt: string;
+  isGuest?: boolean;
+  lifetimeWavTracksDownloaded?: number;
+  lifetimeWavMinutesDownloaded?: number;
+}
+
+export interface VisitLogEntry {
+  userId?: string;
+  userName?: string;
+  userEmail?: string;
+  role?: string;
+  action: string;
+  feature?: string;
+  frequencyHz?: number;
+  brainwaveMode?: string;
+  durationSeconds?: number;
+  timestamp?: string;
+  userAgent?: string;
+}
+
 export { getActiveGuestUser, clearActiveGuestUser, onGuestAuthStateChanged, saveActiveGuestUser };
 
 const createAdminProfile = (email?: string): UserProfile => ({
@@ -67,7 +107,7 @@ export function subscribeToSanctuaryAuth(
     }
   });
 
-  // 4. Deferred Firebase initialization: only rehydrate if returning user has stored credentials, or on explicit sign-in
+  // 4. Deferred Firebase initialization: only rehydrate if returning user has stored credentials
   let hasTriggered = false;
 
   const triggerFirebaseInit = async () => {
@@ -75,41 +115,19 @@ export function subscribeToSanctuaryAuth(
     hasTriggered = true;
 
     try {
-      const { auth, onAuthStateChanged, syncUserProfile, clearActiveGuestUser: clearGuest, validateFirestoreConnection } = await import('./firebase');
-      if (isCancelled) return;
-
-      // Non-blocking ping test
-      validateFirestoreConnection().catch(() => {});
-
-      unsubFirebase = onAuthStateChanged(auth, async (fbUser: any) => {
-        if (isCancelled) return;
-        if (fbUser) {
-          try {
-            const profile = await syncUserProfile(fbUser);
-            if (!isCancelled) {
-              onUserChange(profile);
-              clearGuest();
-            }
-          } catch (err) {
-            console.error('Failed to sync user profile:', err);
-          }
-        } else {
-          // If active 2FA admin session exists, preserve admin role
-          const currentAdmin = getActiveAdminSession();
-          if (currentAdmin) {
-            if (!isCancelled) {
-              onUserChange(createAdminProfile(currentAdmin.email));
-            }
-            return;
-          }
-          const guest = getActiveGuestUser();
-          if (!isCancelled) {
-            onUserChange(guest as unknown as UserProfile | null);
-          }
-        }
-      });
+      const { initFirebaseSession } = await import('./firebaseAuthService');
+      const unsub = await initFirebaseSession(
+        onUserChange,
+        clearActiveGuestUser,
+        createAdminProfile,
+        getActiveAdminSession,
+        getActiveGuestUser
+      );
+      if (unsub && !isCancelled) {
+        unsubFirebase = unsub;
+      }
     } catch (err) {
-      console.warn('Deferred Firebase auth initialization notice:', err);
+      console.warn('Deferred auth initialization notice:', err);
     }
   };
 

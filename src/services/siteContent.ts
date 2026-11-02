@@ -236,13 +236,8 @@ export async function fetchSiteContent(): Promise<SiteContentConfig> {
   const activeSession = getActiveAdminSession();
   if (activeSession) {
     try {
-      const { doc, getDoc } = await import('firebase/firestore');
-      const { db } = await import('./firebase');
-      const docRef = doc(db, 'system_settings', 'site_content');
-      const snap = await getDoc(docRef);
-      if (snap.exists()) {
-        firestoreContent = snap.data() as Partial<SiteContentConfig>;
-      }
+      const { fetchFirestoreSiteContent } = await import('./adminFirestoreContent');
+      firestoreContent = await fetchFirestoreSiteContent();
     } catch (e) {
       console.debug('Firestore site content fetch notice:', e);
     }
@@ -383,10 +378,8 @@ export async function updateSiteContent(
 
   // 4. Persist to Firestore system_settings/site_content
   try {
-    const { doc, setDoc } = await import('firebase/firestore');
-    const { db } = await import('./firebase');
-    const docRef = doc(db, 'system_settings', 'site_content');
-    await setDoc(docRef, merged, { merge: true });
+    const { saveFirestoreSiteContent } = await import('./adminFirestoreContent');
+    await saveFirestoreSiteContent(merged);
   } catch (e) {
     console.debug('Firestore remote sync notice:', e);
   }
@@ -531,10 +524,8 @@ export async function subscribeToConstructionWaitlist(email: string): Promise<{ 
 
   // 2. Persist to Firestore construction_subscribers collection
   try {
-    const { collection, addDoc } = await import('firebase/firestore');
-    const { db } = await import('./firebase');
-    const colRef = collection(db, 'construction_subscribers');
-    await addDoc(colRef, subscriber);
+    const { saveConstructionSubscriberToFirestore } = await import('./adminFirestoreContent');
+    await saveConstructionSubscriberToFirestore(subscriber);
   } catch (e) {
     console.debug('Firestore subscriber save error (local saved):', e);
   }
@@ -547,16 +538,10 @@ export async function subscribeToConstructionWaitlist(email: string): Promise<{ 
  */
 export async function fetchConstructionSubscribers(): Promise<ConstructionSubscriber[]> {
   try {
-    const { collection, getDocs, query, orderBy, limit } = await import('firebase/firestore');
-    const { db } = await import('./firebase');
-    const colRef = collection(db, 'construction_subscribers');
-    const q = query(colRef, orderBy('timestamp', 'desc'), limit(100));
-    const snap = await getDocs(q);
-    if (!snap.empty) {
-      return snap.docs.map((d) => ({
-        id: d.id,
-        ...(d.data() as Omit<ConstructionSubscriber, 'id'>),
-      }));
+    const { fetchConstructionSubscribersFromFirestore } = await import('./adminFirestoreContent');
+    const subscribers = await fetchConstructionSubscribersFromFirestore();
+    if (subscribers && subscribers.length > 0) {
+      return subscribers;
     }
   } catch (e) {
     console.debug('Firestore subscribers query fallback to local:', e);

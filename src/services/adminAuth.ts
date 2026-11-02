@@ -197,12 +197,9 @@ export async function getAdminSecurityConfig(): Promise<AdminSecurityConfig> {
   };
 
   try {
-    const { doc, getDoc } = await import('firebase/firestore');
-    const { db } = await import('./firebase');
-    const docRef = doc(db, 'system_settings', 'admin_auth');
-    const snap = await getDoc(docRef);
-    if (snap.exists()) {
-      const data = snap.data() as Partial<AdminSecurityConfig>;
+    const { fetchFirestoreAdminConfig } = await import('./adminFirestoreContent');
+    const data = await fetchFirestoreAdminConfig();
+    if (data) {
       return {
         ...defaultConfig,
         ...data,
@@ -245,10 +242,8 @@ export async function updateAdminCredentials(newPassword?: string, newSecret?: s
   } catch {}
 
   try {
-    const { doc, setDoc } = await import('firebase/firestore');
-    const { db } = await import('./firebase');
-    const docRef = doc(db, 'system_settings', 'admin_auth');
-    await setDoc(docRef, updated, { merge: true });
+    const { saveFirestoreAdminConfig } = await import('./adminFirestoreContent');
+    await saveFirestoreAdminConfig(updated);
     return true;
   } catch (err) {
     console.debug('Failed to sync admin credentials to Firestore:', err);
