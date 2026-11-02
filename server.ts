@@ -393,7 +393,7 @@ async function startServer() {
       : path.resolve(__dirname, 'public/.well-known/ard.json');
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
     res.sendFile(ardPath);
   });
 
@@ -405,7 +405,7 @@ async function startServer() {
       : path.resolve(__dirname, 'public', filename);
     res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
     res.sendFile(docPath);
   });
 
