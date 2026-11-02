@@ -1,79 +1,131 @@
 {
   "$schema": "https://agentic-resource-discovery.org/schema/v1/ard.json",
   "version": "1.0.0",
-  "name": "Aura 432Hz Sanctuary",
-  "description": "Harmonic resonance & ambient meditation sanctuary producing 432Hz Solfeggio soundscapes, breath pacing, and acoustic wellness tools.",
-  "url": "https://aura432hz.com",
-  "provider": {
+  "publisher": {
     "name": "Aura 432Hz Sanctuary",
     "url": "https://aura432hz.com",
     "contactEmail": "moreed.raouf@gmail.com"
   },
-  "capabilities": [
+  "entries": [
     {
-      "id": "soundscape_synthesis",
-      "name": "432Hz Soundscape Synthesis",
-      "description": "Procedural real-time Web Audio API synthesizer for 432Hz harmonic sine waves and brainwave entrainment.",
-      "type": "audio/web-audio",
-      "url": "https://aura432hz.com/"
+      "identifier": "urn:air:aura432hz.com:sound:harmonic-player",
+      "displayName": "Aura 432Hz Sanctuary Player",
+      "type": "text/html",
+      "url": "https://aura432hz.com/",
+      "description": "Real-time procedural Web Audio API synthesizer generating pure 432Hz sine harmonics, 9 Solfeggio frequencies (174Hz to 963Hz), and binaural beat brainwave entrainment (Alpha, Theta, Delta, Beta, Gamma).",
+      "capabilities": [
+        "SoundscapeSynthesis",
+        "SolfeggioHarmonics",
+        "BinauralBeats",
+        "BrainwaveEntrainment",
+        "LoudnessLimiting"
+      ],
+      "representativeQueries": [
+        "Play 432Hz alpha wave meditation soundscape",
+        "Generate 432Hz delta frequency for deep sleep",
+        "Start 528Hz Solfeggio heart resonance audio",
+        "Synthesize pure 432Hz sine wave relaxation audio"
+      ],
+      "version": "1.0.0",
+      "updatedAt": "2026-11-02T00:00:00Z"
     },
     {
-      "id": "nature_mixer",
-      "name": "Harmonic Nature Mixer",
-      "description": "Multi-track procedural soundscape mixer for rain, ocean, wind, campfire, and singing bowls.",
-      "type": "audio/mixer",
-      "url": "https://aura432hz.com/mixer"
+      "identifier": "urn:air:aura432hz.com:wellness:breath-pacer",
+      "displayName": "Harmonic Breath Pacer",
+      "type": "text/html",
+      "url": "https://aura432hz.com/breath",
+      "description": "Interactive visual and acoustic coherent respiratory pacer calibrated for vagal nerve stimulation and heart rate variability (HRV) coherence with Box Breathing and 4-7-8 modes.",
+      "capabilities": [
+        "CoherentBreathing",
+        "VagusNerveStimulation",
+        "HeartRateVariabilityPacing",
+        "BoxBreathingTimer"
+      ],
+      "representativeQueries": [
+        "Start 4-7-8 relaxation breathwork session",
+        "Guide box breathing 4-second pace",
+        "Launch harmonic breathing pacer for stress relief"
+      ],
+      "version": "1.0.0",
+      "updatedAt": "2026-11-02T00:00:00Z"
     },
     {
-      "id": "breath_pacing",
-      "name": "Harmonic Breath Pacer",
-      "description": "Audio-guided autonomic nervous system coherent breathing pacer with customizable breathing cycles.",
-      "type": "interactive/utility",
-      "url": "https://aura432hz.com/breath"
+      "identifier": "urn:air:aura432hz.com:mixer:nature-soundscapes",
+      "displayName": "Multi-Track Nature Soundscapes Mixer",
+      "type": "text/html",
+      "url": "https://aura432hz.com/mixer",
+      "description": "Procedural multi-track organic soundscape mixer offering rain, ocean surf, deep forest birds, wind, campfire, and Tibetan singing bowls blended with 432Hz harmonics.",
+      "capabilities": [
+        "ProceduralAudioMixing",
+        "NatureSoundscapes",
+        "BinauralSpatialAudio",
+        "CustomPresetSaving"
+      ],
+      "representativeQueries": [
+        "Mix rain soundscape with 432Hz theta waves",
+        "Play ocean waves and Tibetan singing bowls",
+        "Blend forest ambient sounds with sleep timer"
+      ],
+      "version": "1.0.0",
+      "updatedAt": "2026-11-02T00:00:00Z"
     },
     {
-      "id": "crystal_harp",
-      "name": "Interactive Crystal Sound Harp",
-      "description": "Pentatonic crystal sound harp tuned to 432Hz natural pitch for mindful improvisation.",
-      "type": "interactive/instrument",
-      "url": "https://aura432hz.com/musical"
+      "identifier": "urn:air:aura432hz.com:instrument:crystal-harp",
+      "displayName": "Interactive Crystal Sound Harp",
+      "type": "text/html",
+      "url": "https://aura432hz.com/musical",
+      "description": "Interactive virtual crystal sound harp tuned to 432Hz natural pitch with pentatonic crystalline resonance for tactile mindfulness and improvisational sound therapy.",
+      "capabilities": [
+        "VirtualHarpSynthesis",
+        "PentatonicTuning432Hz",
+        "InteractiveChimes",
+        "TactileMindfulness"
+      ],
+      "representativeQueries": [
+        "Play virtual crystal sound harp tuned to 432Hz",
+        "Improvise on 432Hz chime scale",
+        "Explore interactive sound therapy chimes"
+      ],
+      "version": "1.0.0",
+      "updatedAt": "2026-11-02T00:00:00Z"
     },
     {
-      "id": "research_archive",
-      "name": "Acoustic Science & Research Archive",
-      "description": "Peer-reviewed acoustic literature, 1884 Diapason Normale history, and vagal entrainment studies.",
-      "type": "document/archive",
-      "url": "https://aura432hz.com/blog"
-    }
-  ],
-  "resources": [
+      "identifier": "urn:air:aura432hz.com:science:research-archive",
+      "displayName": "Acoustic Science & Research Archive",
+      "type": "text/html",
+      "url": "https://aura432hz.com/blog",
+      "description": "Peer-reviewed scientific articles, medical trial summaries, and historical archives detailing the 1884 Giuseppe Verdi Diapason Normale and the autonomic effects of 432Hz vs 440Hz tuning.",
+      "capabilities": [
+        "ScientificLiterature",
+        "AcousticMedicineResearch",
+        "DiapasonNormaleHistory",
+        "CardiovascularEntrainmentData"
+      ],
+      "representativeQueries": [
+        "What is the scientific research comparing 432Hz vs 440Hz music?",
+        "History of 1884 Giuseppe Verdi Diapason Normale pitch decree",
+        "Autonomic nervous system response to 432Hz sound"
+      ],
+      "version": "1.0.0",
+      "updatedAt": "2026-11-02T00:00:00Z"
+    },
     {
-      "name": "llms.txt",
+      "identifier": "urn:air:aura432hz.com:docs:llms-index",
+      "displayName": "Aura 432Hz LLM Context & Index",
       "type": "text/markdown",
       "url": "https://aura432hz.com/llms.txt",
-      "description": "Curated LLM context and sanctuary index."
-    },
-    {
-      "name": "llms-full.txt",
-      "type": "text/markdown",
-      "url": "https://aura432hz.com/llms-full.txt",
-      "description": "Full LLM technical documentation and acoustic frequency guide."
-    },
-    {
-      "name": "sitemap",
-      "type": "application/xml",
-      "url": "https://aura432hz.com/sitemap.xml",
-      "description": "XML sitemap of public routes."
-    },
-    {
-      "name": "ard-manifest",
-      "type": "application/json",
-      "url": "https://aura432hz.com/.well-known/ard.json",
-      "description": "Agentic Resource Discovery manifest."
+      "description": "Standardized LLM index outlining site taxonomy, acoustic synthesis tools, and frequency specifications for autonomous agents and LLMs.",
+      "capabilities": [
+        "MachineReadableContext",
+        "LLMDiscoverability",
+        "AcousticSiteIndex"
+      ],
+      "representativeQueries": [
+        "Fetch Aura 432Hz site index for LLM reasoning",
+        "Get 432Hz sanctuary tools documentation"
+      ],
+      "version": "1.0.0",
+      "updatedAt": "2026-11-02T00:00:00Z"
     }
-  ],
-  "links": {
-    "privacyPolicy": "https://aura432hz.com/legal/privacy",
-    "termsOfService": "https://aura432hz.com/legal/terms"
-  }
+  ]
 }
