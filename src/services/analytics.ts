@@ -69,12 +69,16 @@ class AnalyticsService {
       console.log(`[Aura Analytics] ${event}`, payload || {});
     }
 
-    // Window dataLayer bridge for GTM / GA4 if present
-    if (typeof window !== 'undefined' && (window as any).dataLayer) {
-      (window as any).dataLayer.push({
-        event,
-        ...payload,
-      });
+    // Window dataLayer & gtag bridge for GTM / GA4 if present
+    if (typeof window !== 'undefined') {
+      if (typeof (window as any).gtag === 'function') {
+        (window as any).gtag('event', event, payload || {});
+      } else if ((window as any).dataLayer) {
+        (window as any).dataLayer.push({
+          event,
+          ...payload,
+        });
+      }
     }
 
     // Keep lightweight local history for admin telemetry
