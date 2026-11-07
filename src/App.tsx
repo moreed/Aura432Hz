@@ -404,19 +404,22 @@ export default function App() {
     };
   }, []);
 
-  // Update dynamic SEO & URL path when changing tabs or toggling playback
+  // Scroll to top & sync URL path ONLY when changing navigation tabs
   useEffect(() => {
     setIsTabsBarHidden(false);
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     if (document.documentElement) document.documentElement.scrollTop = 0;
     if (document.body) document.body.scrollTop = 0;
 
-    applyPageSeo(activeTab, isPlaying);
-
     const targetPath = activeTab === 'player' ? '/' : `/${activeTab}`;
     if (window.location.pathname !== targetPath && !window.location.hash) {
       window.history.pushState(null, '', targetPath);
     }
+  }, [activeTab]);
+
+  // Update dynamic SEO without scrolling the page
+  useEffect(() => {
+    applyPageSeo(activeTab, isPlaying);
   }, [activeTab, isPlaying]);
 
   // Visualizer Section Ref & Scroll-Away Detection for Main Page
@@ -756,28 +759,42 @@ export default function App() {
 
     const isCurrentlyActive = audioEngine.getIsPlaying() || isPlaying;
     if (isCurrentlyActive) {
-      // 5-second graceful fade-out at end of streaming
-      setIsFadingOut(true);
-      audioEngine.pauseWithFadeOut(5.0, () => {
-        setIsPlaying(false);
-        setIsFadingOut(false);
-      });
-      analytics.track('play_paused_fade', { freq: baseFreq, durationSeconds: sessionListenSeconds });
+      // Immediate clean pause: silence playback instantly without lingering 1-second waves
+      setIsPlaying(false);
+      setIsFadingOut(false);
+      audioEngine.instantStop();
+      analytics.track('play_paused_instant', { freq: baseFreq, durationSeconds: sessionListenSeconds });
+
+      if (sessionStartTimeRef.current) {
+        const durationSec = Math.max(1, Math.round((Date.now() - sessionStartTimeRef.current) / 1000));
+        logUsageEvent({
+          userId: currentUser?.uid || 'guest',
+          userName: currentUser?.displayName || 'Guest Meditator',
+          userEmail: currentUser?.email || 'guest@aura432.sanctuary',
+          role: currentUser?.role || 'user',
+          action: 'session_end',
+          feature: 'player',
+          frequencyHz: baseFreq,
+          brainwaveMode,
+          durationSeconds: durationSec,
+        });
+        sessionStartTimeRef.current = null;
+      }
     } else {
       // Synchronously set isPlaying to true immediately so all play icons instantly turn to pause signs
       setIsPlaying(true);
       setIsFadingOut(false);
       sessionStartTimeRef.current = Date.now();
 
-      // Launch audio start: 5-second fade in, active atmosphere sounds start first, then main wave stream blooms in
+      // Launch audio start: 2-second smooth fade in, active atmosphere sounds start together with main tone
       audioEngine.cancelFadeOutAndResume();
       audioEngine
-        .start(5.0, 2.5)
+        .start(2.0, 0)
         .then(() => {
-          // Synchronously initialize active atmosphere nature sounds with 5-second fade in
+          // Synchronously initialize active atmosphere nature sounds with 2-second fade in
           natureSoundsRef.current.forEach((s) => {
             if (s.enabled) {
-              audioEngine.updateNatureSound(s.id, true, s.volume, 5.0);
+              audioEngine.updateNatureSound(s.id, true, s.volume, 2.0);
             }
           });
         })

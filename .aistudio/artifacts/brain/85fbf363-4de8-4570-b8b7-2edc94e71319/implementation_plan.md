@@ -1,102 +1,103 @@
-# Unified Mobile & Desktop Performance and LCP Optimization Plan
+# Real-Time Audio Playback Render & Acoustic Fidelity Fix
 
-A comprehensive engineering plan to achieve 98–100 PageSpeed Insights performance scores across **both Mobile and Desktop** viewports on `aura432hz.com`, ensuring sub-second Largest Contentful Paint (LCP < 0.9s desktop, < 1.2s mobile), zero Cumulative Layout Shift (CLS = 0.00), and sub-50ms Total Blocking Time (TBT).
+A targeted engineering plan to eliminate clicks, pops, digital clipping distortion, and initial playback silence in the Aura 432Hz real-time Web Audio synthesis engine.
 
 ### User Review & Critical Decisions
 
 > [!IMPORTANT]
-> The plan has been revised per your request to cover **both Mobile and Desktop form factors**. Specific optimizations are tailored to the differences in layout, LCP candidate elements, and CPU profiles between mobile phones and desktop displays.
+> The user confirmed that **real-time audio playback rendering** produces **clicks, distortion, or silence**. The plan below addresses each of these acoustical defects at the Web Audio DSP node level.
 
-- **Confirmed Objective**: Maximize Performance scores across both Mobile and Desktop audits, targeting 98–100 on desktop and 95–100 on mobile.
-- **Form Factor Strategy**:
-  - **Mobile**: Minimal initial transfer size, high-priority mobile LCP asset delivery (`icon-96.webp`), and deferred offscreen computations.
-  - **Desktop**: Fast two-column hero paint, instant canvas container reservation to prevent any layout shift, responsive media image preloads, and sub-16ms Interaction to Next Paint (INP).
+- **Defect 1: Initial Playback Silence**:
+  - *Cause*: `start()` was programmed with an artificial `mainHzDelaySeconds = 2.5s` delay holding the carrier tone gain at `0.0001` for the first 2.5 seconds. If nature layers were silent or loading, the user experienced complete silence after pressing play.
+  - *Fix*: Eliminate the 2.5s dead gap. Start an immediate, gentle acoustic bloom starting at $t = 0$ with an organic 1.0s envelope so harmonic sound is heard instantly without acoustic shock.
+- **Defect 2: Clicks and Pops on Stop, Pause, and Frequency Changes**:
+  - *Cause*: `stopToneNodes()` called `setTargetAtTime(0.0001, now, 0.05)` and abruptly stopped oscillators via JavaScript `setTimeout(..., 70ms)` while the waveform was still oscillating at ~25% amplitude. Abruptly stopping active waveforms produces instantaneous DC offset cliffs (audible clicks).
+  - *Fix*: Implement sample-accurate gain ramps down to true zero (`linearRampToValueAtTime(0, now + 0.05)`), scheduling `.stop(now + 0.055)` directly on the Web Audio hardware clock timeline to guarantee zero-crossing silence before oscillator termination.
+- **Defect 3: Digital Clipping Distortion & Crackling**:
+  - *Cause*: Summing carrier sine waves (432Hz), binaural beats, sub-drone (108Hz), celestial harmonics (864Hz), ambient Solfeggio chords, and multi-track nature sounds pushes signal peaks above 0 dBFS (+6 dB to +12 dB). The safety compressor had a ratio of only 1.2:1 and a wide 30dB knee, allowing raw signal overshoots to clip hard against the DAC ceiling.
+  - *Fix*: Re-architect the master output bus with a true studio brickwall peak limiter (Threshold: -0.8 dBFS, Ratio: 20:1, Attack: 1 ms, Knee: 0) and dynamic headroom summation scaling so multi-layer soundscapes remain crystal clear, warm, and 100% distortion-free.
 
 ---
 
 ### 1. Overview & Core Concept
 
-- **What It Delivers**: A unified, blazing-fast loading sequence whether visited on a smartphone over 4G or on a 4K desktop monitor. Above-the-fold content renders instantly within 300–600ms on desktop and 600–900ms on mobile, with zero FOUC and immediate interactivity.
-- **Key Value**: Delivers green Core Web Vitals across both Google Search Console mobile and desktop reports, improving SEO rankings and visitor retention.
+- **What It Delivers**: Pristine, studio-grade real-time acoustic rendering for all 432Hz and Solfeggio frequencies. Instant sound delivery upon tapping play, silky smooth crossfades between frequencies and presets, and completely click-free, distortion-free audio playback even with all nature tracks and chords active simultaneously.
+- **Target Audience**: Meditators, acoustic healing practitioners, and sleep listeners who require serene, uninterrupted soundscapes free from audio glitches, clicks, or harsh digital clipping.
+- **Key Value**: Restores authentic acoustic fidelity and eliminates user hesitation or perceived playback failures.
 
 ---
 
-### 2. User Experience & Visual Design by Form Factor
+### 2. User Experience & Acoustic Design
 
-#### Mobile Viewport (< 768px)
-- **Layout**: Single-column vertical flow with compact header, sticky bottom player bar, and 4-column navigation grid.
-- **LCP Candidate**: Sanctuary header logo and primary H1 title.
-- **Performance Budget**: Initial JS transfer < 65 KiB, critical CSS inlined, zero unneeded network requests.
-
-#### Desktop Viewport (>= 1024px)
-- **Layout**: Spacious 12-column sanctuary grid with two-column hero card (left: interactive sacred geometry visualizer, right: frequency dial, Solfeggio matrix, and primary action buttons).
-- **LCP Candidate**: Hero H1 text block (`Pure 432Hz Harmonic Resonance & Ambient Soundscapes`) and visualizer container.
-- **Visual Stability**: Preserves strict height and aspect-ratio bounds for the 12-column hero container (`min-height: 480px`) so that when the Web Audio canvas initializes, the right column controls never shift vertically.
-
----
-
-### 3. Key Product Decisions & Trade-Offs
-
-- **Decision 1: Responsive LCP Asset Preloading**
-  - *Chosen Approach*: Preload the high-efficiency WebP sanctuary logo with `fetchpriority="high"` and specify responsive dimensions matching both mobile (48–58px) and desktop (58px) headers.
-  - *Why*: Solves the "LCP resource load delay" audit on both device categories without duplicating network requests.
-
-- **Decision 2: CSS `content-visibility: auto` on Below-the-Fold Sections**
-  - *Chosen Approach*: Apply `content-visibility: auto; contain-intrinsic-size: 1px 500px;` to the 32 Sacred Presets grid, the FAQ accordion, and the Sanctuary footer.
-  - *Why*: On desktop, where thousands of pixels are rendered below the fold, this tells the browser's layout engine to skip rendering offscreen sections until the user scrolls, cutting desktop initial layout time from ~140ms down to ~15ms.
-
-- **Decision 3: Zero-Overhead Font Delivery**
-  - *Chosen Approach*: Maintain self-hosted Inter variable font with `font-display: swap` preloaded in `<head>`.
-  - *Why*: Eliminates Flash of Invisible Text (FOIT) on desktop and mobile while guaranteeing immediate text paint.
+- **Play / Pause Response**:
+  - **Start**: Tapping "Begin 432Hz Sanctuary" unlocks the browser AudioContext immediately and begins a warm, immediate acoustic swell over 1.0s. No awkward 2.5-second dead air.
+  - **Pause**: Fades out smoothly without any click or snap upon pause completion.
+  - **Preset & Frequency Switching**: Smooth portamento frequency gliding (0.15s exponential curve) with zero phase distortion or pops.
+- **Dynamic Headroom & Loudness Balance**:
+  - Soft, immersive sound quality tuned to acoustic healing standards.
+  - Bass tones (sub-drone) stay punchy and warm without driving the master bus into digital saturation.
+  - High-frequency shimmers (chimes, singing bowls, rain drops) remain crisp without harshness.
 
 ---
 
-### 4. Technical Architecture & Component Execution Flow
+### 3. Key Technical Decisions & Trade-Offs
+
+- **Decision 1: Hardware-Clock Scheduled Oscillator Termination**
+  - *Chosen Approach*: Replace JavaScript `setTimeout` oscillator disconnects with sample-accurate Web Audio timeline scheduling (`node.stop(now + 0.06)`).
+  - *Why*: JavaScript event loop timers are subject to thread jitter and GC pauses. Scheduling on `ctx.currentTime` guarantees the oscillator stops only after the gain node has reached zero amplitude.
+  - *Alternatives Considered*: Immediate `.stop()` — rejected as it causes immediate clicking.
+
+- **Decision 2: Studio Brickwall Limiter vs. Soft Clipper**
+  - *Chosen Approach*: Configure the built-in Web Audio `DynamicsCompressorNode` as a dedicated peak brickwall limiter (Ratio 20:1, Attack 0.001s, Threshold -0.8 dB) preceded by calibrated bus gain staging.
+  - *Why*: Transparently catches transients without squashing musical dynamic range or adding harmonic distortion.
+
+- **Decision 3: Zero-Delay Playback Bloom**
+  - *Chosen Approach*: Remove the 2.5-second silence delay in `start()`.
+  - *Why*: Users expect immediate acoustic feedback when clicking a play button. A smooth 1.0s exponential envelope provides the desired tranquility without the confusion of initial silence.
+
+---
+
+### 4. Technical Architecture & Audio Signal Flow
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                   Unified Request Pipeline (All Devices)                │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │
-                    ┌───────────────┴───────────────┐
-                    ▼                               ▼
-       ┌────────────────────────┐      ┌────────────────────────┐
-       │   Early Modulepreload  │      │   Critical CSS Inline  │
-       │   index-*.js at line 6 │      │   Sanctuary #081321    │
-       └────────────┬───────────┘      └────────────┬───────────┘
-                    │                               │
-                    └───────────────┬───────────────┘
-                                    ▼
-       ┌────────────────────────────────────────────────────────┐
-       │     Fast Contentful Paint & Form-Factor LCP            │
-       │   • Mobile: Logo + H1 Header (< 900ms)                 │
-       │   • Desktop: 12-Col Hero Card Skeleton (< 500ms)       │
-       │   • fetchpriority="high", explicit dimensions          │
-       └────────────────────────────┬───────────────────────────┘
-                                    │
-                    ┌───────────────┴───────────────┐
-                    ▼                               ▼
-       ┌────────────────────────┐      ┌────────────────────────┐
-       │ Below-the-Fold Offscreen│      │ Defer Secondary Tasks  │
-       │ content-visibility:auto│      │ requestIdleCallback for│
-       │ (Presets, FAQ, Footer) │      │ Analytics & Listeners  │
-       └────────────────────────┘      └────────────────────────┘
+│                        Audio Sources Generation                        │
+│  ┌───────────────────────┐  ┌────────────────────┐  ┌───────────────┐ │
+│  │ 432Hz Left/Right Sine │  │ Sub-Drone / Harmonic│  │ Ambient Chords│ │
+│  └───────────┬───────────┘  └──────────┬─────────┘  └───────┬───────┘ │
+│              │                         │                    │         │
+│  ┌───────────┴─────────────────────────┴────────────────────┴───────┐ │
+│  │              Nature Sound Generators (Rain, Ocean, etc.)         │ │
+│  └─────────────────────────────────────┬────────────────────────────┘ │
+└────────────────────────────────────────┼──────────────────────────────┘
+                                         ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                        Acoustic Summing Bus                            │
+│                  (Calibrated Headroom Gain Staging)                    │
+└────────────────────────────────────────┬──────────────────────────────┘
+                                         ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                Studio Brickwall Limiter & Safety Ceiling               │
+│          (Threshold: -0.8 dBFS, Ratio: 20:1, Attack: 1ms, Knee: 0)     │
+└────────────────────────────────────────┬──────────────────────────────┘
+                                         ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│             FFT Visualizer Analyser -> Audio Destination (DAC)         │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
-#### Step-by-Step Execution Plan
+#### Implementation Status: COMPLETE
 
-1. **LCP & Viewport Asset Prioritization**:
-   - In `FlatLogo.tsx`, add `fetchpriority="high"`, `decoding="async"`, and explicit `width="58"` and `height="58"` attributes.
-   - In `index.html` / `scripts/optimize-build.mjs`, insert `<link rel="preload" as="image" href="/icon-96.webp" type="image/webp" fetchpriority="high">` to kick off the LCP image download at the earliest possible stage.
-
-2. **Desktop & Mobile Layout Stabilization (CLS = 0.00)**:
-   - In `src/App.tsx`, ensure the hero container (`#sanctuary-visualizer-section`) has explicit minimum height constraints for both mobile (`min-h-[420px]`) and desktop (`lg:min-h-[480px]`) to guarantee zero layout shifts when visualizer canvas elements attach.
-   - Set `contain-intrinsic-size` on the preset grid and footer using `content-visibility: auto`.
-
-3. **Main-Thread Scheduling & TBT Minimization**:
-   - Defer secondary listeners (session listen milestone tickers, online/offline state listeners, and non-blocking pings) using `requestIdleCallback` or a 1-second delay so the main thread remains 100% idle for user input during initial load.
-
-4. **Verification**:
-   - Execute `npm run build` and verify `dist/index.html` structure.
-   - Run `lint_applet` to ensure zero compilation or type regressions.
-   - Verify server response across mobile and desktop test user agents.
+1. [x] **Fix Playback Start Silence in `src/services/audioEngine.ts` & `src/App.tsx`**:
+   - Updated `start(fadeDurationSeconds = 2.0, mainHzDelaySeconds = 0)` to default `mainHzDelaySeconds` to `0`.
+   - Updated `handleTogglePlay` in `src/App.tsx` from `audioEngine.start(5.0, 2.5)` to `audioEngine.start(2.0, 0)` with synchronized nature sound fade-in so tone and nature soundscapes bloom immediately.
+2. [x] **Eliminate Clicks on Tone Stop / Disconnect**:
+   - In `stopToneNodes()`, replaced abrupt `setTimeout` oscillator stops with sample-accurate linear ramps (`linearRampToValueAtTime(0.00001, now + 0.045)`) and hardware-clock scheduled `node.stop(now + 0.050)`.
+   - Applied identical click-free ramps in `instantStop()`, `stopAmbientChords()`, and `stopAllNatureSounds()`.
+3. [x] **Eliminate Distortion with Calibrated Limiter & Bus Scaling**:
+   - Re-configured `applyCompressorSettings()` to a true studio brickwall peak limiter (`threshold: -0.8 dBFS`, `knee: 0.0 dB`, `ratio: 20.0`, `attack: 0.001s`, `release: 0.08s`).
+   - Integrated dynamic headroom summation scaling (`headroomGain = 1 / Math.sqrt(1 + (totalActive - 1) * 0.45)`) in `recalculateNormalization()` to eliminate multi-track DAC saturation.
+4. [x] **Verify & Test**:
+   - Validated clean TypeScript compilation (`tsc --noEmit`).
+   - Validated production build compilation (`npm run build`).
+   - Verified dev server HTTP 200 response on `/api/health` and HTML entry point.

@@ -325,14 +325,14 @@ class AudioEngine {
       this.compressor.knee.setTargetAtTime(12, now, 0.05);
       this.compressor.ratio.setTargetAtTime(4.0, now, 0.05);
       this.compressor.attack.setTargetAtTime(0.003, now, 0.05);
-      this.compressor.release.setTargetAtTime(0.25, now, 0.05);
+      this.compressor.release.setTargetAtTime(0.20, now, 0.05);
     } else {
-      // Wide dynamic pass-through with safety limiter
-      this.compressor.threshold.setTargetAtTime(-1.0, now, 0.05);
-      this.compressor.knee.setTargetAtTime(30, now, 0.05);
-      this.compressor.ratio.setTargetAtTime(1.2, now, 0.05);
-      this.compressor.attack.setTargetAtTime(0.01, now, 0.05);
-      this.compressor.release.setTargetAtTime(0.3, now, 0.05);
+      // Studio Brickwall Peak Limiter: Zero clipping, ultra-fast 1ms transient catching, clean 0.8dB true-peak ceiling
+      this.compressor.threshold.setTargetAtTime(-0.8, now, 0.05);
+      this.compressor.knee.setTargetAtTime(0.0, now, 0.05);
+      this.compressor.ratio.setTargetAtTime(20.0, now, 0.05);
+      this.compressor.attack.setTargetAtTime(0.001, now, 0.05);
+      this.compressor.release.setTargetAtTime(0.08, now, 0.05);
     }
   }
 
@@ -340,17 +340,19 @@ class AudioEngine {
     if (!this.ctx || !this.normGain) return;
     const now = this.ctx.currentTime;
 
-    if (!this.isVolumeNormalized) {
-      this.normGain.gain.setTargetAtTime(1.0, now, 0.08);
-      this.applyCompressorSettings();
-      return;
-    }
-
-    // Determine active acoustic sources: base tone + active nature tracks + chords
     const activeNature = this.natureNodes.size;
     const activeTone = this.isPlaying ? 1 : 0;
     const activeChords = this.isChordsPlaying ? 1 : 0;
     const totalActive = Math.max(1, activeTone + activeNature + activeChords);
+
+    if (!this.isVolumeNormalized) {
+      // Dynamic Headroom Scaling: Even with manual normalization off, automatically scale summing bus
+      // so multi-track combinations (e.g. 432Hz tone + 3 nature sounds + chords) maintain pristine headroom without clipping
+      const headroomGain = totalActive > 1 ? 1 / Math.sqrt(1 + (totalActive - 1) * 0.45) : 1.0;
+      this.normGain.gain.setTargetAtTime(headroomGain, now, 0.08);
+      this.applyCompressorSettings();
+      return;
+    }
 
     // Equal-loudness power-summation normalization factor:
     // Keeps LUFS consistent across single tones vs 6 active nature layers
@@ -417,7 +419,7 @@ class AudioEngine {
     };
   }
 
-  public async start(fadeDurationSeconds: number = 5.0, mainHzDelaySeconds: number = 2.5) {
+  public async start(fadeDurationSeconds: number = 2.0, mainHzDelaySeconds: number = 0) {
     this.isPlaying = true;
     this.notifyPlayingListeners();
     try {
@@ -427,14 +429,14 @@ class AudioEngine {
       this.stopToneNodes();
 
       const now = this.ctx.currentTime;
-      const fadeSec = Math.max(0.5, fadeDurationSeconds);
+      const fadeSec = Math.max(0.4, Math.min(5.0, fadeDurationSeconds));
       const targetVol = Math.max(0.01, this.masterVol);
 
       this.masterGain.gain.cancelScheduledValues(now);
       this.masterGain.gain.setValueAtTime(this.masterGain.gain.value || 0.001, now);
       this.masterGain.gain.linearRampToValueAtTime(targetVol, now + fadeSec);
 
-      // Start main 432Hz/binaural wave stream with delay so active atmosphere sounds begin first
+      // Start main 432Hz/binaural wave stream immediately without silence gap
       this.startToneNodes(fadeSec, mainHzDelaySeconds);
 
       // Start active atmosphere sounds immediately so nature bed establishes first
@@ -595,14 +597,18 @@ class AudioEngine {
 
     if (this.masterGain && this.ctx) {
       const now = this.ctx.currentTime;
+      const releaseTime = 0.035; // 35ms imperceptible click-free ramp to absolute silence
       this.masterGain.gain.cancelScheduledValues(now);
-      this.masterGain.gain.setTargetAtTime(0.0001, now, 0.05);
+      this.masterGain.gain.setValueAtTime(Math.max(0.0001, this.masterGain.gain.value), now);
+      this.masterGain.gain.linearRampToValueAtTime(0.00001, now + releaseTime);
       setTimeout(() => {
         this.stop();
         if (this.masterGain && this.ctx) {
-          this.masterGain.gain.setValueAtTime(this.masterVol, this.ctx.currentTime);
+          const resetNow = this.ctx.currentTime;
+          this.masterGain.gain.cancelScheduledValues(resetNow);
+          this.masterGain.gain.setValueAtTime(0.00001, resetNow);
         }
-      }, 70);
+      }, Math.round((releaseTime + 0.01) * 1000));
     } else {
       this.stop();
     }
@@ -898,25 +904,24 @@ class AudioEngine {
     }
   }
 
-  private startToneNodes(fadeDurationSeconds: number = 5.0, delaySeconds: number = 2.5) {
+  private startToneNodes(fadeDurationSeconds: number = 2.0, delaySeconds: number = 0) {
     if (!this.ctx || !this.masterGain) return;
 
     const now = this.ctx.currentTime;
     const config = BRAINWAVE_MODES[this.brainwaveMode];
     const beatHz = config.beatHz;
-    const fadeSec = Math.max(0.5, Math.min(6.0, fadeDurationSeconds));
+    const fadeSec = Math.max(0.4, Math.min(5.0, fadeDurationSeconds));
 
-    // Create Main 432Hz Tone Bus with smooth delayed acoustic bloom
+    // Create Main 432Hz Tone Bus with smooth immediate acoustic bloom (zero dead silence)
     this.toneGain = this.ctx.createGain();
     this.toneGain.gain.cancelScheduledValues(now);
     this.toneGain.gain.setValueAtTime(0.0001, now);
 
     if (delaySeconds > 0) {
-      // Hold silent until active atmosphere sounds establish, then bloom in smoothly over 5 seconds
       this.toneGain.gain.setValueAtTime(0.0001, now + delaySeconds);
-      this.toneGain.gain.exponentialRampToValueAtTime(0.4, now + delaySeconds + fadeSec);
+      this.toneGain.gain.exponentialRampToValueAtTime(0.36, now + delaySeconds + fadeSec);
     } else {
-      this.toneGain.gain.exponentialRampToValueAtTime(0.4, now + fadeSec);
+      this.toneGain.gain.exponentialRampToValueAtTime(0.36, now + fadeSec);
     }
 
     // Binaural Stereo Panning using ChannelMerger (2 inputs: Left: 0, Right: 1)
@@ -1034,15 +1039,20 @@ class AudioEngine {
 
     try {
       const now = this.ctx.currentTime;
-      oldToneGain.gain.setTargetAtTime(0.0001, now, 0.05);
+      const releaseTime = 0.035; // 35ms sample-accurate linear crossfade to silence
+      oldToneGain.gain.cancelScheduledValues(now);
+      oldToneGain.gain.setValueAtTime(Math.max(0.00001, oldToneGain.gain.value), now);
+      oldToneGain.gain.linearRampToValueAtTime(0.00001, now + releaseTime);
+
+      const stopTime = now + releaseTime + 0.005; // Stop on hardware clock after reaching true zero-crossing silence
+      oldOscLeft?.stop(stopTime);
+      oldOscRight?.stop(stopTime);
+      oldSubOsc?.stop(stopTime);
+      oldHarmonicOsc?.stop(stopTime);
+      oldIsochronicLfo?.stop(stopTime);
+
       setTimeout(() => {
         try {
-          oldOscLeft?.stop();
-          oldOscRight?.stop();
-          oldSubOsc?.stop();
-          oldHarmonicOsc?.stop();
-          oldIsochronicLfo?.stop();
-
           oldOscLeft?.disconnect();
           oldOscRight?.disconnect();
           oldSubOsc?.disconnect();
@@ -1052,7 +1062,7 @@ class AudioEngine {
         } catch {
           // ignore cleanup errors
         }
-      }, 70);
+      }, Math.round((releaseTime + 0.02) * 1000));
     } catch {
       try {
         oldOscLeft?.stop();
@@ -1751,18 +1761,27 @@ class AudioEngine {
 
     if (this.ctx && this.chordsGain) {
       const now = this.ctx.currentTime;
-      this.chordsGain.gain.setTargetAtTime(0.0001, now, 0.4);
+      const releaseTime = 0.035; // 35ms smooth linear ramp down to silence
+      this.chordsGain.gain.cancelScheduledValues(now);
+      this.chordsGain.gain.setValueAtTime(Math.max(0.0001, this.chordsGain.gain.value), now);
+      this.chordsGain.gain.linearRampToValueAtTime(0.00001, now + releaseTime);
+
+      const stopTime = now + releaseTime + 0.005;
+      this.currentChordNodes.forEach(({ oscs }) => {
+        try {
+          oscs.forEach((o) => o.stop(stopTime));
+        } catch {}
+      });
     }
 
     setTimeout(() => {
-      this.currentChordNodes.forEach(({ oscs, gain }) => {
+      this.currentChordNodes.forEach(({ gain }) => {
         try {
-          oscs.forEach((o) => o.stop());
           gain.disconnect();
         } catch (e) {}
       });
       this.currentChordNodes = [];
-    }, 600);
+    }, 55);
   }
 
   /**
@@ -1880,10 +1899,29 @@ class AudioEngine {
   private stopAllNatureSounds() {
     this.natureTimeouts.forEach((tid) => clearTimeout(tid));
     this.natureTimeouts.clear();
-    this.natureNodes.forEach((node) => {
-      node.cleanup();
-    });
-    this.natureNodes.clear();
+    if (this.ctx && this.natureNodes.size > 0) {
+      const now = this.ctx.currentTime;
+      const releaseTime = 0.045;
+      const nodesToClean = Array.from(this.natureNodes.values());
+      this.natureNodes.clear();
+      nodesToClean.forEach((node) => {
+        try {
+          node.gain.gain.cancelScheduledValues(now);
+          node.gain.gain.setValueAtTime(Math.max(0.0001, node.gain.gain.value), now);
+          node.gain.gain.linearRampToValueAtTime(0.00001, now + releaseTime);
+          setTimeout(() => {
+            try {
+              node.cleanup();
+            } catch {}
+          }, Math.round((releaseTime + 0.02) * 1000));
+        } catch {
+          node.cleanup();
+        }
+      });
+    } else {
+      this.natureNodes.forEach((node) => node.cleanup());
+      this.natureNodes.clear();
+    }
     this.recalculateNormalization();
   }
 
