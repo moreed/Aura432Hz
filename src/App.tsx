@@ -74,6 +74,7 @@ import {
 import { getRecommendedProductForPreset } from './services/presetProductRecommendations';
 import { useSiteContent } from './services/siteContent';
 import { AudioVisualizer } from './components/AudioVisualizer';
+import { LoudnessMeterHUD } from './components/LoudnessMeterHUD';
 import { FlatLogo } from './components/FlatLogo';
 import { SacredSocialLinks } from './components/SacredSocialIcons';
 import { AdSenseBanner } from './components/AdSenseBanner';
@@ -2279,40 +2280,9 @@ export default function App() {
                           </button>
                         </div>
 
-                        {/* EBU R128 Volume Normalization Mode Switch */}
-                        <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                            <div>
-                              <div className="text-xs font-medium text-slate-200 flex items-center gap-1.5">
-                                <span>EBU R128 Loudness Auto-Level</span>
-                                <span className={`text-[9px] px-1.5 rounded font-bold uppercase ${isVolumeNormalized ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-800 text-slate-400 border border-slate-700'}`}>
-                                  {isVolumeNormalized ? 'Active' : 'Off'}
-                                </span>
-                              </div>
-                              <div className="text-[10px] text-slate-400">
-                                Normalizes multi-layer loudness & prevents clipping
-                              </div>
-                            </div>
-                          </div>
-
-                          <button
-                            type="button"
-                            role="switch"
-                            aria-checked={isVolumeNormalized}
-                            aria-label="EBU R128 Loudness Auto-Level Normalization"
-                            onClick={() => setIsVolumeNormalized(!isVolumeNormalized)}
-                            className={`w-9 h-5 rounded-full transition-colors relative p-0.5 focus:outline-none cursor-pointer ${
-                              isVolumeNormalized ? 'bg-emerald-500' : 'bg-slate-700'
-                            }`}
-                            title={isVolumeNormalized ? 'Disable Volume Normalization' : 'Enable Volume Normalization'}
-                          >
-                            <div
-                              className={`w-4 h-4 rounded-full bg-white transition-transform ${
-                                isVolumeNormalized ? 'translate-x-4' : 'translate-x-0'
-                              }`}
-                            />
-                          </button>
+                        {/* Dedicated EBU R128 Loudness Meter & Real-Time Auto-Leveler */}
+                        <div className="pt-2 border-t border-slate-800/80">
+                          <LoudnessMeterHUD className="mt-1" />
                         </div>
                       </div>
                     )}

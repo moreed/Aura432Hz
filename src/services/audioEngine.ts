@@ -3,6 +3,9 @@
  * Built with Web Audio API for 100% offline, studio-quality, seamless playback.
  */
 
+import { r128LoudnessMeter, LoudnessMetrics, TargetLoudnessPreset } from './r128LoudnessMeter';
+export { r128LoudnessMeter, type LoudnessMetrics, type TargetLoudnessPreset };
+
 export interface NatureSoundState {
   id: string;
   name: string;
@@ -239,6 +242,8 @@ class AudioEngine {
   private compressor: DynamicsCompressorNode | null = null;
   private normGain: GainNode | null = null;
   private isVolumeNormalized = true; // Enabled by default for balanced multi-layer playback
+  private autoLevelTrim = 1.0;
+  private autoLevelDeltaDb = 0.0;
 
   // Nature Sounds Map & Timeout Tracker
   private natureNodes: Map<string, { gain: GainNode; cleanup: () => void }> = new Map();
@@ -305,6 +310,11 @@ class AudioEngine {
       this.normGain.connect(this.compressor);
       this.compressor.connect(this.analyser);
       this.analyser.connect(this.ctx.destination);
+
+      // Connect ITU-R BS.1770-4 & EBU R128 loudness analysis and auto-leveler post-compressor
+      r128LoudnessMeter.connectSource(this.ctx, this.compressor, (trimGain, deltaDb) => {
+        this.setLoudnessAutoLevelTrim(trimGain, deltaDb);
+      });
     }
 
     if (this.ctx.state === 'suspended') {
@@ -336,6 +346,25 @@ class AudioEngine {
     }
   }
 
+  private calculateBaseNormFactor(): number {
+    const activeNature = this.natureNodes.size;
+    const activeTone = this.isPlaying ? 1 : 0;
+    const activeChords = this.isChordsPlaying ? 1 : 0;
+    const totalActive = Math.max(1, activeTone + activeNature + activeChords);
+    return 1 / Math.sqrt(1 + (totalActive - 1) * 0.65);
+  }
+
+  public setLoudnessAutoLevelTrim(trimMultiplier: number, deltaDb: number) {
+    this.autoLevelTrim = Math.max(0.25, Math.min(2.0, trimMultiplier));
+    this.autoLevelDeltaDb = deltaDb;
+    if (this.ctx && this.normGain && this.isVolumeNormalized && r128LoudnessMeter.getAutoLevelEnabled()) {
+      const now = this.ctx.currentTime;
+      const baseFactor = this.calculateBaseNormFactor();
+      const effectiveGain = Math.max(0.1, Math.min(1.5, baseFactor * this.autoLevelTrim));
+      this.normGain.gain.setTargetAtTime(effectiveGain, now, 0.25);
+    }
+  }
+
   public recalculateNormalization() {
     if (!this.ctx || !this.normGain) return;
     const now = this.ctx.currentTime;
@@ -354,10 +383,12 @@ class AudioEngine {
       return;
     }
 
-    // Equal-loudness power-summation normalization factor:
-    // Keeps LUFS consistent across single tones vs 6 active nature layers
-    const factor = 1 / Math.sqrt(1 + (totalActive - 1) * 0.65);
-    this.normGain.gain.setTargetAtTime(factor, now, 0.08);
+    // Equal-loudness power-summation factor combined with real-time EBU R128 auto-leveling
+    const baseFactor = 1 / Math.sqrt(1 + (totalActive - 1) * 0.65);
+    const effectiveGain = r128LoudnessMeter.getAutoLevelEnabled()
+      ? Math.max(0.1, Math.min(1.5, baseFactor * this.autoLevelTrim))
+      : baseFactor;
+    this.normGain.gain.setTargetAtTime(effectiveGain, now, 0.08);
     this.applyCompressorSettings();
   }
 
@@ -645,6 +676,79 @@ class AudioEngine {
     }
   }
 
+  /**
+   * Refactored transition logic using zero-crossing envelope detection.
+   * Calculates current wave cycle period T = 1 / f and aligns a micro ducking envelope
+   * to an exact wave cycle zero crossing, preventing any click or pop artifact during frequency switching.
+   */
+  public transitionFrequencyWithZeroCrossing(newFreq: number, newMode?: BrainwaveMode) {
+    const safeFreq = Math.min(
+      AudioEngine.SAFE_MAX_HZ,
+      Math.max(AudioEngine.SAFE_MIN_HZ, Number.isFinite(newFreq) ? Math.round(newFreq) : 432)
+    );
+    if (newMode) {
+      this.brainwaveMode = newMode;
+    }
+    this.baseFreq = safeFreq;
+
+    if (!this.isPlaying || !this.ctx) return;
+
+    if (!this.oscLeft || !this.toneGain) {
+      this.startToneNodes(0.4, 0);
+      return;
+    }
+
+    const now = this.ctx.currentTime;
+    const currentBase = this.oscLeft.frequency.value || safeFreq;
+    const currentPeriod = 1 / Math.max(40, currentBase);
+
+    // Align ducking window to an exact multiple of the wave period near 10-12ms
+    const cycles = Math.max(1, Math.round(0.010 / currentPeriod));
+    const duckDuration = cycles * currentPeriod;
+    const zcTime = now + duckDuration;
+
+    // Micro zero-crossing duck to 0 amplitude
+    this.toneGain.gain.cancelScheduledValues(now);
+    this.toneGain.gain.setValueAtTime(Math.max(0.0001, this.toneGain.gain.value), now);
+    this.toneGain.gain.linearRampToValueAtTime(0.00001, zcTime);
+
+    // Schedule frequency and filter updates at the exact zero-crossing timestamp
+    const config = BRAINWAVE_MODES[this.brainwaveMode];
+    const beatHz = config.beatHz;
+    const leftFreq = safeFreq;
+    const rightFreq = this.headphoneBinaural && beatHz > 0 ? safeFreq + beatHz : safeFreq;
+
+    this.oscLeft.frequency.setValueAtTime(leftFreq, zcTime);
+    this.oscRight.frequency.setValueAtTime(rightFreq, zcTime);
+
+    if (this.subOsc) {
+      this.subOsc.frequency.setValueAtTime(safeFreq / 4, zcTime);
+    }
+    if (this.subFilter) {
+      this.subFilter.frequency.setValueAtTime(Math.min(350, Math.max(120, (safeFreq / 4) * 1.6)), zcTime);
+    }
+    if (this.harmonicOsc) {
+      this.harmonicOsc.frequency.setValueAtTime(safeFreq * 2, zcTime);
+    }
+    if (this.toneFilter) {
+      const safeCutoff = Math.min(2400, Math.max(1200, safeFreq * 2.2));
+      this.toneFilter.frequency.setValueAtTime(safeCutoff, zcTime);
+    }
+    if (this.isochronicLfo) {
+      const lfoFreq = beatHz > 0 ? beatHz : 0.01;
+      this.isochronicLfo.frequency.setValueAtTime(lfoFreq, zcTime);
+    }
+
+    // Micro crossfade ramp back to standard tone operating volume (12ms)
+    const targetToneVol = 0.36;
+    this.toneGain.gain.setValueAtTime(0.00001, zcTime);
+    this.toneGain.gain.linearRampToValueAtTime(targetToneVol, zcTime + 0.012);
+
+    if (this.isMusicalModeEnabled && this.isChordsPlaying) {
+      this.reharmonizeChords();
+    }
+  }
+
   public setBaseFrequency(freq: number) {
     // Clinical & Acoustical Safety Boundary Check:
     // Only pure audible mechanical acoustic sound frequencies between 40Hz and 1200Hz are allowed.
@@ -653,25 +757,18 @@ class AudioEngine {
       AudioEngine.SAFE_MAX_HZ,
       Math.max(AudioEngine.SAFE_MIN_HZ, Number.isFinite(freq) ? Math.round(freq) : 432)
     );
-    this.baseFreq = safeFreq;
-    if (!this.isPlaying || !this.ctx) return;
-    if (!this.oscLeft || !this.toneGain) {
-      this.startToneNodes(0.4, 0);
+    if (this.isPlaying && this.ctx && this.oscLeft && this.toneGain) {
+      this.transitionFrequencyWithZeroCrossing(safeFreq);
     } else {
-      this.updateFrequencies();
-    }
-    if (this.isMusicalModeEnabled && this.isChordsPlaying) {
-      this.reharmonizeChords();
+      this.baseFreq = safeFreq;
     }
   }
 
   public setBrainwaveMode(mode: BrainwaveMode) {
-    this.brainwaveMode = mode;
-    if (!this.isPlaying || !this.ctx) return;
-    if (!this.oscLeft || !this.toneGain) {
-      this.startToneNodes(0.4, 0);
+    if (this.isPlaying && this.ctx && this.oscLeft && this.toneGain) {
+      this.transitionFrequencyWithZeroCrossing(this.baseFreq, mode);
     } else {
-      this.updateFrequencies();
+      this.brainwaveMode = mode;
     }
   }
 

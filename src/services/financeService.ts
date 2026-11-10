@@ -29,8 +29,18 @@ import {
 
 const STORAGE_KEY_EARNINGS = 'aura_finance_commission_earnings_v2';
 const STORAGE_KEY_EXPENSES = 'aura_finance_operating_expenses_v2';
+const STORAGE_KEY_CLEARED = 'aura_finance_data_cleared_v2';
 
-// Initial realistic default dataset
+// Set cleared flag by default to fulfill user request to clear all transactions
+if (typeof window !== 'undefined' && !localStorage.getItem(STORAGE_KEY_CLEARED)) {
+  try {
+    localStorage.setItem(STORAGE_KEY_CLEARED, 'true');
+    localStorage.setItem(STORAGE_KEY_EARNINGS, '[]');
+    localStorage.setItem(STORAGE_KEY_EXPENSES, '[]');
+  } catch {}
+}
+
+// Initial realistic default dataset (kept for optional reference or schema definition)
 const DEFAULT_COMMISSIONS: CommissionEarning[] = [
   {
     id: 'comm-001',
@@ -334,18 +344,14 @@ function getLocalItems<T>(key: string, defaults: T[]): T[] {
     const raw = localStorage.getItem(key);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
   } catch (err) {
     console.warn(`Error reading ${key} from localStorage:`, err);
   }
-  // Store defaults
-  try {
-    localStorage.setItem(key, JSON.stringify(defaults));
-  } catch {}
-  return defaults;
+  return [];
 }
 
 function saveLocalItems<T>(key: string, items: T[]): void {
@@ -357,15 +363,67 @@ function saveLocalItems<T>(key: string, items: T[]): void {
 }
 
 // ==========================================
+// Financial Ledger Clear & Reset Service
+// ==========================================
+export async function clearAllFinancialData(): Promise<void> {
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(STORAGE_KEY_CLEARED, 'true');
+      localStorage.setItem(STORAGE_KEY_EARNINGS, '[]');
+      localStorage.setItem(STORAGE_KEY_EXPENSES, '[]');
+    } catch {}
+  }
+
+  try {
+    const colRef = collection(db, 'commission_earnings');
+    const snapshot = await getDocs(colRef);
+    for (const d of snapshot.docs) {
+      try {
+        await deleteDoc(d.ref);
+      } catch (err) {
+        console.warn('Error deleting commission record:', err);
+      }
+    }
+  } catch (err) {
+    console.warn('Firestore clear commission_earnings error:', err);
+  }
+
+  try {
+    const colRef = collection(db, 'operating_expenses');
+    const snapshot = await getDocs(colRef);
+    for (const d of snapshot.docs) {
+      try {
+        await deleteDoc(d.ref);
+      } catch (err) {
+        console.warn('Error deleting operating expense record:', err);
+      }
+    }
+  } catch (err) {
+    console.warn('Firestore clear operating_expenses error:', err);
+  }
+}
+
+// ==========================================
 // Commission Earnings Service
 // ==========================================
 export async function fetchCommissionEarnings(): Promise<CommissionEarning[]> {
   try {
+    const isCleared = typeof window !== 'undefined' && localStorage.getItem(STORAGE_KEY_CLEARED) === 'true';
     const colRef = collection(db, 'commission_earnings');
     const q = query(colRef, orderBy('date', 'desc'));
     const snapshot = await getDocs(q);
 
     if (!snapshot.empty) {
+      if (isCleared) {
+        // If data was marked cleared, purge any lingering docs from Firestore
+        for (const d of snapshot.docs) {
+          try {
+            await deleteDoc(d.ref);
+          } catch {}
+        }
+        saveLocalItems(STORAGE_KEY_EARNINGS, []);
+        return [];
+      }
       const results: CommissionEarning[] = [];
       snapshot.forEach((d) => {
         results.push({ id: d.id, ...(d.data() as Omit<CommissionEarning, 'id'>) });
@@ -374,25 +432,12 @@ export async function fetchCommissionEarnings(): Promise<CommissionEarning[]> {
       return results;
     }
 
-    // Empty Firestore collection -> Seed default items to Firestore
-    const local = getLocalItems<CommissionEarning>(STORAGE_KEY_EARNINGS, DEFAULT_COMMISSIONS);
-    // Background async seed into Firestore
-    seedCommissionsToFirestore(local);
-    return local;
+    // Collection empty -> never re-seed demo data; maintain clean zero ledger
+    saveLocalItems(STORAGE_KEY_EARNINGS, []);
+    return [];
   } catch (err) {
     console.warn('Firestore fetchCommissionEarnings error, falling back to local cache:', err);
-    return getLocalItems<CommissionEarning>(STORAGE_KEY_EARNINGS, DEFAULT_COMMISSIONS);
-  }
-}
-
-async function seedCommissionsToFirestore(items: CommissionEarning[]): Promise<void> {
-  try {
-    for (const item of items) {
-      const docRef = doc(db, 'commission_earnings', item.id);
-      await setDoc(docRef, item, { merge: true });
-    }
-  } catch (e) {
-    console.warn('Seeding commissions to Firestore failed (offline/permission):', e);
+    return getLocalItems<CommissionEarning>(STORAGE_KEY_EARNINGS, []);
   }
 }
 
@@ -409,7 +454,7 @@ export async function saveCommissionEarning(
   };
 
   // Update local cache immediately
-  const localList = getLocalItems<CommissionEarning>(STORAGE_KEY_EARNINGS, DEFAULT_COMMISSIONS);
+  const localList = getLocalItems<CommissionEarning>(STORAGE_KEY_EARNINGS, []);
   const existingIdx = localList.findIndex((item) => item.id === id);
   if (existingIdx >= 0) {
     localList[existingIdx] = fullEarning;
@@ -430,7 +475,7 @@ export async function saveCommissionEarning(
 }
 
 export async function deleteCommissionEarning(id: string): Promise<boolean> {
-  const localList = getLocalItems<CommissionEarning>(STORAGE_KEY_EARNINGS, DEFAULT_COMMISSIONS);
+  const localList = getLocalItems<CommissionEarning>(STORAGE_KEY_EARNINGS, []);
   const updated = localList.filter((item) => item.id !== id);
   saveLocalItems(STORAGE_KEY_EARNINGS, updated);
 
@@ -448,11 +493,22 @@ export async function deleteCommissionEarning(id: string): Promise<boolean> {
 // ==========================================
 export async function fetchOperatingExpenses(): Promise<OperatingExpense[]> {
   try {
+    const isCleared = typeof window !== 'undefined' && localStorage.getItem(STORAGE_KEY_CLEARED) === 'true';
     const colRef = collection(db, 'operating_expenses');
     const q = query(colRef, orderBy('date', 'desc'));
     const snapshot = await getDocs(q);
 
     if (!snapshot.empty) {
+      if (isCleared) {
+        // If data was marked cleared, purge any lingering docs from Firestore
+        for (const d of snapshot.docs) {
+          try {
+            await deleteDoc(d.ref);
+          } catch {}
+        }
+        saveLocalItems(STORAGE_KEY_EXPENSES, []);
+        return [];
+      }
       const results: OperatingExpense[] = [];
       snapshot.forEach((d) => {
         results.push({ id: d.id, ...(d.data() as Omit<OperatingExpense, 'id'>) });
@@ -461,24 +517,12 @@ export async function fetchOperatingExpenses(): Promise<OperatingExpense[]> {
       return results;
     }
 
-    // Empty Firestore collection -> Seed default items to Firestore
-    const local = getLocalItems<OperatingExpense>(STORAGE_KEY_EXPENSES, DEFAULT_EXPENSES);
-    seedExpensesToFirestore(local);
-    return local;
+    // Collection empty -> never re-seed demo data; maintain clean zero ledger
+    saveLocalItems(STORAGE_KEY_EXPENSES, []);
+    return [];
   } catch (err) {
     console.warn('Firestore fetchOperatingExpenses error, falling back to local cache:', err);
-    return getLocalItems<OperatingExpense>(STORAGE_KEY_EXPENSES, DEFAULT_EXPENSES);
-  }
-}
-
-async function seedExpensesToFirestore(items: OperatingExpense[]): Promise<void> {
-  try {
-    for (const item of items) {
-      const docRef = doc(db, 'operating_expenses', item.id);
-      await setDoc(docRef, item, { merge: true });
-    }
-  } catch (e) {
-    console.warn('Seeding expenses to Firestore failed (offline/permission):', e);
+    return getLocalItems<OperatingExpense>(STORAGE_KEY_EXPENSES, []);
   }
 }
 
@@ -495,7 +539,7 @@ export async function saveOperatingExpense(
   };
 
   // Update local cache
-  const localList = getLocalItems<OperatingExpense>(STORAGE_KEY_EXPENSES, DEFAULT_EXPENSES);
+  const localList = getLocalItems<OperatingExpense>(STORAGE_KEY_EXPENSES, []);
   const existingIdx = localList.findIndex((item) => item.id === id);
   if (existingIdx >= 0) {
     localList[existingIdx] = fullExpense;
@@ -516,7 +560,7 @@ export async function saveOperatingExpense(
 }
 
 export async function deleteOperatingExpense(id: string): Promise<boolean> {
-  const localList = getLocalItems<OperatingExpense>(STORAGE_KEY_EXPENSES, DEFAULT_EXPENSES);
+  const localList = getLocalItems<OperatingExpense>(STORAGE_KEY_EXPENSES, []);
   const updated = localList.filter((item) => item.id !== id);
   saveLocalItems(STORAGE_KEY_EXPENSES, updated);
 

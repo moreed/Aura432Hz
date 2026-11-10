@@ -56,6 +56,7 @@ import {
   deleteCommissionEarning,
   saveOperatingExpense,
   deleteOperatingExpense,
+  clearAllFinancialData,
   filterItemsByDate,
   calculateFinancialSummary,
   exportFinancialCSV,
@@ -112,6 +113,8 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
 
   const [isDraggingFile, setIsDraggingFile] = useState<boolean>(false);
   const [showExportMenu, setShowExportMenu] = useState<boolean>(false);
+  const [showClearLedgerModal, setShowClearLedgerModal] = useState<boolean>(false);
+  const [clearingLedger, setClearingLedger] = useState<boolean>(false);
 
   const processFile = (file: File) => {
     setImportError(null);
@@ -527,6 +530,21 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
     triggerToast(`Expense marked as ${nextStatus.toUpperCase()}`);
   };
 
+  const handleClearAllLedger = async () => {
+    setClearingLedger(true);
+    try {
+      await clearAllFinancialData();
+      setEarnings([]);
+      setExpenses([]);
+      setShowClearLedgerModal(false);
+      triggerToast('All commission earnings and operating costs have been wiped.');
+    } catch (err) {
+      console.warn('Error clearing ledger:', err);
+    } finally {
+      setClearingLedger(false);
+    }
+  };
+
   // Helpers for category styling
   const getCategoryBadge = (category: ExpenseCategory) => {
     switch (category) {
@@ -617,6 +635,16 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
             >
               <Upload className="w-4 h-4 text-sky-400" />
               <span>Import Ledger</span>
+            </button>
+
+            {/* Clear Ledger Button */}
+            <button
+              onClick={() => setShowClearLedgerModal(true)}
+              className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-rose-950/30 hover:bg-rose-900/50 border border-rose-500/30 hover:border-rose-400 text-rose-300 font-medium text-xs sm:text-sm transition-all active:scale-95 shadow-sm cursor-pointer"
+              title="Wipe all commission earnings and operating cost transactions"
+            >
+              <Trash2 className="w-4 h-4 text-rose-400" />
+              <span>Clear Ledger</span>
             </button>
 
             {/* Export & Print Group */}
@@ -2429,6 +2457,60 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
                   )}
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Clear All Ledger Confirmation Modal */}
+      {showClearLedgerModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-stone-900 border border-rose-500/30 rounded-2xl p-6 max-w-md w-full shadow-2xl relative space-y-4">
+            <div className="flex items-center space-x-3 text-rose-400">
+              <div className="p-3 bg-rose-500/10 rounded-xl border border-rose-500/20">
+                <AlertCircle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-stone-100">Clear All Financial Records?</h3>
+                <p className="text-xs text-rose-400/90 font-mono">Commission Earnings &amp; Operating Costs</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-stone-300 leading-relaxed">
+              This will permanently wipe all commission earnings and operating expenses from both Firestore and local storage. Auto-reseeding will remain disabled, maintaining a clean zero-state ledger.
+            </p>
+
+            <div className="bg-stone-950/70 border border-stone-800 rounded-xl p-3 text-[11px] text-stone-400 font-mono space-y-1">
+              <div>Current Commissions: <span className="text-amber-300 font-semibold">{earnings.length} records</span></div>
+              <div>Current Operating Costs: <span className="text-rose-300 font-semibold">{expenses.length} records</span></div>
+            </div>
+
+            <div className="flex items-center justify-end space-x-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowClearLedgerModal(false)}
+                className="px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-medium cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleClearAllLedger}
+                disabled={clearingLedger}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow-md active:scale-95 transition-all flex items-center space-x-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {clearingLedger ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Wiping records...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Confirm Clear All</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

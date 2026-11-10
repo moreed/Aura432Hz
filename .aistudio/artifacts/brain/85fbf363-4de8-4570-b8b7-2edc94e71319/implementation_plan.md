@@ -1,103 +1,147 @@
-# Real-Time Audio Playback Render & Acoustic Fidelity Fix
+# Zero-Crossing Frequency Transitions, EBU R128 Loudness Meter & Financial Ledger Reset
 
-A targeted engineering plan to eliminate clicks, pops, digital clipping distortion, and initial playback silence in the Aura 432Hz real-time Web Audio synthesis engine.
+A comprehensive engineering plan to eliminate audio frequency switching pops via zero-crossing envelope detection, implement an ITU-R BS.1770 / EBU R128 real-time loudness metering and auto-leveling engine, and purge all Commission Earnings & Operating Costs data while disabling demo data reseeding.
 
 ### User Review & Critical Decisions
 
 > [!IMPORTANT]
-> The user confirmed that **real-time audio playback rendering** produces **clicks, distortion, or silence**. The plan below addresses each of these acoustical defects at the Web Audio DSP node level.
-
-- **Defect 1: Initial Playback Silence**:
-  - *Cause*: `start()` was programmed with an artificial `mainHzDelaySeconds = 2.5s` delay holding the carrier tone gain at `0.0001` for the first 2.5 seconds. If nature layers were silent or loading, the user experienced complete silence after pressing play.
-  - *Fix*: Eliminate the 2.5s dead gap. Start an immediate, gentle acoustic bloom starting at $t = 0$ with an organic 1.0s envelope so harmonic sound is heard instantly without acoustic shock.
-- **Defect 2: Clicks and Pops on Stop, Pause, and Frequency Changes**:
-  - *Cause*: `stopToneNodes()` called `setTargetAtTime(0.0001, now, 0.05)` and abruptly stopped oscillators via JavaScript `setTimeout(..., 70ms)` while the waveform was still oscillating at ~25% amplitude. Abruptly stopping active waveforms produces instantaneous DC offset cliffs (audible clicks).
-  - *Fix*: Implement sample-accurate gain ramps down to true zero (`linearRampToValueAtTime(0, now + 0.05)`), scheduling `.stop(now + 0.055)` directly on the Web Audio hardware clock timeline to guarantee zero-crossing silence before oscillator termination.
-- **Defect 3: Digital Clipping Distortion & Crackling**:
-  - *Cause*: Summing carrier sine waves (432Hz), binaural beats, sub-drone (108Hz), celestial harmonics (864Hz), ambient Solfeggio chords, and multi-track nature sounds pushes signal peaks above 0 dBFS (+6 dB to +12 dB). The safety compressor had a ratio of only 1.2:1 and a wide 30dB knee, allowing raw signal overshoots to clip hard against the DAC ceiling.
-  - *Fix*: Re-architect the master output bus with a true studio brickwall peak limiter (Threshold: -0.8 dBFS, Ratio: 20:1, Attack: 1 ms, Knee: 0) and dynamic headroom summation scaling so multi-layer soundscapes remain crystal clear, warm, and 100% distortion-free.
+> The user confirmed the following design and technical directions:
+> - **EBU R128 Loudness Tool**: A dedicated real-time meter UI component paired with continuous background auto-leveling across all active ambient layers.
+> - **Financial Ledger Purge**: Complete wipe of all Commission Earnings and Operating Costs records in Firestore and `localStorage`, with default demo data auto-reseeding permanently disabled.
+> - **Zero-Crossing Transitions**: Micro zero-crossing ducking (10–12ms smooth cosine window) down to true zero amplitude at the waveform phase zero-crossing, followed by clean frequency updates and immediate acoustic bloom.
 
 ---
 
 ### 1. Overview & Core Concept
 
-- **What It Delivers**: Pristine, studio-grade real-time acoustic rendering for all 432Hz and Solfeggio frequencies. Instant sound delivery upon tapping play, silky smooth crossfades between frequencies and presets, and completely click-free, distortion-free audio playback even with all nature tracks and chords active simultaneously.
-- **Target Audience**: Meditators, acoustic healing practitioners, and sleep listeners who require serene, uninterrupted soundscapes free from audio glitches, clicks, or harsh digital clipping.
-- **Key Value**: Restores authentic acoustic fidelity and eliminates user hesitation or perceived playback failures.
+- **Zero-Crossing Audio Engine Transition**:
+  - Eliminates the audible "click/pop" artifact when users switch between Solfeggio frequencies (e.g., 432Hz $\rightarrow$ 528Hz $\rightarrow$ 639Hz).
+  - Web Audio oscillator frequency changes on continuous sine waves produce phase velocity cliffs if modified mid-cycle. By computing the waveform's phase and scheduling a micro 10–12ms gain duck to $0.00001$ synchronized with a zero-crossing, the frequency shifts at zero amplitude, resulting in a silent, fluid transition.
+- **Real-Time EBU R128 Loudness Analysis & Auto-Leveler**:
+  - Implements the ITU-R BS.1770-4 / EBU R128 standard: stage-1 high-shelf K-weighting filter, stage-2 high-pass RLB filter, gating, and mean-square energy integration to compute Momentary (400ms), Short-term (3s), and Integrated LUFS.
+  - Dynamically calculates the perceptual loudness delta as users toggle combinations of nature sounds (e.g., Rain + Ocean Waves + Tibetan Singing Bowls) and adjusts master normalization so the acoustic experience remains coherent and comfortable without volume spikes.
+  - A sleek, floating or docked acoustic telemetry HUD displaying real-time LUFS, target loudness (-23 LUFS / -14 LUFS presets), true-peak safety ceiling, and an Auto-Level toggle.
+- **Commission Earnings & Operating Costs Purge**:
+  - Completely clears all demo and recorded transactions from `localStorage` (`aura_finance_commission_earnings_v2`, `aura_finance_operating_expenses_v2`) and Firestore collections (`commission_earnings`, `operating_expenses`).
+  - Updates `financeService.ts` to disable automatic demo data re-seeding when collections are empty, introducing an explicit initialized state flag (`aura_finance_data_initialized: 'empty'`).
+  - Adds a direct "Clear All Ledger Records" administrative action to `EarningsDashboard.tsx` with confirmation safeguards.
 
 ---
 
-### 2. User Experience & Acoustic Design
+### 2. User Experience & Visual Design
 
-- **Play / Pause Response**:
-  - **Start**: Tapping "Begin 432Hz Sanctuary" unlocks the browser AudioContext immediately and begins a warm, immediate acoustic swell over 1.0s. No awkward 2.5-second dead air.
-  - **Pause**: Fades out smoothly without any click or snap upon pause completion.
-  - **Preset & Frequency Switching**: Smooth portamento frequency gliding (0.15s exponential curve) with zero phase distortion or pops.
-- **Dynamic Headroom & Loudness Balance**:
-  - Soft, immersive sound quality tuned to acoustic healing standards.
-  - Bass tones (sub-drone) stay punchy and warm without driving the master bus into digital saturation.
-  - High-frequency shimmers (chimes, singing bowls, rain drops) remain crisp without harshness.
-
----
-
-### 3. Key Technical Decisions & Trade-Offs
-
-- **Decision 1: Hardware-Clock Scheduled Oscillator Termination**
-  - *Chosen Approach*: Replace JavaScript `setTimeout` oscillator disconnects with sample-accurate Web Audio timeline scheduling (`node.stop(now + 0.06)`).
-  - *Why*: JavaScript event loop timers are subject to thread jitter and GC pauses. Scheduling on `ctx.currentTime` guarantees the oscillator stops only after the gain node has reached zero amplitude.
-  - *Alternatives Considered*: Immediate `.stop()` — rejected as it causes immediate clicking.
-
-- **Decision 2: Studio Brickwall Limiter vs. Soft Clipper**
-  - *Chosen Approach*: Configure the built-in Web Audio `DynamicsCompressorNode` as a dedicated peak brickwall limiter (Ratio 20:1, Attack 0.001s, Threshold -0.8 dB) preceded by calibrated bus gain staging.
-  - *Why*: Transparently catches transients without squashing musical dynamic range or adding harmonic distortion.
-
-- **Decision 3: Zero-Delay Playback Bloom**
-  - *Chosen Approach*: Remove the 2.5-second silence delay in `start()`.
-  - *Why*: Users expect immediate acoustic feedback when clicking a play button. A smooth 1.0s exponential envelope provides the desired tranquility without the confusion of initial silence.
+- **EBU R128 Metering Interface**:
+  - **Aesthetic Tone**: Clinical precision telemetry adhering to the Science & Laboratory Visual Reference (`#0B0E17` obsidian surface, hairline slate borders, phosphor cyan `#06B6D4` / amber `#F59E0B` telemetry bars, `font-mono tabular-nums`).
+  - **Loudness HUD Component**:
+    - Dual horizontal/vertical multi-segment LED meter: Momentary LUFS (responsive), Short-Term LUFS (smooth), and Integrated LUFS (stable).
+    - Clear numeric readout: e.g. `-14.2 LUFS · Target: -14.0 LUFS · Range: 3.8 LU`.
+    - Compact docked mode on the player page with an expandable telemetry drawer.
+    - Quick "EBU R128 Auto-Level" toggle switch with status indicator (`ACTIVE · DYNAMIC HEADROOM ENGAGED`).
+- **Solfeggio Frequency Switch Feedback**:
+  - Switching frequency chips (174Hz, 285Hz, 396Hz, 417Hz, 432Hz, 528Hz, 639Hz, 741Hz, 852Hz, 963Hz) transitions immediately with zero mechanical clicks, pops, or speaker snaps.
+  - Visual frequency badge pulses smoothly during the 12ms micro-transition.
+- **Financial Dashboard Zero-State**:
+  - `EarningsDashboard.tsx` transitions cleanly from populated tables to an authentic empty state with clear typography (`No Active Commission Transactions`, `Operating Costs Cleared`).
+  - "Clear All Ledger Records" button with destructive confirmation dialog (`Are you sure? This will wipe all commission and cost entries across local storage and Firestore`).
 
 ---
 
-### 4. Technical Architecture & Audio Signal Flow
+### 3. Key Product Decisions & Trade-Offs
+
+- **Decision 1: Real-Time EBU R128 Filter Nodes vs. Time-Domain Approximation**
+  - *Chosen Approach*: Implement genuine ITU-R BS.1770 K-weighting pre-filtering via native Web Audio `BiquadFilterNode` instances (Stage 1: High-shelf filter $+4\text{ dB}$ at $1.5\text{ kHz}$, Stage 2: High-pass RLB filter $-3\text{ dB}$ at $38\text{ Hz}$) feeding an `AnalyserNode` with mean-square root-energy summation.
+  - *Why*: True EBU R128 compliance accurately models the acoustic sensitivity of the human ear across frequency bands, preventing bass-heavy tones (like sub-drone or ocean rumble) from falsely dominating loudness measurements.
+  - *Alternatives Considered*: Standard RMS or peak metering — rejected because RMS does not match human perceptual loudness and fails EBU R128 standards.
+
+- **Decision 2: Micro Zero-Crossing Ducking vs. Continuous Frequency Glissando**
+  - *Chosen Approach*: 12ms micro zero-crossing envelope ducking.
+  - *Why*: Continuous frequency glissando (portamento) sounds like a sci-fi pitch bend, which is jarring during meditation. Micro-ducking at the zero-crossing is acoustically transparent ($< 15\text{ms}$ is below human perceptual threshold for silence) and completely avoids DC step discontinuities.
+
+- **Decision 3: Disabling Demo Data Reseeding**
+  - *Chosen Approach*: Replace the `DEFAULT_COMMISSIONS` and `DEFAULT_EXPENSES` fallback seeding with an explicit initialized flag in storage.
+  - *Why*: In production applications, when an administrator wipes records, they expect the database to remain empty until real business operations occur, rather than resurrecting mock entries on the next page refresh.
+
+---
+
+### 4. Technical Architecture & Data Strategy
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                        Audio Sources Generation                        │
+│                        Acoustic Synthesis Core                         │
 │  ┌───────────────────────┐  ┌────────────────────┐  ┌───────────────┐ │
-│  │ 432Hz Left/Right Sine │  │ Sub-Drone / Harmonic│  │ Ambient Chords│ │
+│  │ Solfeggio Oscillators │  │ Nature Sound Beds  │  │ Ambient Chords│ │
 │  └───────────┬───────────┘  └──────────┬─────────┘  └───────┬───────┘ │
 │              │                         │                    │         │
-│  ┌───────────┴─────────────────────────┴────────────────────┴───────┐ │
-│  │              Nature Sound Generators (Rain, Ocean, etc.)         │ │
+│              ▼                         ▼                    ▼         │
+│  ┌──────────────────────────────────────────────────────────────────┐ │
+│  │ Zero-Crossing Micro-Envelope Controller (12ms De-Click Ducking)  │ │
 │  └─────────────────────────────────────┬────────────────────────────┘ │
 └────────────────────────────────────────┼──────────────────────────────┘
                                          ▼
 ┌────────────────────────────────────────────────────────────────────────┐
-│                        Acoustic Summing Bus                            │
-│                  (Calibrated Headroom Gain Staging)                    │
+│                        Master Summing Bus                              │
+│         (Dynamic Headroom & EBU R128 Auto-Leveling Target)             │
 └────────────────────────────────────────┬──────────────────────────────┘
                                          ▼
 ┌────────────────────────────────────────────────────────────────────────┐
-│                Studio Brickwall Limiter & Safety Ceiling               │
-│          (Threshold: -0.8 dBFS, Ratio: 20:1, Attack: 1ms, Knee: 0)     │
-└────────────────────────────────────────┬──────────────────────────────┘
-                                         ▼
+│                     ITU-R BS.1770 K-Weighting Bus                      │
+│   ┌───────────────────────────┐     ┌────────────────────────────┐    │
+│   │ Stage 1: High-Shelf Filter│ ──> │ Stage 2: High-Pass Filter  │    │
+│   │ (+4 dB @ 1.5 kHz)         │     │ (12 dB/oct @ 38 Hz)        │    │
+│   └───────────────────────────┘     └─────────────┬──────────────┘    │
+│                                                   ▼                   │
+│                                     ┌────────────────────────────┐    │
+│                                     │ EBU R128 Loudness Engine   │    │
+│                                     │ (Momentary / Short / Int)  │    │
+│                                     └─────────────┬──────────────┘    │
+└───────────────────────────────────────────────────┼────────────────────┘
+                                                    ▼
 ┌────────────────────────────────────────────────────────────────────────┐
-│             FFT Visualizer Analyser -> Audio Destination (DAC)         │
+│        EBU R128 Telemetry HUD  &  Output Destination (DAC / Speakers)  │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
-#### Implementation Status: COMPLETE
+#### Step-by-Step Implementation Steps
 
-1. [x] **Fix Playback Start Silence in `src/services/audioEngine.ts` & `src/App.tsx`**:
-   - Updated `start(fadeDurationSeconds = 2.0, mainHzDelaySeconds = 0)` to default `mainHzDelaySeconds` to `0`.
-   - Updated `handleTogglePlay` in `src/App.tsx` from `audioEngine.start(5.0, 2.5)` to `audioEngine.start(2.0, 0)` with synchronized nature sound fade-in so tone and nature soundscapes bloom immediately.
-2. [x] **Eliminate Clicks on Tone Stop / Disconnect**:
-   - In `stopToneNodes()`, replaced abrupt `setTimeout` oscillator stops with sample-accurate linear ramps (`linearRampToValueAtTime(0.00001, now + 0.045)`) and hardware-clock scheduled `node.stop(now + 0.050)`.
-   - Applied identical click-free ramps in `instantStop()`, `stopAmbientChords()`, and `stopAllNatureSounds()`.
-3. [x] **Eliminate Distortion with Calibrated Limiter & Bus Scaling**:
-   - Re-configured `applyCompressorSettings()` to a true studio brickwall peak limiter (`threshold: -0.8 dBFS`, `knee: 0.0 dB`, `ratio: 20.0`, `attack: 0.001s`, `release: 0.08s`).
-   - Integrated dynamic headroom summation scaling (`headroomGain = 1 / Math.sqrt(1 + (totalActive - 1) * 0.45)`) in `recalculateNormalization()` to eliminate multi-track DAC saturation.
-4. [x] **Verify & Test**:
-   - Validated clean TypeScript compilation (`tsc --noEmit`).
-   - Validated production build compilation (`npm run build`).
-   - Verified dev server HTTP 200 response on `/api/health` and HTML entry point.
+1. **Zero-Crossing Transition Controller (`src/services/audioEngine.ts`)**:
+   - Create `transitionFrequencyWithZeroCrossing(targetFreq: number, targetMode?: BrainwaveMode)`:
+     - Compute the current period $T = 1 / \text{baseFreq}$.
+     - Determine the nearest zero-crossing timestamp $t_{\text{zc}} = \text{now} + (T - (\text{now} \pmod T))$.
+     - Ramp `toneGain` down to `0.00001` over $10\text{ms}$ landing at $t_{\text{zc}}$.
+     - Update oscillator frequencies at $t_{\text{zc}}$ where waveform amplitude is zero.
+     - Ramp `toneGain` back to target amplitude over $12\text{ms}$ using a smooth linear/cosine curve.
+   - Wire this method into `setBaseFrequency`, `setBrainwaveMode`, and `smartFadePreset`.
+
+2. **EBU R128 Real-Time Loudness Analysis Engine (`src/services/audioEngine.ts` & `src/services/loudnessMeter.ts`)**:
+   - Construct K-weighting pre-filter node chain connected post-master summing:
+     - `stage1`: `biquadFilter.type = 'highshelf'`, `frequency = 1500`, `gain = 4.0`.
+     - `stage2`: `biquadFilter.type = 'highpass'`, `frequency = 38`, `Q = 0.5`.
+     - `loudnessAnalyser`: `analyserNode` reading calibrated time-domain sample buffers.
+   - Implement real-time LUFS calculations:
+     - Momentary Loudness $M$ ($400\text{ms}$ window).
+     - Short-Term Loudness $S$ ($3\text{s}$ sliding window).
+     - Integrated Loudness $I$ with $-70\text{ LUFS}$ absolute gate.
+     - Loudness Range (LRA).
+   - Implement automatic background leveler: computes difference between measured LUFS and target (e.g. $-14\text{ LUFS}$ or $-23\text{ LUFS}$) and applies smooth gain adjustment (`0.15s` time constant) across master volume when nature sound tracks are toggled.
+
+3. **EBU R128 Loudness Telemetry UI Component (`src/components/LoudnessMeterHUD.tsx`)**:
+   - Build a dedicated, precision telemetry panel:
+     - Real-time stereo bar meter with color-coded LUFS brackets (Quiet: $<-24$, Optimal: $-24$ to $-12$, Hot: $>-12$).
+     - Momentary & Short-term numeric readouts in `font-mono tabular-nums`.
+     - Target mode selector (Broadcast $-23\text{ LUFS}$ / Streaming $-14\text{ LUFS}$).
+     - Auto-Leveling dynamic toggle with real-time gain trim display.
+   - Integrate the HUD into the main Sanctuary player view and Nature Mixer header.
+
+4. **Purge Commission Earnings & Costs & Disable Reseeding (`src/services/financeService.ts` & `src/components/EarningsDashboard.tsx`)**:
+   - Update `financeService.ts`:
+     - Implement `clearAllFinancialData()`: removes all documents in Firestore collections `commission_earnings` and `operating_expenses`, wipes local keys `aura_finance_commission_earnings_v2` and `aura_finance_operating_expenses_v2`, and sets `aura_finance_data_initialized = 'cleared'`.
+     - Update `fetchCommissionEarnings()` and `fetchOperatingExpenses()`: if collections are empty, do NOT seed `DEFAULT_COMMISSIONS` or `DEFAULT_EXPENSES`. Return an empty array.
+   - Update `EarningsDashboard.tsx`:
+     - Add a "Clear Ledger" button with a red confirmation modal to execute `clearAllFinancialData()`.
+     - Ensure clean zero-states for graphs, metrics, and tables when data is cleared.
+
+5. **Verification & Testing**:
+   - Test frequency switching across all 9 Solfeggio frequencies to verify complete elimination of audio pop artifacts.
+   - Toggle multiple nature sound beds (Rain, Ocean, Forest, Wind) and verify EBU R128 meter responsiveness and smooth automatic loudness leveling.
+   - Verify that clearing financial data purges all records and that page reloads do not restore mock data.
+   - Run `npm run build`, `lint_applet`, and `compile_applet`.
