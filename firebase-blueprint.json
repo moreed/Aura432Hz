@@ -50,9 +50,12 @@
         "allowGuestAccess": { "type": "boolean", "description": "Whether guest usage is permitted" },
         "maintenanceMode": { "type": "boolean", "description": "Maintenance mode flag" },
         "updatedAt": { "type": "string", "description": "ISO timestamp of last configuration update" },
-        "updatedBy": { "type": "string", "description": "Admin UID who updated settings" }
+        "updatedBy": { "type": "string", "description": "Admin UID who updated settings" },
+        "propertyId": { "type": "string", "description": "Numeric Google Analytics 4 Property ID" },
+        "propertyDisplayName": { "type": "string", "description": "Display name of the connected GA4 Property" },
+        "measurementId": { "type": "string", "description": "GA4 Web Stream Measurement ID (e.g. G-D8TKJBBET7)" }
       },
-      "required": ["defaultFrequency", "allowGuestAccess", "maintenanceMode"]
+      "required": ["updatedAt", "updatedBy"]
     },
     "ContactMessage": {
       "title": "ContactMessage",

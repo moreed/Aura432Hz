@@ -1,6 +1,0 @@
-{
-  "summary":  "Implementation plan for:\n1. Zero-Crossing Envelope Detection: Refactor Solfeggio frequency switching to use micro zero-crossing envelope ducking (12ms smooth cosine window) and seamless frequency transitions, mathematically eliminating audio pop artifacts.\n2. Real-Time EBU R128 Loudness Analysis Tool & Auto-Leveler: Build an ITU-R BS.1770-4 / EBU R128 dual-stage K-weighting analysis engine and a dedicated floating/docked real-time loudness meter UI with dynamic master volume auto-leveling across ambient nature sound tracks.\n3. Purge Commission Earnings & Costs: Clear all existing records from Firestore and localStorage, disable mock data auto-reseeding, and provide a dedicated reset/clear action in the Earnings Dashboard.",
-  "updatedAt":  "2026-11-10T17:44:04.220046772Z",
-  "requestFeedback":  true,
-  "userFacing":  true
-}

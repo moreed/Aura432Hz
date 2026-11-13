@@ -11,6 +11,7 @@ import {
   limit,
   getDocs,
   getDocFromServer,
+  getCountFromServer,
   addDoc,
   deleteDoc,
   where,
@@ -102,9 +103,12 @@ export interface VisitLogEntry {
 // Initialize Firebase
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// Target designated database ID if provided in config
-export const db = firebaseConfig.firestoreDatabaseId
-  ? getFirestore(app, firebaseConfig.firestoreDatabaseId)
+// Target designated database ID if provided in config (or use the project's designated database ID)
+const designatedDatabaseId =
+  (firebaseConfig as { firestoreDatabaseId?: string }).firestoreDatabaseId ||
+  'ai-studio-aura432hzhealing-85fbf363-4de8-4570-b8b7-2edc94e71319';
+export const db = designatedDatabaseId
+  ? getFirestore(app, designatedDatabaseId)
   : getFirestore(app);
 
 let _auth: ReturnType<typeof getAuth> | null = null;
@@ -410,6 +414,26 @@ export async function logUsageEvent(event: {
     };
     await addDoc(logsRef, newEntry);
 
+    // Bridge Sanctuary navigation & feature activity directly to Google Analytics 4 (G-D8TKJBBET7)
+    if (typeof window !== 'undefined' && typeof (window as any).gtag === 'function') {
+      try {
+        if (event.action === 'view_tab') {
+          (window as any).gtag('event', 'page_view', {
+            page_title: `Aura 432Hz - ${event.feature}`,
+            page_path: `/${event.feature === 'player' ? '' : event.feature}`,
+            sanctuary_feature: event.feature,
+          });
+        } else {
+          (window as any).gtag('event', `sanctuary_${event.action}`, {
+            feature: event.feature,
+            frequency_hz: event.frequencyHz,
+            brainwave_mode: event.brainwaveMode,
+            duration_seconds: event.durationSeconds,
+          });
+        }
+      } catch {}
+    }
+
     // Update user total session duration if provided
     if (event.durationSeconds && event.durationSeconds > 0 && event.userId) {
       const uRef = doc(db, 'users', event.userId);
@@ -423,6 +447,46 @@ export async function logUsageEvent(event: {
     // Audit logging fails gracefully without interrupting meditation audio
     console.debug('Logging event notice:', err);
   }
+}
+
+function normalizeUserProfile(docId: string, raw: Partial<UserProfile>): UserProfile {
+  const email = typeof raw.email === 'string' ? raw.email : '';
+  const displayName =
+    typeof raw.displayName === 'string' && raw.displayName.trim()
+      ? raw.displayName
+      : email
+      ? email.split('@')[0]
+      : 'Sanctuary Member';
+  return {
+    uid: raw.uid || docId,
+    email,
+    displayName,
+    photoURL: raw.photoURL,
+    role: raw.role || 'user',
+    permissions: Array.isArray(raw.permissions) ? raw.permissions : [],
+    status: raw.status || 'active',
+    createdAt: raw.createdAt || '',
+    lastLoginAt: raw.lastLoginAt || raw.createdAt || '',
+    totalVisits: typeof raw.totalVisits === 'number' ? raw.totalVisits : 1,
+    totalDurationSeconds: typeof raw.totalDurationSeconds === 'number' ? raw.totalDurationSeconds : 0,
+  };
+}
+
+function normalizeVisitLog(docId: string, raw: Partial<VisitLogEntry>): VisitLogEntry {
+  return {
+    id: raw.id || docId,
+    userId: raw.userId || 'anonymous',
+    userName: raw.userName || 'Sanctuary Visitor',
+    userEmail: raw.userEmail || '',
+    role: raw.role || 'guest',
+    action: raw.action || 'view_tab',
+    feature: raw.feature || 'player',
+    frequencyHz: raw.frequencyHz,
+    brainwaveMode: raw.brainwaveMode,
+    durationSeconds: typeof raw.durationSeconds === 'number' ? raw.durationSeconds : 0,
+    timestamp: raw.timestamp || new Date(0).toISOString(),
+    userAgent: raw.userAgent,
+  };
 }
 
 // Admin: Fetch all registered users
@@ -439,7 +503,7 @@ export async function fetchAllUsers(): Promise<UserProfile[]> {
       snap = await getDocs(query(usersRef, limit(150)));
     }
     snap.forEach((d) => {
-      users.push(d.data() as UserProfile);
+      users.push(normalizeUserProfile(d.id, d.data() as Partial<UserProfile>));
     });
   } catch (err: any) {
     console.warn('Notice fetching users from Firestore:', err?.message || err);
@@ -449,8 +513,15 @@ export async function fetchAllUsers(): Promise<UserProfile[]> {
   try {
     const LOCAL_USERS_KEY = 'aura_directory_users_local';
     const localUsers: UserProfile[] = JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || '[]');
-    localUsers.forEach((lu) => {
-      if (!users.some((u) => u.uid === lu.uid || u.email.toLowerCase() === lu.email.toLowerCase())) {
+    localUsers.forEach((rawLu) => {
+      const lu = normalizeUserProfile(rawLu?.uid || `local_${Math.random()}`, rawLu || {});
+      if (
+        !users.some(
+          (u) =>
+            u.uid === lu.uid ||
+            (Boolean(u.email) && Boolean(lu.email) && u.email.toLowerCase() === lu.email.toLowerCase())
+        )
+      ) {
         users.push(lu);
       }
     });
@@ -603,8 +674,64 @@ export async function updateUserStatus(uid: string, status: 'active' | 'suspende
   } catch {}
 }
 
+export interface FeatureUsageMetric {
+  feature: string;
+  label: string;
+  count: number;
+  percentage: number;
+  color: string;
+}
+
+export interface FrequencyUsageMetric {
+  frequencyHz: number;
+  label: string;
+  desc: string;
+  count: number;
+  percentage: number;
+  color: string;
+}
+
+export interface SanctuaryAnalyticsSummary {
+  totalVisitsCount: number;
+  totalDurationMinutes: number;
+  totalRegisteredUsers: number;
+  adminCount: number;
+  teamCount: number;
+  memberCount: number;
+  featuresBreakdown: FeatureUsageMetric[];
+  frequenciesBreakdown: FrequencyUsageMetric[];
+  actionsBreakdown: Record<string, number>;
+  uniqueVisitorCount: number;
+  lastSyncedAt: string;
+}
+
+export const FEATURE_META: Record<string, { label: string; color: string }> = {
+  player: { label: '432Hz Sanctuary Player', color: 'bg-sky-400' },
+  admin: { label: 'Sanctuary Control Center', color: 'bg-indigo-400' },
+  gear: { label: 'Sacred Gear & Audio Shop', color: 'bg-emerald-400' },
+  mixer: { label: 'Nature & Musical Mixer', color: 'bg-teal-400' },
+  blog: { label: 'Science & Research Articles', color: 'bg-amber-400' },
+  breath: { label: 'Breath Pacer (4-7-8 & Box)', color: 'bg-cyan-400' },
+  contact: { label: 'Contact Us & Inquiries', color: 'bg-blue-400' },
+  community: { label: 'Community Sanctuary', color: 'bg-purple-400' },
+  musical: { label: 'Crystal Sound Harp & Chords', color: 'bg-yellow-400' },
+  gratitude: { label: 'Daily Gratitude Journal', color: 'bg-rose-400' },
+};
+
+export const FREQUENCY_META: Record<number, { label: string; desc: string; color: string }> = {
+  432: { label: '432Hz Harmonic Natural Tuning', desc: 'Golden ratio universal harmonic', color: 'text-sky-400' },
+  174: { label: '174Hz Somatic Foundation', desc: 'Grounding acoustic physical release', color: 'text-amber-400' },
+  285: { label: '285Hz Cellular Restoration', desc: 'Harmonic acoustic rejuvenation', color: 'text-teal-400' },
+  396: { label: '396Hz Root Chakra Liberation', desc: 'Easing tension & mental grounding', color: 'text-rose-400' },
+  528: { label: '528Hz Harmonic Soundscape', desc: 'Heart-centered acoustic equilibrium', color: 'text-emerald-400' },
+  639: { label: '639Hz Heart Coherence & Harmony', desc: 'Interpersonal peace & connection', color: 'text-rose-400' },
+  741: { label: '741Hz Intuitive Awakening', desc: 'Mental clarity & expressive presence', color: 'text-cyan-400' },
+  852: { label: '852Hz Third Eye Intuition', desc: 'Spiritual stillness & order', color: 'text-indigo-400' },
+  963: { label: '963Hz Crown Cosmic Connection', desc: 'Transcendental awareness & peace', color: 'text-purple-400' },
+};
+
 // Admin: Fetch visit and usage logs
-export async function fetchVisitLogs(limitCount = 100): Promise<VisitLogEntry[]> {
+export async function fetchVisitLogs(limitCount = 300): Promise<VisitLogEntry[]> {
   try {
     const logsRef = collection(db, 'visit_logs');
     let snap;
@@ -617,12 +744,186 @@ export async function fetchVisitLogs(limitCount = 100): Promise<VisitLogEntry[]>
     }
     const logs: VisitLogEntry[] = [];
     snap.forEach((d) => {
-      logs.push({ id: d.id, ...(d.data() as VisitLogEntry) });
+      logs.push(normalizeVisitLog(d.id, d.data() as Partial<VisitLogEntry>));
     });
+    logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     return logs;
   } catch (err: any) {
     console.warn('Notice fetching visit logs:', err?.message || err);
     return [];
+  }
+}
+
+// Admin: Fetch exact real-time visit count directly from Firestore
+export async function fetchVisitLogsTotalCount(): Promise<number> {
+  try {
+    const snap = await getCountFromServer(collection(db, 'visit_logs'));
+    return snap.data().count;
+  } catch (err) {
+    console.warn('Notice getting visit_logs count:', err);
+    return 0;
+  }
+}
+
+// Admin: Fetch comprehensive real-world analytics summary across all database records
+export async function fetchSanctuaryAnalyticsSummary(): Promise<SanctuaryAnalyticsSummary> {
+  const [totalCount, users, sampleLogs] = await Promise.all([
+    fetchVisitLogsTotalCount(),
+    fetchAllUsers(),
+    fetchVisitLogs(1000),
+  ]);
+
+  const featureCounts: Record<string, number> = {};
+  const frequencyCounts: Record<number, number> = {};
+  const actionsBreakdown: Record<string, number> = {};
+  const uniqueUsers = new Set<string>();
+  let durationSecondsSum = 0;
+
+  sampleLogs.forEach((l) => {
+    if (l.userId) uniqueUsers.add(l.userId);
+    if (l.durationSeconds && l.durationSeconds > 0) {
+      durationSecondsSum += Number(l.durationSeconds);
+    }
+    const feat = l.feature || 'player';
+    featureCounts[feat] = (featureCounts[feat] || 0) + 1;
+
+    if (l.frequencyHz) {
+      const freq = Math.round(Number(l.frequencyHz));
+      frequencyCounts[freq] = (frequencyCounts[freq] || 0) + 1;
+    }
+
+    const action = l.action || 'view_tab';
+    actionsBreakdown[action] = (actionsBreakdown[action] || 0) + 1;
+  });
+
+  // Calculate real total meditation minutes combining logged sessions & users
+  const userDurationSeconds = users.reduce((acc, u) => acc + (u.totalDurationSeconds || 0), 0);
+  const totalDurationMinutes = Math.max(1, Math.round((durationSecondsSum + userDurationSeconds) / 60));
+
+  // Build features breakdown with proper percentages and labels
+  const totalFeatureActions = Math.max(sampleLogs.length, 1);
+  const featuresBreakdown: FeatureUsageMetric[] = Object.entries(featureCounts)
+    .map(([feature, count]) => {
+      const meta = FEATURE_META[feature] || {
+        label: feature.charAt(0).toUpperCase() + feature.slice(1),
+        color: 'bg-indigo-400',
+      };
+      return {
+        feature,
+        label: meta.label,
+        count,
+        percentage: Math.round((count / totalFeatureActions) * 100),
+        color: meta.color,
+      };
+    })
+    .sort((a, b) => b.count - a.count);
+
+  // Build frequencies breakdown with real percentages
+  const totalFrequencyTones = Object.values(frequencyCounts).reduce((a, b) => a + b, 0) || 1;
+  const frequenciesBreakdown: FrequencyUsageMetric[] = Object.entries(frequencyCounts)
+    .map(([freqStr, count]) => {
+      const freq = Number(freqStr);
+      const meta = FREQUENCY_META[freq] || {
+        label: `${freq}Hz Acoustic Harmonic`,
+        desc: 'Custom harmonic tuning soundscape',
+        color: 'text-sky-400',
+      };
+      return {
+        frequencyHz: freq,
+        label: meta.label,
+        desc: meta.desc,
+        count,
+        percentage: Math.round((count / totalFrequencyTones) * 100),
+        color: meta.color,
+      };
+    })
+    .sort((a, b) => b.count - a.count);
+
+  const adminCount = users.filter((u) => u.role === 'admin' || isAuthorizedAdminEmail(u.email)).length;
+  const teamCount = users.filter((u) => u.role === 'team').length;
+  const memberCount = users.filter((u) => u.role === 'user').length;
+
+  return {
+    totalVisitsCount: Math.max(totalCount, sampleLogs.length),
+    totalDurationMinutes,
+    totalRegisteredUsers: users.length,
+    adminCount,
+    teamCount,
+    memberCount,
+    featuresBreakdown,
+    frequenciesBreakdown,
+    actionsBreakdown,
+    uniqueVisitorCount: Math.max(uniqueUsers.size, users.length),
+    lastSyncedAt: new Date().toISOString(),
+  };
+}
+
+// Admin: Real-time listener on live audit trail entries
+export function subscribeToLiveAuditLogs(
+  limitCount = 100,
+  onUpdate: (logs: VisitLogEntry[]) => void,
+  onError?: (err: any) => void
+): () => void {
+  const logsRef = collection(db, 'visit_logs');
+  try {
+    const q = query(logsRef, orderBy('timestamp', 'desc'), limit(limitCount));
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const logs: VisitLogEntry[] = [];
+        snapshot.forEach((d) => {
+          logs.push(normalizeVisitLog(d.id, d.data() as Partial<VisitLogEntry>));
+        });
+        logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        onUpdate(logs);
+      },
+      (error) => {
+        console.warn('onSnapshot orderBy error, falling back to basic query:', error);
+        try {
+          return onSnapshot(query(logsRef, limit(limitCount)), (s2) => {
+            const logs: VisitLogEntry[] = [];
+            s2.forEach((d) => {
+              logs.push(normalizeVisitLog(d.id, d.data() as Partial<VisitLogEntry>));
+            });
+            logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+            onUpdate(logs);
+          });
+        } catch (e) {
+          if (onError) onError(e);
+        }
+      }
+    );
+  } catch (err) {
+    if (onError) onError(err);
+    return () => {};
+  }
+}
+
+// Admin: Real-time listener on registered users collection
+export function subscribeToLiveUsers(
+  onUpdate: (users: UserProfile[]) => void,
+  onError?: (err: any) => void
+): () => void {
+  const usersRef = collection(db, 'users');
+  try {
+    return onSnapshot(
+      usersRef,
+      (snapshot) => {
+        const users: UserProfile[] = [];
+        snapshot.forEach((d) => {
+          users.push(normalizeUserProfile(d.id, d.data() as Partial<UserProfile>));
+        });
+        users.sort((a, b) => new Date(b.lastLoginAt || 0).getTime() - new Date(a.lastLoginAt || 0).getTime());
+        onUpdate(users);
+      },
+      (err) => {
+        console.warn('subscribeToLiveUsers notice:', err);
+        if (onError) onError(err);
+      }
+    );
+  } catch (err) {
+    if (onError) onError(err);
+    return () => {};
   }
 }
 

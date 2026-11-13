@@ -10,6 +10,11 @@ import {
   saveDailyResearchStatus,
   executeDailyResearchFetch,
 } from './src/server/dailyResearcher.ts';
+import {
+  fetchGa4Properties,
+  fetchGa4SyncReport,
+  Ga4ApiError,
+} from './src/server/ga4Service.ts';
 
 dotenv.config();
 
@@ -264,6 +269,51 @@ app.post('/api/usage-event', (_req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.json({ ok: true });
+});
+
+// GET /api/ga4/properties: Discover accessible GA4 properties using client's OAuth Bearer token
+app.get('/api/ga4/properties', async (req, res) => {
+  const authHeader = req.headers['authorization'] || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+  if (!token) {
+    return res.status(401).json({ error: 'Missing Google Analytics OAuth Bearer token.' });
+  }
+  try {
+    const properties = await fetchGa4Properties(token);
+    return res.json({ success: true, properties });
+  } catch (err: any) {
+    const status = err instanceof Ga4ApiError ? err.status : 500;
+    return res.status(status).json({
+      success: false,
+      error: err?.message || 'Failed to discover Google Analytics properties.',
+      code: err?.code,
+    });
+  }
+});
+
+// POST /api/ga4/sync: Fetch real-time (30m) and historical GA4 metrics for selected Property ID
+app.post('/api/ga4/sync', async (req, res) => {
+  const authHeader = req.headers['authorization'] || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+  if (!token) {
+    return res.status(401).json({ error: 'Missing Google Analytics OAuth Bearer token.' });
+  }
+  const { propertyId, range } = req.body || {};
+  if (!propertyId || typeof propertyId !== 'string') {
+    return res.status(400).json({ error: 'Numeric GA4 Property ID is required.' });
+  }
+  const validRange = range === '7days' || range === '30days' ? range : 'today';
+  try {
+    const data = await fetchGa4SyncReport(token, propertyId, validRange);
+    return res.json({ success: true, data });
+  } catch (err: any) {
+    const status = err instanceof Ga4ApiError ? err.status : 500;
+    return res.status(status).json({
+      success: false,
+      error: err?.message || 'Failed to sync Google Analytics metrics.',
+      code: err?.code,
+    });
+  }
 });
 
 // POST /api/site-content: Updates and persists site configuration across all devices and visitors (Admin only)
