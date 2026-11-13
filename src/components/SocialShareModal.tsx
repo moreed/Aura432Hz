@@ -105,8 +105,10 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
     >
       <div className="relative w-full max-w-md bg-slate-900 border border-slate-700/80 rounded-2xl sm:rounded-3xl p-4 sm:p-6 landscape:p-4 shadow-2xl max-h-[92dvh] landscape:max-h-[94dvh] overflow-y-auto overscroll-contain my-auto text-left">
         <button
+          type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-200 rounded-lg hover:bg-slate-800 transition-colors"
+          className="absolute top-4 right-4 w-8 h-8 inline-flex items-center justify-center text-slate-400 hover:text-slate-200 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+          aria-label="Close Share Sanctuary"
         >
           <X className="w-5 h-5" />
         </button>
@@ -146,8 +148,9 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
             className="flex-1 bg-transparent text-xs text-slate-300 focus:outline-none truncate font-mono select-all"
           />
           <button
+            type="button"
             onClick={handleCopyLink}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+            className={`px-3 py-1.5 min-h-[32px] rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               copied
                 ? 'bg-emerald-500 text-slate-950 font-bold'
                 : 'bg-sky-500 hover:bg-sky-400 text-slate-950 shadow-sm'
@@ -168,16 +171,18 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
         {/* Native Web Share Button */}
         {typeof navigator !== 'undefined' && 'share' in navigator && (
           <button
+            type="button"
             onClick={handleNativeShare}
-            className="w-full py-2.5 mb-3 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-slate-950 text-xs font-semibold rounded-xl shadow-lg shadow-sky-500/20 transition-all flex items-center justify-center gap-2"
+            className="w-full py-2.5 min-h-[40px] mb-3 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-slate-950 text-xs font-semibold rounded-xl shadow-lg shadow-sky-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <Share2 className="w-4 h-4" /> Share via Device Apps
           </button>
         )}
 
         <button
+          type="button"
           onClick={onClose}
-          className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-xl border border-slate-700 transition-colors"
+          className="w-full py-2 min-h-[38px] bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-xl border border-slate-700 transition-colors cursor-pointer"
         >
           Close
         </button>

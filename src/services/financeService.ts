@@ -1273,7 +1273,7 @@ export function generatePrintableHTML(
     <span style="font-size: 14px; font-weight: 600; color: #166534;">
       📄 Financial Statement Ready for Printing / PDF Export
     </span>
-    <button class="print-btn" onclick="window.print()">Print Statement / Save PDF</button>
+    <button type="button" class="print-btn" onclick="window.print()">Print Statement / Save PDF</button>
   </div>
 
   <div class="header">

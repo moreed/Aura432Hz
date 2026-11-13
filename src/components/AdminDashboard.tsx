@@ -682,8 +682,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
         </div>
 
         <button
+          type="button"
           onClick={() => setShowAuthModal(true)}
-          className="w-full py-3.5 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all active:scale-98"
+          className="w-full py-3.5 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all active:scale-98 cursor-pointer"
         >
           <Key className="w-4 h-4" />
           <span>Unlock Console with Password & 2FA</span>
@@ -736,6 +737,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
 
         <div className="flex items-center gap-2 flex-wrap">
           <button
+            type="button"
             onClick={async () => {
               await Promise.all([
                 loadData(),
@@ -744,7 +746,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
               showNotification(`Synchronized real Firestore data: ${displayVisits.toLocaleString()} visits & ${users.length} accounts verified.`);
             }}
             disabled={loading || ga4Syncing}
-            className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs border border-slate-700 font-medium transition-colors flex items-center gap-1.5 shadow-sm active:scale-95"
+            className="min-h-[36px] px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs border border-slate-700 font-medium transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap shadow-sm active:scale-95 cursor-pointer disabled:opacity-50"
             title="Refresh database records and Google Analytics metrics"
           >
             <RefreshCw className={`w-3.5 h-3.5 text-indigo-400 ${loading || ga4Syncing ? 'animate-spin' : ''}`} />
@@ -752,16 +754,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
           </button>
 
           <button
+            type="button"
             onClick={handleExportCSV}
-            className="px-3 py-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm"
+            className="min-h-[36px] px-3 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 text-xs font-medium transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap shadow-sm cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export CSV</span>
           </button>
 
           <button
+            type="button"
             onClick={handleLockAdminSession}
-            className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-rose-950/40 text-slate-300 hover:text-rose-300 border border-slate-700 hover:border-rose-500/40 text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm"
+            className="min-h-[36px] px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-rose-950/40 text-slate-300 hover:text-rose-300 border border-slate-700 hover:border-rose-500/40 text-xs font-medium transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap shadow-sm cursor-pointer"
             title="Lock session immediately"
           >
             <Lock className="w-3.5 h-3.5 text-rose-400" />
@@ -849,182 +853,196 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
       {/* Sub Navigation (Wrapping Flex - No Horizontal Scroll) */}
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-3">
         <button
+          type="button"
           onClick={() => setActiveSubTab('overview')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap shrink-0 ${
+          className={`min-h-[36px] px-3 py-1.5 rounded-lg border text-xs font-medium transition-all inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
             activeSubTab === 'overview'
-              ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
-          <BarChart3 className="w-3.5 h-3.5 inline-block mr-1" />
-          Overview
+          <BarChart3 className="w-3.5 h-3.5 shrink-0" />
+          <span>Overview</span>
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveSubTab('ga4')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
+          className={`min-h-[36px] px-3 py-1.5 rounded-lg border text-xs font-medium transition-all inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
             activeSubTab === 'ga4'
-              ? 'bg-teal-400/20 text-teal-300 border border-teal-400/50'
-              : 'text-slate-400 hover:text-teal-300'
+              ? 'bg-teal-400/20 text-teal-300 border-teal-400/50'
+              : 'border-transparent text-slate-400 hover:text-teal-300'
           }`}
           title="Real-time Google Analytics 4 active users, pageviews, traffic sources, and events"
         >
-          <Activity className="w-3.5 h-3.5 text-teal-400" />
+          <Activity className="w-3.5 h-3.5 text-teal-400 shrink-0" />
           <span>Google Analytics (GA4)</span>
           {ga4Data && (
-            <span className="font-mono tabular-nums text-[11px] text-emerald-400">
+            <span className="font-mono tabular-nums text-[11px] text-emerald-400 leading-none">
               · {ga4Data.realtime.activeUsers30m} live
             </span>
           )}
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveSubTab('fetcher')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+          className={`min-h-[36px] px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
             activeSubTab === 'fetcher'
-              ? 'bg-gradient-to-r from-sky-400 to-indigo-500 text-slate-950 font-bold shadow-sm'
-              : 'text-slate-300 hover:text-white bg-slate-800/60 border border-slate-700/60'
+              ? 'bg-gradient-to-r from-sky-400 to-indigo-500 text-slate-950 border-transparent font-bold shadow-sm'
+              : 'text-slate-300 hover:text-white bg-slate-800/60 border-slate-700/60'
           }`}
           title="Import affiliate products or human-authored research articles via URL with Staging Draft Queue"
         >
-          <Download className="w-3.5 h-3.5 inline-block mr-1.5 text-sky-400" />
-          Content Fetcher &amp; Staging Queue
+          <Download className={`w-3.5 h-3.5 shrink-0 ${activeSubTab === 'fetcher' ? 'text-slate-950' : 'text-sky-400'}`} />
+          <span>Content Fetcher &amp; Staging Queue</span>
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveSubTab('earnings')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+          className={`min-h-[36px] px-3 py-1.5 rounded-lg border text-xs font-medium transition-all inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
             activeSubTab === 'earnings'
-              ? 'bg-amber-500/25 text-amber-200 border border-amber-400/60 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-amber-500/25 text-amber-200 border-amber-400/60 shadow-sm'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
           title="Commission earnings, operating costs (ads, hosting, domains), and export reports"
         >
-          <DollarSign className="w-3.5 h-3.5 inline-block mr-1 text-amber-400" />
-          Earnings &amp; Costs
+          <DollarSign className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+          <span>Earnings &amp; Costs</span>
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveSubTab('affiliate')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+          className={`min-h-[36px] px-3 py-1.5 rounded-lg border text-xs font-medium transition-all inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
             activeSubTab === 'affiliate'
-              ? 'bg-emerald-500/25 text-emerald-200 border border-emerald-400/60 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-emerald-500/25 text-emerald-200 border-emerald-400/60 shadow-sm'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
           title="Add new products to shop via URL fetcher or manage affiliate items"
         >
-          <Sparkles className="w-3.5 h-3.5 inline-block mr-1 text-emerald-400" />
-          Shop Products &amp; Link Auto-Fetcher
+          <Sparkles className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+          <span>Shop Products &amp; Link Auto-Fetcher</span>
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveSubTab('editorial')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+          className={`min-h-[36px] px-3 py-1.5 rounded-lg border text-xs font-medium transition-all inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
             activeSubTab === 'editorial'
-              ? 'bg-amber-500/25 text-amber-200 border border-amber-400/60 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-amber-500/25 text-amber-200 border-amber-400/60 shadow-sm'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
           title="Add new articles to science and blog via research fetcher"
         >
-          <FileText className="w-3.5 h-3.5 inline-block mr-1 text-amber-400" />
-          Science &amp; Blog Research Auto-Fetcher
+          <FileText className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+          <span>Science &amp; Blog Research Auto-Fetcher</span>
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveSubTab('content')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+          className={`min-h-[36px] px-3 py-1.5 rounded-lg border text-xs font-medium transition-all inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
             activeSubTab === 'content'
-              ? 'bg-sky-500/25 text-sky-200 border border-sky-400/60 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-sky-500/25 text-sky-200 border-sky-400/60 shadow-sm'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
-          <Globe className="w-3.5 h-3.5 inline-block mr-1 text-sky-400" />
-          Content &amp; Socials
+          <Globe className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+          <span>Content &amp; Socials</span>
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveSubTab('construction')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+          className={`min-h-[36px] px-3 py-1.5 rounded-lg border text-xs font-medium transition-all inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
             activeSubTab === 'construction'
-              ? 'bg-gradient-to-r from-amber-500/30 to-amber-600/30 text-amber-200 border border-amber-400/60 shadow-sm ring-1 ring-amber-400/30 font-semibold'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-gradient-to-r from-amber-500/30 to-amber-600/30 text-amber-200 border-amber-400/60 shadow-sm ring-1 ring-amber-400/30 font-semibold'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
           title="Under Construction Mode on/off, custom quotes, stay tuned message, launch timer, and leads"
         >
-          <ShieldAlert className="w-3.5 h-3.5 inline-block mr-1 text-amber-400" />
-          Under Construction Mode
+          <ShieldAlert className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+          <span>Under Construction Mode</span>
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveSubTab('newsletter')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+          className={`min-h-[36px] px-3 py-1.5 rounded-lg border text-xs font-medium transition-all inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
             activeSubTab === 'newsletter'
-              ? 'bg-purple-500/25 text-purple-200 border border-purple-400/60 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-purple-500/25 text-purple-200 border-purple-400/60 shadow-sm'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
           title="Manage automated welcome emails and monthly sanctuary newsletters"
         >
-          <Mail className="w-3.5 h-3.5 inline-block mr-1 text-purple-400" />
-          Welcome Emails &amp; Newsletters
+          <Mail className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+          <span>Welcome Emails &amp; Newsletters</span>
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveSubTab('users')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+          className={`min-h-[36px] px-3 py-1.5 rounded-lg border text-xs font-medium transition-all inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
             activeSubTab === 'users'
-              ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
-          <Users className="w-3.5 h-3.5 inline-block mr-1" />
-          User Management ({filteredUsers.length})
+          <Users className="w-3.5 h-3.5 shrink-0" />
+          <span>User Management ({filteredUsers.length})</span>
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveSubTab('logs')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+          className={`min-h-[36px] px-3 py-1.5 rounded-lg border text-xs font-medium transition-all inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
             activeSubTab === 'logs'
-              ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
-          <Activity className="w-3.5 h-3.5 inline-block mr-1" />
-          Visits & Usages Audit ({filteredLogs.length})
+          <Activity className="w-3.5 h-3.5 shrink-0" />
+          <span>Visits & Usages Audit ({filteredLogs.length})</span>
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveSubTab('export')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+          className={`min-h-[36px] px-3 py-1.5 rounded-lg border text-xs font-medium transition-all inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
             activeSubTab === 'export'
-              ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
-          <Download className="w-3.5 h-3.5 inline-block mr-1" />
-          Export Reports Center
+          <Download className="w-3.5 h-3.5 shrink-0" />
+          <span>Export Reports Center</span>
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveSubTab('security')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+          className={`min-h-[36px] px-3 py-1.5 rounded-lg border text-xs font-medium transition-all inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
             activeSubTab === 'security'
-              ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
-          <Lock className="w-3.5 h-3.5 inline-block mr-1" />
-          Security & 2FA Settings
+          <Lock className="w-3.5 h-3.5 shrink-0" />
+          <span>Security & 2FA Settings</span>
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveSubTab('deployment')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
+          className={`min-h-[36px] px-3 py-1.5 rounded-lg border text-xs font-medium transition-all inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
             activeSubTab === 'deployment'
-              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50 shadow-md shadow-amber-500/10'
-              : 'text-slate-400 hover:text-amber-200'
+              ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-md shadow-amber-500/10'
+              : 'border-transparent text-slate-400 hover:text-amber-200'
           }`}
         >
-          <Globe className="w-3.5 h-3.5 inline-block text-amber-400" />
+          <Globe className="w-3.5 h-3.5 text-amber-400 shrink-0" />
           <span>Cloudflare &amp; Deployment</span>
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse inline-block" title="Aura432Hz Account ID Connected" />
         </button>
@@ -1323,7 +1341,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
               <select
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value as any)}
-                className="bg-slate-950 border border-slate-800 text-xs text-slate-300 rounded-xl px-2.5 py-2 focus:outline-none"
+                className="h-[34px] bg-slate-950 border border-slate-800 text-xs text-slate-300 rounded-xl px-2.5 focus:outline-none"
               >
                 <option value="all">All Roles</option>
                 <option value="admin">Administrators</option>
@@ -1334,7 +1352,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="bg-slate-950 border border-slate-800 text-xs text-slate-300 rounded-xl px-2.5 py-2 focus:outline-none"
+                className="h-[34px] bg-slate-950 border border-slate-800 text-xs text-slate-300 rounded-xl px-2.5 focus:outline-none"
               >
                 <option value="all">All Statuses</option>
                 <option value="active">Active</option>
@@ -1351,7 +1369,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
                   setAddUserError(null);
                   setShowAddUserModal(true);
                 }}
-                className="px-3 py-2 rounded-xl bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-300 hover:to-indigo-400 text-slate-950 text-xs font-semibold shadow-md flex items-center gap-1.5 whitespace-nowrap cursor-pointer transition-all active:scale-95"
+                className="min-h-[34px] px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-300 hover:to-indigo-400 border border-transparent text-slate-950 text-xs font-semibold shadow-md inline-flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer transition-all active:scale-95"
                 title="Add new user with custom permissions"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -1359,8 +1377,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
               </button>
 
               <button
+                type="button"
                 onClick={handleExportUsersCSV}
-                className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs border border-slate-700 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap"
+                className="min-h-[34px] px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs border border-slate-700 font-medium transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer"
                 title="Export user directory as CSV"
               >
                 <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
@@ -1555,8 +1574,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
                     </div>
                   </div>
                   <button
+                    type="button"
                     onClick={() => setShowAddUserModal(false)}
-                    className="p-1 text-slate-400 hover:text-slate-200 transition-colors"
+                    className="w-8 h-8 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors inline-flex items-center justify-center shrink-0 cursor-pointer"
+                    aria-label="Close modal"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -1695,8 +1716,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
                     <p className="text-[11px] text-slate-400 font-mono">{editingUser.email}</p>
                   </div>
                   <button
+                    type="button"
                     onClick={() => setEditingUser(null)}
-                    className="p-1 text-slate-400 hover:text-slate-200 transition-colors"
+                    className="w-8 h-8 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors inline-flex items-center justify-center shrink-0 cursor-pointer"
+                    aria-label="Close modal"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -1824,7 +1847,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
               <select
                 value={featureFilter}
                 onChange={(e) => setFeatureFilter(e.target.value)}
-                className="bg-slate-950 border border-slate-800 text-xs text-slate-300 rounded-xl px-2.5 py-1.5 focus:outline-none"
+                className="h-[34px] bg-slate-950 border border-slate-800 text-xs text-slate-300 rounded-xl px-2.5 focus:outline-none"
               >
                 <option value="all">All Features</option>
                 <option value="player">Sanctuary Player</option>
@@ -1841,8 +1864,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
             </div>
 
             <button
+              type="button"
               onClick={handleExportCSV}
-              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs border border-slate-700 font-medium transition-colors flex items-center gap-1.5"
+              className="min-h-[34px] px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs border border-slate-700 font-medium transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer"
             >
               <Download className="w-3.5 h-3.5 text-emerald-400" />
               <span>Export Audit Trail</span>
@@ -1917,8 +1941,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
                 </p>
               </div>
               <button
+                type="button"
                 onClick={handleExportCSV}
-                className="w-full py-2.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 text-xs font-semibold transition-colors flex items-center justify-center gap-2"
+                className="w-full min-h-[38px] py-2 px-4 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 text-xs font-semibold transition-colors inline-flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Download className="w-4 h-4" />
                 <span>Download Visits CSV</span>
@@ -1937,8 +1962,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
                 </p>
               </div>
               <button
+                type="button"
                 onClick={handleExportUsersCSV}
-                className="w-full py-2.5 rounded-xl bg-sky-600/20 hover:bg-sky-600/30 text-sky-300 border border-sky-500/40 text-xs font-semibold transition-colors flex items-center justify-center gap-2"
+                className="w-full min-h-[38px] py-2 px-4 rounded-xl bg-sky-600/20 hover:bg-sky-600/30 text-sky-300 border border-sky-500/40 text-xs font-semibold transition-colors inline-flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Download className="w-4 h-4" />
                 <span>Download Users CSV</span>
@@ -1957,8 +1983,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
                 </p>
               </div>
               <button
+                type="button"
                 onClick={handleExportJSON}
-                className="w-full py-2.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 text-xs font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full min-h-[38px] py-2 px-4 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 text-xs font-semibold transition-colors inline-flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Download className="w-4 h-4" />
                 <span>Download JSON Package</span>
@@ -1977,8 +2004,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => setShowAuditPrintModal(true)}
-                className="w-full py-2.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 text-xs font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer no-print"
+                className="w-full min-h-[38px] py-2 px-4 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 text-xs font-semibold transition-colors inline-flex items-center justify-center gap-2 cursor-pointer no-print"
                 title="Preview and Print Formal Audit Report or Save as PDF"
               >
                 <Printer className="w-4 h-4" />
@@ -2005,7 +2033,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
               <button
                 type="button"
                 onClick={onOpenExportAudio}
-                className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                className="w-full min-h-[38px] py-2 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 border border-transparent text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 transition-all inline-flex items-center justify-center gap-2 cursor-pointer active:scale-98"
               >
                 <Download className="w-4 h-4" />
                 <span>Launch Audio WAV Exporter</span>
@@ -2024,8 +2052,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => setActiveSubTab('earnings')}
-                className="w-full py-2.5 rounded-xl bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/40 text-xs font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full min-h-[38px] py-2 px-4 rounded-xl bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/40 text-xs font-semibold transition-colors inline-flex items-center justify-center gap-2 cursor-pointer"
               >
                 <DollarSign className="w-4 h-4" />
                 <span>Open Earnings &amp; Export Center</span>
@@ -2223,8 +2252,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
                   >
                     <span>{code}</span>
                     <button
+                      type="button"
                       onClick={() => copyToClipboard(code, 'code')}
-                      className="text-slate-400 hover:text-slate-200 p-0.5"
+                      className="text-slate-400 hover:text-slate-200 w-6 h-6 inline-flex items-center justify-center rounded cursor-pointer"
                       title="Copy recovery code"
                     >
                       <Copy className="w-3 h-3" />
@@ -2274,8 +2304,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
               </div>
 
               <button
+                type="button"
                 onClick={handleLockAdminSession}
-                className="w-full py-2.5 px-4 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/60 font-medium text-xs transition-colors flex items-center justify-center gap-2"
+                className="w-full min-h-[38px] py-2 px-4 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/60 font-medium text-xs transition-colors inline-flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Lock className="w-4 h-4 text-rose-400" />
                 <span>Lock Session Immediately</span>

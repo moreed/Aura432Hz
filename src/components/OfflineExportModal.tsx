@@ -725,9 +725,10 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
       <div className="relative w-full max-w-xl bg-slate-900 border border-slate-700/80 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl text-left max-h-[92dvh] overflow-y-auto overscroll-contain my-auto">
         {/* Close Button */}
         <button
+          type="button"
           onClick={onClose}
           disabled={isRendering}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-200 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-40"
+          className="absolute top-4 right-4 w-9 h-9 inline-flex items-center justify-center text-slate-400 hover:text-slate-200 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-40"
           title="Close Dialog"
           aria-label="Close export dialog"
         >

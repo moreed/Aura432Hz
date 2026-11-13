@@ -159,9 +159,10 @@ export const NewsletterAdminSection: React.FC<NewsletterAdminSectionProps> = ({
         </div>
 
         <button
+          type="button"
           onClick={loadData}
           disabled={loading}
-          className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 flex items-center gap-1.5 transition-colors shrink-0"
+          className="min-h-[36px] px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 inline-flex items-center justify-center gap-1.5 transition-colors shrink-0 cursor-pointer whitespace-nowrap"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
           <span>Refresh</span>
@@ -218,39 +219,42 @@ export const NewsletterAdminSection: React.FC<NewsletterAdminSectionProps> = ({
       {/* Sub-Tabs: Newsletters | Welcome Emails | Subscribers (Wrapping Flex - No Horizontal Scroll) */}
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-2">
         <button
+          type="button"
           onClick={() => setActiveSection('newsletters')}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+          className={`px-3.5 py-1.5 min-h-[36px] rounded-xl border text-xs font-semibold transition-all inline-flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer ${
             activeSection === 'newsletters'
-              ? 'bg-sky-500/20 text-sky-200 border border-sky-400/50 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-sky-500/20 text-sky-200 border-sky-400/50 shadow-sm'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
-          <Calendar className="w-3.5 h-3.5 inline-block mr-1 text-sky-400" />
-          Monthly Newsletters ({newsletters.length})
+          <Calendar className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+          <span>Monthly Newsletters ({newsletters.length})</span>
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveSection('welcome_emails')}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+          className={`px-3.5 py-1.5 min-h-[36px] rounded-xl border text-xs font-semibold transition-all inline-flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer ${
             activeSection === 'welcome_emails'
-              ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-400/50 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-emerald-500/20 text-emerald-200 border-emerald-400/50 shadow-sm'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
-          <Mail className="w-3.5 h-3.5 inline-block mr-1 text-emerald-400" />
-          Delivered Welcome Emails ({welcomeEmails.length})
+          <Mail className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+          <span>Delivered Welcome Emails ({welcomeEmails.length})</span>
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveSection('subscribers')}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+          className={`px-3.5 py-1.5 min-h-[36px] rounded-xl border text-xs font-semibold transition-all inline-flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer ${
             activeSection === 'subscribers'
-              ? 'bg-purple-500/20 text-purple-200 border border-purple-400/50 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-purple-500/20 text-purple-200 border-purple-400/50 shadow-sm'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
-          <Users className="w-3.5 h-3.5 inline-block mr-1 text-purple-400" />
-          Subscribers Directory ({subscribers.length})
+          <Users className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+          <span>Subscribers Directory ({subscribers.length})</span>
         </button>
       </div>
 
@@ -289,18 +293,20 @@ export const NewsletterAdminSection: React.FC<NewsletterAdminSectionProps> = ({
                     <p className="text-xs text-slate-400 mt-0.5">{nl.subject}</p>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-2 flex-wrap shrink-0">
                     <button
+                      type="button"
                       onClick={() => setPreviewingNewsletter(nl)}
-                      className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 flex items-center gap-1.5 transition-colors cursor-pointer"
+                      className="min-h-[34px] px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
                     >
                       <Eye className="w-3.5 h-3.5 text-sky-400" />
                       <span>Preview</span>
                     </button>
 
                     <button
+                      type="button"
                       onClick={() => handleBroadcastNewsletter(nl.id)}
-                      className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-all shadow-md shadow-purple-500/20 cursor-pointer active:scale-95"
+                      className="min-h-[34px] px-3.5 py-1.5 rounded-xl border border-transparent bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-slate-950 font-bold text-xs inline-flex items-center justify-center gap-1.5 transition-all shadow-md shadow-purple-500/20 cursor-pointer active:scale-95 whitespace-nowrap"
                     >
                       <Send className="w-3.5 h-3.5" />
                       <span>Broadcast to {subscribers.length} Members</span>
@@ -395,6 +401,7 @@ export const NewsletterAdminSection: React.FC<NewsletterAdminSectionProps> = ({
                     </td>
                     <td className="p-3 text-right">
                       <button
+                        type="button"
                         onClick={() => setPreviewingWelcomeEmail(email)}
                         className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition-colors cursor-pointer"
                       >
@@ -423,8 +430,9 @@ export const NewsletterAdminSection: React.FC<NewsletterAdminSectionProps> = ({
             </div>
 
             <button
+              type="button"
               onClick={handleExportSubscribersCSV}
-              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="min-h-[34px] px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
             >
               <Download className="w-3.5 h-3.5 text-sky-400" />
               <span>Export CSV</span>
@@ -488,8 +496,10 @@ export const NewsletterAdminSection: React.FC<NewsletterAdminSectionProps> = ({
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={() => setPreviewingNewsletter(null)}
-                className="p-1.5 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800"
+                className="w-8 h-8 inline-flex items-center justify-center text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 cursor-pointer"
+                aria-label="Close newsletter preview"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -524,8 +534,9 @@ export const NewsletterAdminSection: React.FC<NewsletterAdminSectionProps> = ({
 
             <div className="flex items-center justify-end pt-3 border-t border-slate-800">
               <button
+                type="button"
                 onClick={() => setPreviewingNewsletter(null)}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-xl font-medium"
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-xl font-medium cursor-pointer"
               >
                 Close Preview
               </button>
@@ -552,8 +563,10 @@ export const NewsletterAdminSection: React.FC<NewsletterAdminSectionProps> = ({
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={() => setPreviewingWelcomeEmail(null)}
-                className="p-1.5 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800"
+                className="w-8 h-8 inline-flex items-center justify-center text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 cursor-pointer"
+                aria-label="Close welcome email preview"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -565,8 +578,9 @@ export const NewsletterAdminSection: React.FC<NewsletterAdminSectionProps> = ({
 
             <div className="flex items-center justify-end pt-2 border-t border-slate-800">
               <button
+                type="button"
                 onClick={() => setPreviewingWelcomeEmail(null)}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-xl font-medium"
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-xl font-medium cursor-pointer"
               >
                 Close Preview
               </button>

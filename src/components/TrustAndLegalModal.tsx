@@ -98,11 +98,11 @@ export const TrustAndLegalModal: React.FC<TrustAndLegalModalProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={handlePrint}
-              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 transition-colors flex items-center gap-1.5 text-xs font-semibold cursor-pointer shadow-sm no-print"
+              className="px-3 py-1.5 min-h-[36px] rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 transition-colors inline-flex items-center gap-1.5 text-xs font-semibold cursor-pointer shadow-sm no-print whitespace-nowrap"
               title="Print Full Policy Document (Clean High-Contrast Print)"
               aria-label="Print Policy Document"
             >
@@ -110,8 +110,9 @@ export const TrustAndLegalModal: React.FC<TrustAndLegalModalProps> = ({
               <span>Print Document</span>
             </button>
             <button
+              type="button"
               onClick={onClose}
-              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer no-print"
+              className="w-9 h-9 inline-flex items-center justify-center rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer no-print shrink-0"
               title="Close Dialog (Esc)"
               aria-label="Close Dialog"
             >
@@ -135,9 +136,10 @@ export const TrustAndLegalModal: React.FC<TrustAndLegalModalProps> = ({
             const isSelected = activeTab === tab.id;
             return (
               <button
+                type="button"
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-2 py-1.5 rounded-xl text-[10.5px] sm:text-xs font-medium flex items-center justify-center gap-1 sm:gap-1.5 transition-all text-center cursor-pointer ${
+                className={`px-2 py-1.5 min-h-[34px] rounded-xl text-[10.5px] sm:text-xs font-medium flex items-center justify-center gap-1 sm:gap-1.5 transition-all text-center cursor-pointer ${
                   isSelected
                     ? 'bg-sky-500 text-slate-950 font-bold shadow-md shadow-sky-500/20'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'

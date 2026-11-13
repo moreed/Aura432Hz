@@ -43,10 +43,14 @@ export const SpiritualShopSection: React.FC<SpiritualShopSectionProps> = ({
   // Apply SEO on mount
   React.useEffect(() => {
     applyPageSeo('gear', false);
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    if (document.documentElement) document.documentElement.scrollTop = 0;
-    if (document.body) document.body.scrollTop = 0;
-  }, []);
+    if (!highlightProductId) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      if (document.documentElement) document.documentElement.scrollTop = 0;
+      if (document.body) document.body.scrollTop = 0;
+    } else {
+      window.scrollTo({ top: 380, behavior: 'smooth' });
+    }
+  }, [highlightProductId]);
 
   // Handle Notify Me Submission
   const handleNotifySubmit = (e: React.FormEvent) => {
@@ -155,7 +159,7 @@ export const SpiritualShopSection: React.FC<SpiritualShopSectionProps> = ({
               <button
                 type="button"
                 onClick={() => handleTriggerAcoustic('chime')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all shadow-md active:scale-95 cursor-pointer ${
+                className={`min-h-[38px] px-3.5 py-2 rounded-xl text-xs font-semibold inline-flex items-center justify-center gap-2 whitespace-nowrap transition-all shadow-md active:scale-95 cursor-pointer ${
                   isTestingSound === 'chime'
                     ? 'bg-emerald-400 text-slate-950 border border-emerald-300 shadow-emerald-400/30'
                     : 'bg-slate-900 border border-slate-750 text-slate-200 hover:border-emerald-400/50 hover:bg-slate-850'
@@ -178,7 +182,7 @@ export const SpiritualShopSection: React.FC<SpiritualShopSectionProps> = ({
               <button
                 type="button"
                 onClick={() => handleTriggerAcoustic('fork')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all shadow-md active:scale-95 cursor-pointer ${
+                className={`min-h-[38px] px-3.5 py-2 rounded-xl text-xs font-semibold inline-flex items-center justify-center gap-2 whitespace-nowrap transition-all shadow-md active:scale-95 cursor-pointer ${
                   isTestingSound === 'fork'
                     ? 'bg-indigo-400 text-slate-950 border border-indigo-300 shadow-indigo-400/30'
                     : 'bg-slate-900 border border-slate-750 text-slate-200 hover:border-indigo-400/50 hover:bg-slate-850'
@@ -201,7 +205,7 @@ export const SpiritualShopSection: React.FC<SpiritualShopSectionProps> = ({
               <button
                 type="button"
                 onClick={() => handleTriggerAcoustic('crystal')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all shadow-md active:scale-95 cursor-pointer ${
+                className={`min-h-[38px] px-3.5 py-2 rounded-xl text-xs font-semibold inline-flex items-center justify-center gap-2 whitespace-nowrap transition-all shadow-md active:scale-95 cursor-pointer ${
                   isTestingSound === 'crystal'
                     ? 'bg-sky-400 text-slate-950 border border-sky-300 shadow-sky-400/30'
                     : 'bg-slate-900 border border-slate-750 text-slate-200 hover:border-sky-400/50 hover:bg-slate-850'
@@ -224,7 +228,7 @@ export const SpiritualShopSection: React.FC<SpiritualShopSectionProps> = ({
               <button
                 type="button"
                 onClick={() => handleTriggerAcoustic('bundle')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all shadow-md active:scale-95 cursor-pointer ${
+                className={`min-h-[38px] px-3.5 py-2 rounded-xl text-xs font-semibold inline-flex items-center justify-center gap-2 whitespace-nowrap transition-all shadow-md active:scale-95 cursor-pointer ${
                   isTestingSound === 'bundle'
                     ? 'bg-gradient-to-r from-amber-400 to-rose-400 text-slate-950 border border-amber-300 shadow-amber-400/30'
                     : 'bg-slate-900 border border-slate-750 text-slate-200 hover:border-amber-400/50 hover:bg-slate-850'
@@ -247,10 +251,10 @@ export const SpiritualShopSection: React.FC<SpiritualShopSectionProps> = ({
               <button
                 type="button"
                 onClick={() => handleTriggerAcoustic('stage')}
-                className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all shadow-md active:scale-95 cursor-pointer ${
+                className={`min-h-[38px] px-3.5 py-2 rounded-xl border text-xs font-semibold inline-flex items-center justify-center gap-2 whitespace-nowrap transition-all shadow-md active:scale-95 cursor-pointer ${
                   isTestingSound === 'stage'
-                    ? 'bg-rose-500 text-white border border-rose-400 shadow-rose-500/30'
-                    : 'bg-gradient-to-r from-sky-400 to-indigo-500 text-slate-950 hover:from-sky-300 hover:to-indigo-400'
+                    ? 'bg-rose-500 text-white border-rose-400 shadow-rose-500/30'
+                    : 'bg-gradient-to-r from-sky-400 to-indigo-500 border-transparent text-slate-950 hover:from-sky-300 hover:to-indigo-400'
                 }`}
                 title={isTestingSound === 'stage' ? 'Stop Soundstage Test' : 'Test stereo soundstage separation and 432Hz binaural wave'}
               >

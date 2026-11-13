@@ -69,47 +69,53 @@ export const FloatingAdminMaintenanceBar: React.FC<FloatingAdminMaintenanceBarPr
         </div>
 
         {/* Right: Quick Action Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Live Visitor Simulation */}
           {onToggleForceVisitorMode && (
             <button
+              type="button"
               onClick={onToggleForceVisitorMode}
-              className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
+              className="min-h-[30px] px-2.5 py-1 rounded-lg border border-transparent bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-bold transition-all inline-flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer shadow-sm active:scale-95"
               title="Test the Under Construction page live as a visitor in your browser"
             >
-              <Eye className="w-3.5 h-3.5 text-slate-950" />
+              <Eye className="w-3.5 h-3.5 text-slate-950 shrink-0" />
               <span>Experience as Visitor</span>
             </button>
           )}
 
           {/* Preview Visitor View Modal */}
           <button
+            type="button"
             onClick={onOpenPreview}
-            className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40 text-[11px] font-medium transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+            className="min-h-[30px] px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40 text-[11px] font-medium transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer shadow-sm"
             title="Preview the exact Under Construction page in a modal"
           >
-            <ExternalLink className="w-3.5 h-3.5" />
+            <ExternalLink className="w-3.5 h-3.5 shrink-0" />
             <span>Preview Modal</span>
           </button>
 
           {/* Edit in Admin Panel */}
           <button
+            type="button"
             onClick={onNavigateToSettings}
-            className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 hover:border-slate-600 text-[11px] font-medium transition-colors flex items-center gap-1.5 cursor-pointer"
+            className="min-h-[30px] px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 hover:border-slate-600 text-[11px] font-medium transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer"
             title="Edit quotes, messages, launch date, and options in the Admin Panel"
           >
-            <Sliders className="w-3.5 h-3.5 text-sky-400" />
-            <span className="hidden sm:inline">Edit in</span> Settings
+            <Sliders className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+            <span>
+              <span className="hidden sm:inline">Edit in </span>Settings
+            </span>
           </button>
 
           {/* Instant 1-Click Turn Off */}
           <button
+            type="button"
             onClick={handleTurnOff}
             disabled={isToggling}
-            className="px-3 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-[11px] transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50"
+            className="min-h-[30px] px-3 py-1 rounded-lg border border-transparent bg-rose-600 hover:bg-rose-500 text-white font-bold text-[11px] transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer shadow-sm disabled:opacity-50"
             title="Turn off Under Construction Mode and immediately restore public website"
           >
-            <PowerOff className="w-3.5 h-3.5" />
+            <PowerOff className="w-3.5 h-3.5 shrink-0" />
             <span>{isToggling ? 'Restoring...' : 'Turn Off Mode'}</span>
           </button>
         </div>

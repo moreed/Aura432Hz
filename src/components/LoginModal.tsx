@@ -222,9 +222,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
             disabled={loading}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-40"
+            className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 inline-flex items-center justify-center shrink-0 transition-colors cursor-pointer disabled:opacity-40"
+            aria-label="Close modal"
           >
             <X className="w-4 h-4" />
           </button>
@@ -376,6 +378,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
               {currentUser.role === 'admin' && onOpenAdmin && (
                 <button
+                  type="button"
                   onClick={() => {
                     onClose();
                     onOpenAdmin();
@@ -413,6 +416,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               )}
 
               <button
+                type="button"
                 onClick={handleSignOut}
                 disabled={loading}
                 className="w-full py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-750 text-rose-300 border border-slate-700 font-medium text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
@@ -454,6 +458,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 <>
                   {/* 1. Google 1-Click Button */}
                   <button
+                    type="button"
                     onClick={handleGoogleLogin}
                     disabled={loading}
                     className="w-full py-3.5 px-4 rounded-2xl bg-white hover:bg-slate-100 disabled:opacity-50 text-slate-900 font-semibold text-xs transition-all shadow-md flex items-center justify-center gap-3 active:scale-98 cursor-pointer"
@@ -509,6 +514,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
                   {/* 3. Instant Fast Guest Login */}
                   <button
+                    type="button"
                     onClick={() => handleGuestLogin()}
                     disabled={loading}
                     className="w-full py-2.5 px-4 rounded-2xl bg-slate-800/80 hover:bg-slate-750 text-slate-300 font-medium text-xs border border-slate-700/80 transition-all flex items-center justify-center gap-2 active:scale-98 cursor-pointer"
@@ -566,7 +572,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     <button
                       type="submit"
                       disabled={loading || !memberEmail.trim()}
-                      className="flex-1 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-450 disabled:opacity-50 text-slate-950 font-semibold text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                      className="flex-1 min-h-[38px] py-2 px-4 rounded-xl bg-sky-500 hover:bg-sky-450 disabled:opacity-50 text-slate-950 font-semibold text-xs transition-colors cursor-pointer inline-flex items-center justify-center gap-1.5 whitespace-nowrap"
                     >
                       {loading ? (
                         <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -578,7 +584,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setActiveTab('options')}
-                      className="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition-colors cursor-pointer"
+                      className="min-h-[38px] px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium inline-flex items-center justify-center whitespace-nowrap transition-colors cursor-pointer"
                     >
                       Back
                     </button>

@@ -455,56 +455,61 @@ export const UnderConstructionEditor: React.FC<UnderConstructionEditorProps> = (
         )}
 
         {/* Tab switchers: Editor vs Waitlist Subscribers */}
-        <div className="flex items-center justify-between border-t border-slate-800/80 pt-3">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2.5 border-t border-slate-800/80 pt-3">
+          <div className="flex flex-wrap items-center gap-2">
             <button
+              type="button"
               onClick={() => setEditorTab('editor')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 min-h-[36px] rounded-xl border text-xs font-semibold transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer ${
                 editorTab === 'editor'
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                  : 'border-transparent text-slate-400 hover:text-slate-200'
               }`}
             >
-              <Sliders className="w-3.5 h-3.5" />
+              <Sliders className="w-3.5 h-3.5 shrink-0" />
               <span>Teaser Content Editor &amp; Preview</span>
             </button>
             <button
+              type="button"
               onClick={() => setEditorTab('subscribers')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 min-h-[36px] rounded-xl border text-xs font-semibold transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer ${
                 editorTab === 'subscribers'
-                  ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
+                  : 'border-transparent text-slate-400 hover:text-slate-200'
               }`}
             >
-              <Users className="w-3.5 h-3.5" />
+              <Users className="w-3.5 h-3.5 shrink-0" />
               <span>Waitlist Subscribers ({subscribers.length})</span>
             </button>
           </div>
 
           {editorTab === 'editor' && (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-[11px] text-slate-400 hidden sm:inline">Preview:</span>
               <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 p-0.5 rounded-xl text-[11px]">
                 <button
+                  type="button"
                   onClick={() => setPreviewMode('split')}
-                  className={`px-2 py-0.5 rounded-lg font-mono ${
-                    previewMode === 'split' ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-slate-400'
+                  className={`px-2 py-1 rounded-lg font-mono cursor-pointer ${
+                    previewMode === 'split' ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
                   Split View
                 </button>
                 <button
+                  type="button"
                   onClick={() => setPreviewMode('form')}
-                  className={`px-2 py-0.5 rounded-lg font-mono ${
-                    previewMode === 'form' ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-slate-400'
+                  className={`px-2 py-1 rounded-lg font-mono cursor-pointer ${
+                    previewMode === 'form' ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
                   Form Only
                 </button>
                 <button
+                  type="button"
                   onClick={() => setPreviewMode('preview')}
-                  className={`px-2 py-0.5 rounded-lg font-mono ${
-                    previewMode === 'preview' ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-slate-400'
+                  className={`px-2 py-1 rounded-lg font-mono cursor-pointer ${
+                    previewMode === 'preview' ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
                   Preview Only
@@ -515,7 +520,7 @@ export const UnderConstructionEditor: React.FC<UnderConstructionEditorProps> = (
                 <button
                   type="button"
                   onClick={onOpenFullscreenPreview}
-                  className="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs border border-slate-700 transition-colors flex items-center gap-1"
+                  className="min-h-[32px] px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs border border-slate-700 transition-colors inline-flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
                   title="Open full window preview"
                 >
                   <Eye className="w-3.5 h-3.5 text-amber-400" />
@@ -1247,8 +1252,9 @@ export const UnderConstructionEditor: React.FC<UnderConstructionEditorProps> = (
 
                 <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 p-0.5 rounded-xl text-[11px]">
                   <button
+                    type="button"
                     onClick={() => setPreviewDevice('desktop')}
-                    className={`px-2 py-0.5 rounded-lg flex items-center gap-1 transition-all ${
+                    className={`px-2 py-1 rounded-lg inline-flex items-center gap-1 transition-all cursor-pointer ${
                       previewDevice === 'desktop' ? 'bg-slate-800 text-amber-300 font-bold' : 'text-slate-400 hover:text-slate-200'
                     }`}
                   >
@@ -1256,8 +1262,9 @@ export const UnderConstructionEditor: React.FC<UnderConstructionEditorProps> = (
                     <span>Desktop</span>
                   </button>
                   <button
+                    type="button"
                     onClick={() => setPreviewDevice('tablet')}
-                    className={`px-2 py-0.5 rounded-lg flex items-center gap-1 transition-all ${
+                    className={`px-2 py-1 rounded-lg inline-flex items-center gap-1 transition-all cursor-pointer ${
                       previewDevice === 'tablet' ? 'bg-slate-800 text-amber-300 font-bold' : 'text-slate-400 hover:text-slate-200'
                     }`}
                   >
@@ -1265,8 +1272,9 @@ export const UnderConstructionEditor: React.FC<UnderConstructionEditorProps> = (
                     <span>Tablet</span>
                   </button>
                   <button
+                    type="button"
                     onClick={() => setPreviewDevice('mobile')}
-                    className={`px-2 py-0.5 rounded-lg flex items-center gap-1 transition-all ${
+                    className={`px-2 py-1 rounded-lg inline-flex items-center gap-1 transition-all cursor-pointer ${
                       previewDevice === 'mobile' ? 'bg-slate-800 text-amber-300 font-bold' : 'text-slate-400 hover:text-slate-200'
                     }`}
                   >
@@ -1313,18 +1321,20 @@ export const UnderConstructionEditor: React.FC<UnderConstructionEditorProps> = (
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button
+                type="button"
                 onClick={loadSubscribers}
                 disabled={loadingSubscribers}
-                className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs border border-slate-800 transition-colors"
+                className="min-h-[34px] px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs border border-slate-800 transition-colors inline-flex items-center justify-center cursor-pointer whitespace-nowrap"
               >
                 {loadingSubscribers ? 'Refreshing...' : 'Refresh List'}
               </button>
               <button
+                type="button"
                 onClick={handleExportCSV}
                 disabled={subscribers.length === 0}
-                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                className="min-h-[34px] px-3 py-1.5 rounded-xl border border-transparent bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors inline-flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer whitespace-nowrap"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Export CSV ({subscribers.length})</span>

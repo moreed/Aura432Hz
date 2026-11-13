@@ -1514,11 +1514,12 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
           {/* Palette Color Selector */}
           <div className="relative">
             <button
+              type="button"
               onClick={() => setShowPaletteMenu(!showPaletteMenu)}
-              className="p-2 sm:p-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 backdrop-blur-xl border border-slate-800 text-slate-300 hover:text-white transition-colors shadow-lg flex items-center gap-1.5 text-xs"
+              className="h-9 px-2.5 sm:px-3 rounded-xl bg-slate-900/80 hover:bg-slate-800 backdrop-blur-xl border border-slate-800 text-slate-300 hover:text-white transition-colors shadow-lg inline-flex items-center justify-center gap-1.5 text-xs whitespace-nowrap cursor-pointer"
               title="Change Ambient Color Atmosphere"
             >
-              <Palette className="w-4 h-4 text-sky-400" />
+              <Palette className="w-4 h-4 text-sky-400 shrink-0" />
               <span className="hidden md:inline text-xs">{currentTheme.name}</span>
             </button>
 
@@ -1533,11 +1534,12 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
                   return (
                     <button
                       key={key}
+                      type="button"
                       onClick={() => {
                         setColorPalette(key);
                         setShowPaletteMenu(false);
                       }}
-                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition-colors ${
+                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition-colors cursor-pointer ${
                         isCur ? 'bg-slate-800 text-white font-medium' : 'text-slate-400 hover:text-slate-200'
                       }`}
                     >
@@ -1558,25 +1560,27 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
 
           {/* Volume Normalization Toggle */}
           <button
+            type="button"
             onClick={onToggleVolumeNormalized ? onToggleVolumeNormalized : () => {}}
-            className={`p-2 sm:p-2.5 rounded-xl backdrop-blur-xl border transition-colors shadow-lg flex items-center gap-1.5 text-xs ${
+            className={`h-9 px-2.5 sm:px-3 rounded-xl backdrop-blur-xl border transition-colors shadow-lg inline-flex items-center justify-center gap-1.5 text-xs whitespace-nowrap cursor-pointer ${
               isVolumeNormalized
                 ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
                 : 'bg-slate-900/80 hover:bg-slate-800 border-slate-800 text-slate-400'
             }`}
             title={isVolumeNormalized ? 'EBU R128 Volume Normalization: Active (Equal Loudness)' : 'Volume Normalization: Off (Raw Dynamics)'}
           >
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
             <span className="hidden lg:inline">{isVolumeNormalized ? 'Auto-Level' : 'Raw'}</span>
           </button>
 
           {/* Sleep Timer */}
           <button
+            type="button"
             onClick={onOpenTimerModal}
-            className="p-2 sm:p-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 backdrop-blur-xl border border-slate-800 text-slate-300 hover:text-indigo-400 transition-colors shadow-lg flex items-center gap-1.5 text-xs"
+            className="h-9 px-2.5 sm:px-3 rounded-xl bg-slate-900/80 hover:bg-slate-800 backdrop-blur-xl border border-slate-800 text-slate-300 hover:text-indigo-400 transition-colors shadow-lg inline-flex items-center justify-center gap-1.5 text-xs whitespace-nowrap cursor-pointer"
             title="Set Sleep Timer"
           >
-            <Timer className="w-4 h-4 text-indigo-400" />
+            <Timer className="w-4 h-4 text-indigo-400 shrink-0" />
             <span className="hidden md:inline">
               {timerSecondsRemaining !== null
                 ? `${Math.floor(timerSecondsRemaining / 60)}m left`
@@ -1586,18 +1590,22 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
 
           {/* Browser Fullscreen Toggle */}
           <button
+            type="button"
             onClick={toggleBrowserFullscreen}
-            className="p-2 sm:p-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 backdrop-blur-xl border border-slate-800 text-slate-300 hover:text-white transition-colors shadow-lg"
+            className="w-9 h-9 rounded-xl bg-slate-900/80 hover:bg-slate-800 backdrop-blur-xl border border-slate-800 text-slate-300 hover:text-white inline-flex items-center justify-center shrink-0 transition-colors shadow-lg cursor-pointer"
             title={isBrowserFullscreen ? 'Exit Screen Fullscreen' : 'Enter Fullscreen'}
+            aria-label={isBrowserFullscreen ? 'Exit Screen Fullscreen' : 'Enter Fullscreen'}
           >
             {isBrowserFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>
 
           {/* Close Ambient Mode */}
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 sm:p-2.5 rounded-xl bg-slate-900/80 hover:bg-rose-950/60 backdrop-blur-xl border border-slate-800 hover:border-rose-600/40 text-slate-300 hover:text-rose-300 transition-colors shadow-lg"
+            className="w-9 h-9 rounded-xl bg-slate-900/80 hover:bg-rose-950/60 backdrop-blur-xl border border-slate-800 hover:border-rose-600/40 text-slate-300 hover:text-rose-300 inline-flex items-center justify-center shrink-0 transition-colors shadow-lg cursor-pointer"
             title="Exit Ambient Mode (Esc)"
+            aria-label="Exit Ambient Mode"
           >
             <X className="w-4 h-4" />
           </button>
@@ -1615,11 +1623,12 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
           {AMBIENT_VISUALIZER_MODES.map((mode) => (
             <button
               key={mode.id}
+              type="button"
               onClick={() => setVisualizerType(mode.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
+              className={`min-h-[32px] px-3 py-1 rounded-xl border text-xs font-medium whitespace-nowrap inline-flex items-center justify-center transition-all cursor-pointer ${
                 visualizerType === mode.id
-                  ? 'bg-gradient-to-r from-aurora-teal/25 to-cosmic-lavender/25 text-white border border-aurora-teal/50 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-gradient-to-r from-aurora-teal/25 to-cosmic-lavender/25 text-white border-aurora-teal/50 shadow-sm'
+                  : 'border-transparent text-slate-400 hover:text-slate-200'
               }`}
             >
               {mode.name}
@@ -1633,8 +1642,9 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
           <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
             {/* Big Play / Pause Primary Action */}
             <button
+              type="button"
               onClick={onTogglePlay}
-              className={`flex-1 sm:flex-none px-4 sm:px-7 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm transition-all shadow-xl flex items-center justify-center gap-2 active:scale-95 ${
+              className={`flex-1 sm:flex-none min-h-[42px] px-4 sm:px-7 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm transition-all shadow-xl inline-flex items-center justify-center gap-2 whitespace-nowrap active:scale-95 cursor-pointer ${
                 isPlaying
                   ? 'bg-rose-500 hover:bg-rose-400 text-white shadow-rose-500/30'
                   : 'bg-gradient-to-r from-aurora-teal via-teal-300 to-cosmic-lavender hover:opacity-95 text-midnight shadow-aurora-teal/30'
@@ -1642,12 +1652,12 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
             >
               {isPlaying ? (
                 <>
-                  <Pause className="w-4 h-4 fill-current" />
+                  <Pause className="w-4 h-4 fill-current shrink-0" />
                   <span>Pause {baseFreq}Hz</span>
                 </>
               ) : (
                 <>
-                  <Play className="w-4 h-4 fill-current text-midnight" />
+                  <Play className="w-4 h-4 fill-current text-midnight shrink-0" />
                   <span className="text-midnight">Begin {baseFreq}Hz</span>
                 </>
               )}
@@ -1661,8 +1671,9 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
               return (
                 <button
                   key={s.freq}
+                  type="button"
                   onClick={() => onSelectBaseFreq(s.freq)}
-                  className={`px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-mono font-medium transition-all whitespace-nowrap ${
+                  className={`min-h-[30px] px-2 sm:px-2.5 py-1 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-mono font-medium transition-all whitespace-nowrap inline-flex items-center justify-center cursor-pointer ${
                     isSelected
                       ? 'bg-cosmic-lavender/25 border border-cosmic-lavender/60 text-cosmic-lavender shadow-sm font-semibold'
                       : 'bg-slate-800/60 border border-slate-700/60 text-slate-400 hover:text-slate-200'
@@ -1706,8 +1717,9 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
           {natureSounds.slice(0, 6).map((sound) => (
             <button
               key={sound.id}
+              type="button"
               onClick={() => onToggleNatureSound(sound.id)}
-              className={`px-2.5 py-1 rounded-xl text-[11px] font-medium transition-all flex items-center gap-1.5 whitespace-nowrap ${
+              className={`min-h-[28px] px-2.5 py-1 rounded-xl text-[11px] font-medium transition-all inline-flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer ${
                 sound.enabled
                   ? 'bg-aurora-teal/20 border border-aurora-teal/50 text-aurora-teal shadow-sm'
                   : 'bg-slate-900/60 border border-slate-800 text-slate-400 hover:text-slate-200'

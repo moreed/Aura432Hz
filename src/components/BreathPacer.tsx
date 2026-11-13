@@ -2,13 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Wind,
   Play,
-  Pause,
   RotateCcw,
   Volume2,
   VolumeX,
   Sparkles,
   Check,
-  Heart,
   Shield,
   ChevronRight,
   Dices,
@@ -29,6 +27,7 @@ import {
 import { audioEngine } from '../services/audioEngine';
 import { Guided478Overlay } from './Guided478Overlay';
 import { BUILT_IN_MIX_PRESETS, MixPreset } from '../services/storage';
+import { BreathVisualizerCanvas, BreathAnimationStyle } from './BreathVisualizerCanvas';
 
 export type BreathPattern = 'relax_478' | 'box_4444' | 'coherence_55' | 'refresh_426';
 
@@ -280,6 +279,13 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
   const [isActive, setIsActive] = useState<boolean>(false);
   const [audioCueEnabled, setAudioCueEnabled] = useState<boolean>(true);
   const [show478Overlay, setShow478Overlay] = useState<boolean>(false);
+  const [animationStyle, setAnimationStyle] = useState<BreathAnimationStyle>(() => {
+    try {
+      const saved = localStorage.getItem('aura_breath_animation_style');
+      if (saved === 'orb' || saved === 'lotus' || saved === 'wave') return saved;
+    } catch {}
+    return 'orb';
+  });
 
   const [phaseIndex, setPhaseIndex] = useState<number>(0);
   const [phaseElapsed, setPhaseElapsed] = useState<number>(0);
@@ -287,6 +293,35 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
 
   const pattern = BREATH_PATTERNS.find((p) => p.id === selectedPattern) || BREATH_PATTERNS[0];
   const currentPhase = pattern.phases[phaseIndex];
+
+  // Keep latest phase timing in refs so the 60fps rAF oscilloscope loop stays uninterrupted
+  const phaseElapsedRef = useRef<number>(phaseElapsed);
+  phaseElapsedRef.current = phaseElapsed;
+  const currentPhaseRef = useRef(currentPhase);
+  currentPhaseRef.current = currentPhase;
+
+  const handleChangeAnimationStyle = (style: BreathAnimationStyle) => {
+    setAnimationStyle(style);
+    try {
+      localStorage.setItem('aura_breath_animation_style', style);
+    } catch {}
+  };
+
+  const handleToggleActive = () => {
+    const nextActive = !isActive;
+    setIsActive(nextActive);
+    if (nextActive && audioCueEnabled) {
+      audioEngine.playBreathCue(currentPhase.type);
+    }
+  };
+
+  const handleToggleAudioCue = () => {
+    const next = !audioCueEnabled;
+    setAudioCueEnabled(next);
+    if (next) {
+      audioEngine.playBreathCue(currentPhase.type);
+    }
+  };
 
   // Get current suitable preset recommendation for selected breathwork
   const suitablePool = SUITABLE_PRESETS_BY_PATTERN[selectedPattern] || SUITABLE_PRESETS_BY_PATTERN.relax_478;
@@ -330,14 +365,18 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
     });
   };
 
-  // Breath pacing tick timer
+  // High-precision breath pacing timer using performance.now delta
   useEffect(() => {
     if (!isActive) return;
 
-    const interval = 50; // update every 50ms for buttery smooth visual animation
+    let lastTick = performance.now();
     const timer = setInterval(() => {
+      const now = performance.now();
+      const deltaSec = Math.min((now - lastTick) / 1000, 0.2);
+      lastTick = now;
+
       setPhaseElapsed((prev) => {
-        const next = prev + interval / 1000;
+        const next = prev + deltaSec;
         if (next >= currentPhase.duration) {
           // Advance to next phase
           const nextIndex = (phaseIndex + 1) % pattern.phases.length;
@@ -346,7 +385,6 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
           if (nextIndex === 0) {
             setCompletedCycles((c) => {
               const newCount = c + 1;
-              // If auto-randomize is enabled, change preset randomly after each completed round!
               if (autoRandomizeOnCycle) {
                 handleRandomizePreset(selectedPattern, true);
               }
@@ -354,7 +392,7 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
             });
           }
 
-          // Trigger audio chime cue
+          // Trigger Sanctuary Bowls transition tone
           if (audioCueEnabled) {
             const nextPhaseType = pattern.phases[nextIndex].type;
             audioEngine.playBreathCue(nextPhaseType);
@@ -364,7 +402,7 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
         }
         return next;
       });
-    }, interval);
+    }, 30);
 
     return () => clearInterval(timer);
   }, [isActive, phaseIndex, pattern, currentPhase, audioCueEnabled, autoRandomizeOnCycle, selectedPattern]);
@@ -464,17 +502,18 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
       smoothedIntensityRef.current += (rawMicro - smoothedIntensityRef.current) * Math.min(1, dt * 14);
       const intensity = Math.max(0, Math.min(1, smoothedIntensityRef.current));
 
-      // Calculate Macro Respiration factor E (0 to 1)
+      // Calculate Macro Respiration factor E (0 to 1) from latest phase refs
       let macroE = 0.5;
-      if (isActive && currentPhase) {
-        const prog = Math.min(1, Math.max(0, phaseElapsed / currentPhase.duration));
-        if (currentPhase.type === 'inhale') {
+      const activePhase = currentPhaseRef.current;
+      if (isActive && activePhase) {
+        const prog = Math.min(1, Math.max(0, phaseElapsedRef.current / activePhase.duration));
+        if (activePhase.type === 'inhale') {
           // Smooth diaphragm expansion ease-in-out
           macroE = 0.5 - 0.5 * Math.cos(Math.PI * prog);
-        } else if (currentPhase.type === 'hold') {
-          const isHoldEmpty = currentPhase.name.toLowerCase().includes('empty');
+        } else if (activePhase.type === 'hold') {
+          const isHoldEmpty = activePhase.name.toLowerCase().includes('empty');
           macroE = isHoldEmpty ? 0.05 : 0.95 + 0.05 * Math.sin(sinePhaseRef.current * 0.1);
-        } else if (currentPhase.type === 'exhale') {
+        } else if (activePhase.type === 'exhale') {
           // Smooth diaphragm release ease-in-out
           macroE = 0.5 + 0.5 * Math.cos(Math.PI * prog);
         }
@@ -630,31 +669,9 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
         cancelAnimationFrame(animFrameRef.current);
       }
     };
-  }, [isCoherenceSync, coherenceDepth, enableAmbientAura, isPlaying, isActive, tuningHz, phaseElapsed, currentPhase]);
+  }, [isCoherenceSync, coherenceDepth, enableAmbientAura, isPlaying, isActive, tuningHz]);
 
   const isCurrentPresetActive = activePresetId === currentRecommendation.presetId;
-
-  // Calculate expansion progress (0 to 1) for the orb
-  const phaseProgress = Math.min(1, phaseElapsed / currentPhase.duration);
-
-  let scale = 1;
-  if (!isActive && phaseElapsed === 0) {
-    // Resting meditative scale before starting
-    scale = 0.95;
-  } else if (currentPhase.type === 'inhale') {
-    scale = 0.85 + phaseProgress * 0.45; // 0.85 -> 1.3
-  } else if (currentPhase.type === 'hold') {
-    scale =
-      phaseIndex === 1 && pattern.phases.length === 4 && pattern.phases[3].name.includes('Empty')
-        ? 1.3
-        : currentPhase.name.includes('Empty')
-        ? 0.85
-        : 1.3;
-  } else if (currentPhase.type === 'exhale') {
-    scale = 1.3 - phaseProgress * 0.45; // 1.3 -> 0.85
-  }
-
-  const secondsRemaining = Math.max(0, currentPhase.duration - phaseElapsed).toFixed(1);
   const isInitialState = !isActive && completedCycles === 0 && phaseElapsed === 0;
 
   return (
@@ -690,33 +707,33 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
                 <Wind className="w-4 h-4 text-sky-400" />
                 <span>Harmonic Breath Pacer</span>
               </h3>
-              <span className="text-[10px] bg-sky-500/15 text-sky-300 border border-sky-500/30 px-2 py-0.5 rounded-full font-mono">
+              <span className="text-[11px] text-sky-300/90 font-medium">
                 Vagal Regulation
               </span>
               {isCoherenceSync && (
-                <span className="text-[10px] bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1 animate-pulse">
-                  <Radio className="w-2.5 h-2.5 text-cyan-400" />
+                <span className="text-[11px] text-cyan-300 font-semibold flex items-center gap-1">
+                  <Radio className="w-3 h-3 text-cyan-400" />
                   <span>432Hz Sync Active</span>
                 </span>
               )}
               {isZenMode && (
-                <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 px-2 py-0.5 rounded-full font-semibold">
-                  Zen Mode Active
+                <span className="text-[11px] text-emerald-300 font-semibold">
+                  Zen View
                 </span>
               )}
             </div>
             <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5 font-light">
-              Synchronize respiration with tailored sound presets &amp; 432Hz harmonics to soothe the nervous system.
+              Synchronize respiration with tailored sound presets &amp; Sanctuary singing bowls.
             </p>
           </div>
 
-          {/* Action Pills */}
+          {/* Action Controls */}
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             {/* Coherence Sync 432Hz Mode Toggle */}
             <button
               type="button"
               onClick={handleToggleCoherenceSync}
-              className={`text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-xl border font-bold transition-all cursor-pointer ${
+              className={`text-xs inline-flex items-center justify-center gap-1.5 px-3 py-1.5 min-h-[36px] rounded-xl border font-semibold transition-all cursor-pointer whitespace-nowrap ${
                 isCoherenceSync
                   ? 'bg-gradient-to-r from-cyan-500/30 via-sky-500/25 to-indigo-500/30 border-cyan-400 text-cyan-200 shadow-md shadow-cyan-500/20 ring-1 ring-cyan-400/50'
                   : 'bg-slate-800/90 border-slate-700 text-slate-300 hover:text-cyan-300 hover:border-cyan-500/40'
@@ -724,17 +741,15 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
               title="Synchronize screen UI expansion & contraction with 432Hz sine wave cycle intensity"
               aria-pressed={isCoherenceSync}
             >
-              <Waves className={`w-3.5 h-3.5 ${isCoherenceSync ? 'text-cyan-400 animate-pulse' : 'text-slate-400'}`} />
+              <Waves className={`w-3.5 h-3.5 ${isCoherenceSync ? 'text-cyan-400' : 'text-slate-400'}`} />
               <span>Coherence Sync</span>
-              {isCoherenceSync && (
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping shrink-0" />
-              )}
             </button>
 
             {/* Guided 4-7-8 Trigger */}
             <button
+              type="button"
               onClick={() => setShow478Overlay(true)}
-              className="text-xs flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-300 hover:to-indigo-400 text-slate-950 font-bold rounded-xl shadow-sm active:scale-95 transition-all cursor-pointer"
+              className="text-xs inline-flex items-center justify-center gap-1.5 px-3 py-1.5 min-h-[36px] border border-transparent bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-300 hover:to-indigo-400 text-slate-950 font-bold rounded-xl shadow-sm active:scale-95 transition-all cursor-pointer whitespace-nowrap"
               title="Launch Guided 4-7-8 Breathing Session"
             >
               <Sparkles className="w-3.5 h-3.5 text-slate-950 fill-current" />
@@ -743,8 +758,9 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
 
             {/* Zen Mode Toggle */}
             <button
+              type="button"
               onClick={() => setIsZenMode(!isZenMode)}
-              className={`text-xs flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all cursor-pointer ${
+              className={`text-xs inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 min-h-[36px] rounded-xl border transition-all cursor-pointer whitespace-nowrap ${
                 isZenMode
                   ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300'
                   : 'bg-slate-800/90 border-slate-700 text-slate-400 hover:text-slate-200'
@@ -757,8 +773,9 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
 
             {/* Randomize Preset */}
             <button
+              type="button"
               onClick={() => handleRandomizePreset(selectedPattern, false)}
-              className={`text-xs flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-sky-400/40 bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 font-semibold transition-all cursor-pointer ${
+              className={`text-xs inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 min-h-[36px] rounded-xl border border-sky-400/40 bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 font-semibold transition-all cursor-pointer whitespace-nowrap ${
                 isShufflingPreset ? 'scale-105 ring-2 ring-sky-400' : ''
               }`}
               title="Randomly change suitable preset recommendation"
@@ -768,24 +785,27 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
               <span className="sm:hidden">Shuffle</span>
             </button>
 
-            {/* Chime Cue Toggle */}
+            {/* Sanctuary Bowls Cue Toggle */}
             <button
-              onClick={() => setAudioCueEnabled(!audioCueEnabled)}
-              className={`text-xs flex items-center gap-1 px-2.5 py-1.5 rounded-xl border transition-colors cursor-pointer ${
+              type="button"
+              onClick={handleToggleAudioCue}
+              aria-pressed={audioCueEnabled}
+              className={`text-xs inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 min-h-[36px] rounded-xl border transition-colors cursor-pointer whitespace-nowrap ${
                 audioCueEnabled
-                  ? 'bg-sky-500/20 border-sky-400 text-sky-300'
+                  ? 'bg-amber-500/20 border-amber-400/50 text-amber-200'
                   : 'bg-slate-800/90 border-slate-700 text-slate-400 hover:text-slate-200'
               }`}
-              title="Soft crystal chime tone on breath transitions"
+              title="Sanctuary singing bowls on breath transitions"
             >
               {audioCueEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
-              <span className="hidden sm:inline">Chime</span>
+              <span className="hidden sm:inline">Bowls</span>
             </button>
 
             {/* Reset */}
             <button
+              type="button"
               onClick={handleReset}
-              className="text-xs flex items-center gap-1 px-2.5 py-1.5 bg-slate-800/90 hover:bg-slate-700 text-slate-300 rounded-xl border border-slate-700 transition-colors cursor-pointer"
+              className="text-xs inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 min-h-[36px] bg-slate-800/90 hover:bg-slate-700 text-slate-300 rounded-xl border border-slate-700 transition-colors cursor-pointer whitespace-nowrap"
               title="Reset counter"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -885,10 +905,10 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
             <button
               type="button"
               onClick={handleApplyCurrentPreset}
-              className={`flex-1 md:flex-initial px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer ${
+              className={`flex-1 md:flex-initial px-3.5 py-1.5 min-h-[36px] rounded-xl border text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer whitespace-nowrap ${
                 isCurrentPresetActive
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/50'
-                  : 'bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-300 hover:to-indigo-400 text-slate-950'
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/50'
+                  : 'bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-300 hover:to-indigo-400 border-transparent text-slate-950'
               }`}
               title="Apply preset with smooth acoustic fade"
             >
@@ -908,8 +928,8 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
             <button
               type="button"
               onClick={() => handleRandomizePreset(selectedPattern, false)}
-              className={`px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-750 text-slate-200 border border-slate-700 hover:border-sky-400 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                isShufflingPreset ? 'rotate-180 scale-105' : ''
+              className={`px-3 py-1.5 min-h-[36px] rounded-xl bg-slate-800/90 hover:bg-slate-750 text-slate-200 border border-slate-700 hover:border-sky-400 text-xs font-semibold inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+                isShufflingPreset ? 'scale-105 ring-2 ring-sky-400' : ''
               }`}
               title="Pick another suitable preset randomly"
             >
@@ -1063,108 +1083,25 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
         </div>
       )}
 
-      {/* Central Visual Breathing Orb - Streamlined & Ergonomic */}
-      <div className={`flex flex-col items-center justify-center relative ${isZenMode ? 'py-4 sm:py-6' : 'py-3 sm:py-5'}`}>
-        {/* Pulsating Concentric Breathing Rings */}
-        <div className="relative w-48 h-48 sm:w-56 sm:h-56 flex items-center justify-center select-none">
-          {/* Outer Ripple Aura with Coherence Sync micro-coupling */}
-          <div
-            ref={orbRippleRef}
-            className="absolute rounded-full border border-sky-400/25 transition-all duration-300 pointer-events-none"
-            style={{
-              width: `${190 * scale}px`,
-              height: `${190 * scale}px`,
-              opacity: 0.35 + (scale - 0.85) * 0.8,
-              boxShadow: isCoherenceSync
-                ? '0 0 35px rgba(56, 189, 248, 0.45), inset 0 0 20px rgba(56, 189, 248, 0.25)'
-                : undefined,
-            }}
-          />
-
-          {/* Main Breathing Orb (Clickable to start/pause) */}
-          <button
-            onClick={() => setIsActive(!isActive)}
-            className={`rounded-full border shadow-xl flex flex-col items-center justify-center p-4 text-center transition-all duration-300 ease-out backdrop-blur-md cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 group ${
-              isCoherenceSync
-                ? 'bg-gradient-to-tr from-cyan-500/35 via-sky-500/25 to-indigo-500/35 border-cyan-400 shadow-cyan-500/30 ring-2 ring-cyan-400/40'
-                : 'bg-gradient-to-tr from-sky-500/30 via-indigo-500/20 to-cyan-400/30 border-sky-400/60 shadow-sky-500/25 hover:border-sky-300'
-            }`}
-            style={{
-              width: '145px',
-              height: '145px',
-              transform: `scale(${scale})`,
-            }}
-            title={isActive ? 'Click to Pause' : isInitialState ? 'Click to Start Breathwork' : 'Click to Resume'}
-            aria-label={isActive ? 'Pause breathwork' : 'Start breathwork'}
-          >
-            <span className="text-[11px] uppercase tracking-widest text-sky-300 font-semibold mb-0.5 flex items-center gap-1">
-              {!isActive && isInitialState ? (
-                <span className="inline-flex items-center gap-1 text-emerald-300 font-bold">
-                  <Play className="w-2.5 h-2.5 fill-current" /> Ready
-                </span>
-              ) : !isActive ? (
-                <span className="inline-flex items-center gap-1 text-amber-300 font-bold">
-                  <Pause className="w-2.5 h-2.5" /> Paused
-                </span>
-              ) : (
-                currentPhase.name
-              )}
-            </span>
-            <span className="text-3xl sm:text-4xl font-light text-slate-100 font-mono tracking-tight">
-              {secondsRemaining}s
-            </span>
-            <span className="text-[9px] text-slate-400 uppercase tracking-wider group-hover:text-sky-300 transition-colors">
-              {!isActive && isInitialState
-                ? 'Tap to Begin'
-                : !isActive
-                ? 'Tap to Resume'
-                : `${currentPhase.duration}s phase`}
-            </span>
-          </button>
-        </div>
-
-        {/* Phase Action Coaching Guide */}
-        <div className="mt-3 text-center max-w-md px-3">
-          <p className="text-xs sm:text-sm font-medium text-slate-200">
-            {!isActive && isInitialState
-              ? 'Prepared and paused. Find a comfortable posture and press Start when ready.'
-              : !isActive
-              ? 'Breathwork paused. Relax your breath and resume when ready.'
-              : currentPhase.cue}
-          </p>
-          <p className="text-[11px] text-slate-400 mt-0.5">
-            {pattern.desc}
-          </p>
-        </div>
-
-        {/* Controls: Play/Pause & Stats */}
-        <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3 w-full">
-          <button
-            onClick={() => setIsActive(!isActive)}
-            className={`w-full sm:w-auto px-6 py-2 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 cursor-pointer ${
-              isActive
-                ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
-                : 'bg-sky-500 hover:bg-sky-400 text-slate-950 shadow-sky-500/25 ring-2 ring-sky-400/40 animate-pulse'
-            }`}
-          >
-            {isActive ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-            <span>
-              {isInitialState
-                ? 'Start Breathwork'
-                : isActive
-                ? 'Pause Breathwork'
-                : 'Resume Breathwork'}
-            </span>
-          </button>
-
-          <div className="w-full sm:w-auto px-3 py-1.5 rounded-xl bg-slate-800/60 border border-slate-800 text-xs text-slate-300 flex items-center justify-center gap-2">
-            <Heart className="w-3.5 h-3.5 text-rose-400" />
-            <span>
-              Completed Cycles: <strong className="text-sky-300 font-mono">{completedCycles}</strong>
-            </span>
-          </div>
-        </div>
-      </div>
+      {/* Restyled Sanctuary Breathwork Visualizer with 3 Inhale & Exhale Animation Modes */}
+      <BreathVisualizerCanvas
+        isActive={isActive}
+        isInitialState={isInitialState}
+        isZenMode={isZenMode}
+        isCoherenceSync={isCoherenceSync}
+        audioCueEnabled={audioCueEnabled}
+        patternName={pattern.name}
+        patternDesc={pattern.desc}
+        phases={pattern.phases}
+        phaseIndex={phaseIndex}
+        phaseElapsed={phaseElapsed}
+        completedCycles={completedCycles}
+        animationStyle={animationStyle}
+        onChangeAnimationStyle={handleChangeAnimationStyle}
+        onToggleActive={handleToggleActive}
+        onToggleAudioCue={handleToggleAudioCue}
+        orbRippleRef={orbRippleRef}
+      />
 
       {/* Interactive Guided 4-7-8 Breathing Session Overlay */}
       <Guided478Overlay

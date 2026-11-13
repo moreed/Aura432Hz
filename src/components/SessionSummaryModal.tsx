@@ -79,8 +79,9 @@ export const SessionSummaryModal: React.FC<SessionSummaryModalProps> = ({
 
         {/* Close Button */}
         <button
+          type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-850 transition-colors cursor-pointer"
+          className="absolute top-4 right-4 w-8 h-8 inline-flex items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-slate-850 transition-colors cursor-pointer"
           aria-label="Close session summary"
         >
           <X className="w-4 h-4" />
@@ -142,7 +143,7 @@ export const SessionSummaryModal: React.FC<SessionSummaryModalProps> = ({
           <p className="text-slate-300 text-xs leading-relaxed">
             Take a slow, deep breath and roll your shoulders. You can jot down a quick thought in your Gratitude Journal or continue your day with quiet presence.
           </p>
-          <div className="flex items-center gap-2 pt-1">
+          <div className="flex flex-wrap items-center gap-2 pt-1">
             {onOpenGratitude && (
               <button
                 type="button"
@@ -150,7 +151,7 @@ export const SessionSummaryModal: React.FC<SessionSummaryModalProps> = ({
                   onClose();
                   onOpenGratitude();
                 }}
-                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                className="px-3 py-1.5 min-h-[34px] rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-200 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
               >
                 <Heart className="w-3.5 h-3.5 text-rose-400" />
                 <span>Journal Gratitude</span>
@@ -163,7 +164,7 @@ export const SessionSummaryModal: React.FC<SessionSummaryModalProps> = ({
                   onClose();
                   onOpenBreathwork();
                 }}
-                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                className="px-3 py-1.5 min-h-[34px] rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-200 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
               >
                 <Volume2 className="w-3.5 h-3.5 text-sky-400" />
                 <span>4-7-8 Breathing</span>

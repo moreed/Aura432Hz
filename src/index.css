@@ -21,6 +21,11 @@
   --color-midnight: #081321;
   --color-aurora-teal: #48E1D0;
   --color-cosmic-lavender: #A99AFB;
+  --color-slate-650: #415066;
+  --color-slate-750: #293548;
+  --color-slate-850: #172033;
+  --color-sky-350: #58c7fa;
+  --color-sky-450: #22b2f2;
 }
 
 :root {

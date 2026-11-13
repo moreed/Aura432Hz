@@ -405,11 +405,12 @@ export const SiteContentCustomizer: React.FC<SiteContentCustomizerProps> = ({
       {/* Navigation Sub-Tabs (Wrapping Flex - No Horizontal Scroll) */}
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-2">
         <button
+          type="button"
           onClick={() => setActiveSection('socials')}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shrink-0 ${
+          className={`px-3.5 py-1.5 min-h-[36px] rounded-xl text-xs font-semibold transition-all inline-flex items-center gap-1.5 shrink-0 border whitespace-nowrap cursor-pointer ${
             activeSection === 'socials'
-              ? 'bg-sky-500/20 text-sky-200 border border-sky-500/40 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-sky-500/20 text-sky-200 border-sky-500/40 shadow-sm'
+              : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
           }`}
         >
           <Radio className="w-3.5 h-3.5 text-sky-400" />
@@ -417,26 +418,28 @@ export const SiteContentCustomizer: React.FC<SiteContentCustomizerProps> = ({
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveSection('bulk')}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shrink-0 ${
+          className={`px-3.5 py-1.5 min-h-[36px] rounded-xl text-xs font-semibold transition-all inline-flex items-center gap-1.5 shrink-0 border whitespace-nowrap cursor-pointer ${
             activeSection === 'bulk'
-              ? 'bg-amber-500/25 text-amber-200 border border-amber-500/50 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-amber-500/25 text-amber-200 border-amber-500/50 shadow-sm'
+              : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
           }`}
         >
           <Zap className="w-3.5 h-3.5 text-amber-400" />
           <span>⚡ Bulk Edit & Site Flags</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[9px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40">
+          <span className="px-1.5 py-0.5 rounded-full text-[9px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40 leading-none">
             1-Action
           </span>
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveSection('hero')}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shrink-0 ${
+          className={`px-3.5 py-1.5 min-h-[36px] rounded-xl text-xs font-semibold transition-all inline-flex items-center gap-1.5 shrink-0 border whitespace-nowrap cursor-pointer ${
             activeSection === 'hero'
-              ? 'bg-indigo-500/20 text-indigo-200 border border-indigo-500/40 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-indigo-500/20 text-indigo-200 border-indigo-500/40 shadow-sm'
+              : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
           }`}
         >
           <Megaphone className="w-3.5 h-3.5 text-indigo-400" />
@@ -444,11 +447,12 @@ export const SiteContentCustomizer: React.FC<SiteContentCustomizerProps> = ({
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveSection('branding')}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shrink-0 ${
+          className={`px-3.5 py-1.5 min-h-[36px] rounded-xl text-xs font-semibold transition-all inline-flex items-center gap-1.5 shrink-0 border whitespace-nowrap cursor-pointer ${
             activeSection === 'branding'
-              ? 'bg-purple-500/20 text-purple-200 border border-purple-500/40 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-purple-500/20 text-purple-200 border-purple-500/40 shadow-sm'
+              : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
           }`}
         >
           <Type className="w-3.5 h-3.5 text-purple-400" />
@@ -456,11 +460,12 @@ export const SiteContentCustomizer: React.FC<SiteContentCustomizerProps> = ({
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveSection('construction')}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shrink-0 ${
+          className={`px-3.5 py-1.5 min-h-[36px] rounded-xl text-xs font-semibold transition-all inline-flex items-center gap-1.5 shrink-0 border whitespace-nowrap cursor-pointer ${
             activeSection === 'construction'
-              ? 'bg-gradient-to-r from-amber-500/30 to-amber-600/30 text-amber-200 border border-amber-400/60 shadow-sm ring-1 ring-amber-400/30'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-gradient-to-r from-amber-500/30 to-amber-600/30 text-amber-200 border-amber-400/60 shadow-sm ring-1 ring-amber-400/30'
+              : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
           }`}
         >
           <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />

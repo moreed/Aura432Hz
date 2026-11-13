@@ -36,8 +36,9 @@ export const HowItWorksModal: React.FC<HowItWorksModalProps> = ({
 
         {/* Close Button */}
         <button
+          type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-850 transition-colors cursor-pointer"
+          className="absolute top-4 right-4 w-8 h-8 rounded-xl text-slate-400 hover:text-white hover:bg-slate-850 inline-flex items-center justify-center transition-colors cursor-pointer"
           aria-label="Close dialog"
         >
           <X className="w-4 h-4" />
@@ -109,14 +110,14 @@ export const HowItWorksModal: React.FC<HowItWorksModalProps> = ({
               onClose();
               onStartListening();
             }}
-            className="flex-1 py-3 bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-300 hover:to-indigo-400 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-md active:scale-95 cursor-pointer text-center"
+            className="flex-1 min-h-[42px] py-2.5 px-4 border border-transparent bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-300 hover:to-indigo-400 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-md active:scale-95 inline-flex items-center justify-center cursor-pointer text-center"
           >
             Start listening now
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-3 bg-slate-800 hover:bg-slate-750 text-slate-300 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+            className="min-h-[42px] px-4 py-2.5 bg-slate-800 hover:bg-slate-750 border border-slate-750 text-slate-300 text-xs font-semibold rounded-xl inline-flex items-center justify-center transition-colors cursor-pointer"
           >
             Close
           </button>

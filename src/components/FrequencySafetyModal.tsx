@@ -163,17 +163,19 @@ export const FrequencySafetyModal: React.FC<FrequencySafetyModalProps> = ({
             <button
               type="button"
               onClick={() => window.print()}
-              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 transition-colors flex items-center gap-1.5 text-xs font-semibold cursor-pointer shadow-sm no-print"
+              className="min-h-[36px] px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap text-xs font-semibold cursor-pointer shadow-sm no-print"
               title="Print Calibration &amp; Safety Certificate"
             >
               <Printer className="w-3.5 h-3.5 text-emerald-400" />
               <span className="hidden sm:inline">Print Certificate</span>
             </button>
             <button
+              type="button"
               onClick={onClose}
-              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors cursor-pointer no-print"
+              className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 hover:text-white inline-flex items-center justify-center shrink-0 transition-colors cursor-pointer no-print"
+              aria-label="Close modal"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>

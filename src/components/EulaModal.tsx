@@ -79,7 +79,7 @@ export const EulaModal: React.FC<EulaModalProps> = ({ isOpen, onClose, onAccept 
             <button
               type="button"
               onClick={handlePrint}
-              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 transition-colors flex items-center gap-1.5 text-xs font-semibold cursor-pointer shadow-sm no-print"
+              className="min-h-[36px] px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap text-xs font-semibold cursor-pointer shadow-sm no-print"
               title="Print EULA Document"
               aria-label="Print EULA Document"
             >
@@ -87,8 +87,9 @@ export const EulaModal: React.FC<EulaModalProps> = ({ isOpen, onClose, onAccept 
               <span className="hidden sm:inline">Print EULA</span>
             </button>
             <button
+              type="button"
               onClick={onClose}
-              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer no-print"
+              className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 hover:text-slate-200 inline-flex items-center justify-center shrink-0 transition-colors cursor-pointer no-print"
               title="Close Dialog"
               aria-label="Close Dialog"
             >
@@ -110,8 +111,9 @@ export const EulaModal: React.FC<EulaModalProps> = ({ isOpen, onClose, onAccept 
           {/* Section 1: Acceptance & Overview */}
           <div className="border border-slate-800 rounded-2xl overflow-hidden bg-slate-900/60 print-avoid-break">
             <button
+              type="button"
               onClick={() => toggleSection('overview')}
-              className="w-full p-4 flex items-center justify-between text-left font-semibold text-slate-200 hover:bg-slate-800/50 transition-colors"
+              className="w-full p-4 flex items-center justify-between text-left font-semibold text-slate-200 hover:bg-slate-800/50 transition-colors cursor-pointer"
             >
               <span className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-sky-400" />
@@ -134,8 +136,9 @@ export const EulaModal: React.FC<EulaModalProps> = ({ isOpen, onClose, onAccept 
           {/* Section 2: Medical Disclaimer & Sound Therapy Safety */}
           <div className="border border-slate-800 rounded-2xl overflow-hidden bg-slate-900/60 print-avoid-break">
             <button
+              type="button"
               onClick={() => toggleSection('health')}
-              className="w-full p-4 flex items-center justify-between text-left font-semibold text-slate-200 hover:bg-slate-800/50 transition-colors"
+              className="w-full p-4 flex items-center justify-between text-left font-semibold text-slate-200 hover:bg-slate-800/50 transition-colors cursor-pointer"
             >
               <span className="flex items-center gap-2">
                 <Shield className="w-4 h-4 text-amber-400" />
@@ -169,8 +172,9 @@ export const EulaModal: React.FC<EulaModalProps> = ({ isOpen, onClose, onAccept 
           {/* Section 3: Audio Generation, Procedural Synthesis & IP Rights */}
           <div className="border border-slate-800 rounded-2xl overflow-hidden bg-slate-900/60 print-avoid-break">
             <button
+              type="button"
               onClick={() => toggleSection('license')}
-              className="w-full p-4 flex items-center justify-between text-left font-semibold text-slate-200 hover:bg-slate-800/50 transition-colors"
+              className="w-full p-4 flex items-center justify-between text-left font-semibold text-slate-200 hover:bg-slate-800/50 transition-colors cursor-pointer"
             >
               <span className="flex items-center gap-2">
                 <Headphones className="w-4 h-4 text-emerald-400" />
@@ -196,8 +200,9 @@ export const EulaModal: React.FC<EulaModalProps> = ({ isOpen, onClose, onAccept 
           {/* Section 4: User Accounts, Privacy & Cloud Storage */}
           <div className="border border-slate-800 rounded-2xl overflow-hidden bg-slate-900/60 print-avoid-break">
             <button
+              type="button"
               onClick={() => toggleSection('privacy')}
-              className="w-full p-4 flex items-center justify-between text-left font-semibold text-slate-200 hover:bg-slate-800/50 transition-colors"
+              className="w-full p-4 flex items-center justify-between text-left font-semibold text-slate-200 hover:bg-slate-800/50 transition-colors cursor-pointer"
             >
               <span className="flex items-center gap-2">
                 <Lock className="w-4 h-4 text-indigo-400" />
@@ -223,8 +228,9 @@ export const EulaModal: React.FC<EulaModalProps> = ({ isOpen, onClose, onAccept 
           {/* Section 5: Limitation of Liability & Governing Law */}
           <div className="border border-slate-800 rounded-2xl overflow-hidden bg-slate-900/60 print-avoid-break">
             <button
+              type="button"
               onClick={() => toggleSection('liability')}
-              className="w-full p-4 flex items-center justify-between text-left font-semibold text-slate-200 hover:bg-slate-800/50 transition-colors"
+              className="w-full p-4 flex items-center justify-between text-left font-semibold text-slate-200 hover:bg-slate-800/50 transition-colors cursor-pointer"
             >
               <span className="flex items-center gap-2">
                 <HeartHandshake className="w-4 h-4 text-purple-400" />

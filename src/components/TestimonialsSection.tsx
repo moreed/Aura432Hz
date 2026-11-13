@@ -197,8 +197,9 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ isAdmi
         </div>
 
         <button
+          type="button"
           onClick={() => setIsSubmitting(!isSubmitting)}
-          className="text-xs flex items-center gap-1.5 px-3.5 py-2 bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-400/40 rounded-xl transition-colors font-medium self-start sm:self-auto cursor-pointer"
+          className="text-xs inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[36px] bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-400/40 rounded-xl transition-colors font-medium self-start sm:self-auto cursor-pointer whitespace-nowrap shrink-0"
         >
           <MessageSquare className="w-3.5 h-3.5" />
           <span>Share Listener Review</span>
@@ -326,9 +327,10 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ isAdmi
           { id: 'healing', label: 'Acoustic Timbre & Rest' },
         ].map((item) => (
           <button
+            type="button"
             key={item.id}
             onClick={() => setFilter(item.id as any)}
-            className={`text-xs px-3 py-1 rounded-full border transition-all whitespace-nowrap cursor-pointer ${
+            className={`text-xs px-3 py-1 min-h-[30px] inline-flex items-center rounded-full border transition-all whitespace-nowrap cursor-pointer ${
               filter === item.id
                 ? 'bg-amber-500/20 text-amber-300 border-amber-400 font-semibold'
                 : 'bg-slate-850 text-slate-400 border-slate-750 hover:text-slate-200'

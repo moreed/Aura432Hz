@@ -197,7 +197,7 @@ export const GoogleAnalyticsPanel: React.FC<GoogleAnalyticsPanelProps> = ({
             {connected && (
               <>
                 {/* Timeframe Segmented Control */}
-                <div className="flex items-center gap-1 p-1 bg-slate-900 border border-slate-800 rounded-xl">
+                <div className="inline-flex items-center gap-1 p-1 h-9 bg-slate-900 border border-slate-800 rounded-xl">
                   {(
                     [
                       { id: 'today', label: 'Today' },
@@ -209,10 +209,10 @@ export const GoogleAnalyticsPanel: React.FC<GoogleAnalyticsPanelProps> = ({
                       key={opt.id}
                       type="button"
                       onClick={() => onChangeRange(opt.id)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
+                      className={`px-3 h-7 inline-flex items-center justify-center rounded-lg border text-xs font-medium whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
                         range === opt.id
-                          ? 'bg-teal-400/20 text-teal-300 border border-teal-400/40'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'bg-teal-400/20 text-teal-300 border-teal-400/40'
+                          : 'border-transparent text-slate-400 hover:text-slate-200'
                       }`}
                     >
                       {opt.label}
@@ -225,7 +225,7 @@ export const GoogleAnalyticsPanel: React.FC<GoogleAnalyticsPanelProps> = ({
                   value={pollIntervalSec}
                   onChange={(e) => onChangePollInterval(Number(e.target.value))}
                   aria-label="Real-time sync interval"
-                  className="bg-slate-900 border border-slate-800 text-xs text-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:border-teal-400 font-mono"
+                  className="h-9 bg-slate-900 border border-slate-800 text-xs text-slate-200 rounded-xl px-3 py-0 focus:outline-none focus:border-teal-400 font-mono cursor-pointer"
                 >
                   <option value={15}>Auto-Sync: 15s</option>
                   <option value={30}>Auto-Sync: 30s</option>
@@ -237,7 +237,7 @@ export const GoogleAnalyticsPanel: React.FC<GoogleAnalyticsPanelProps> = ({
                   type="button"
                   onClick={onSyncNow}
                   disabled={syncing || !config?.propertyId}
-                  className="px-4 py-2 rounded-xl bg-teal-400 hover:bg-teal-300 text-slate-950 font-semibold text-xs transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 disabled:opacity-50 cursor-pointer"
+                  className="h-9 px-4 py-0 rounded-xl border border-transparent bg-teal-400 hover:bg-teal-300 text-slate-950 font-semibold text-xs transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 disabled:opacity-50 cursor-pointer"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
                   <span>{syncing ? 'Syncing...' : 'Sync Now'}</span>
@@ -246,7 +246,7 @@ export const GoogleAnalyticsPanel: React.FC<GoogleAnalyticsPanelProps> = ({
                 <button
                   type="button"
                   onClick={onDisconnectOAuth}
-                  className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-rose-950/50 text-slate-300 hover:text-rose-300 border border-slate-800 hover:border-rose-500/40 text-xs font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
+                  className="h-9 px-3 py-0 rounded-xl bg-slate-900 hover:bg-rose-950/50 text-slate-300 hover:text-rose-300 border border-slate-800 hover:border-rose-500/40 text-xs font-medium transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
                   title="Clear in-memory Google Analytics authorization"
                 >
                   <LogOut className="w-3.5 h-3.5" />

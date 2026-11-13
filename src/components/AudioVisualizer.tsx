@@ -2556,8 +2556,9 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
               <span>Animation Refinement</span>
             </span>
             <button
+              type="button"
               onClick={() => setShowComfortMenu(false)}
-              className="text-slate-400 hover:text-slate-900 dark:hover:text-white p-0.5"
+              className="w-7 h-7 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"
               aria-label="Close animation refinement menu"
             >
               ✕
@@ -2573,8 +2574,9 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
                 return (
                   <button
                     key={p.id}
+                    type="button"
                     onClick={() => setComfortPreset(p.id)}
-                    className={`w-full p-2 rounded-xl text-left transition-all text-[11px] flex items-start gap-2 ${
+                    className={`w-full p-2 rounded-xl text-left transition-all text-[11px] flex items-start gap-2 cursor-pointer ${
                       isSelected
                         ? 'bg-sky-500/20 border border-sky-400/50 text-sky-800 dark:text-sky-200'
                         : 'hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300 border border-transparent'
@@ -2606,8 +2608,9 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
                 return (
                   <button
                     key={s.id}
+                    type="button"
                     onClick={() => setFlowSpeed(s.id)}
-                    className={`py-1.5 px-1 rounded-lg text-center text-[10px] font-medium border transition-all ${
+                    className={`py-1.5 px-1 rounded-lg text-center text-[10px] font-medium border transition-all cursor-pointer ${
                       isSelected
                         ? 'bg-indigo-500/20 border-indigo-400 text-indigo-700 dark:text-indigo-200 font-semibold'
                         : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -2710,8 +2713,9 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
               <span>Sacred Geometries</span>
             </span>
             <button
+              type="button"
               onClick={() => setShowModePicker(false)}
-              className={`text-xs p-1 ${effectiveIsLight ? 'text-slate-500 hover:text-slate-900' : 'text-slate-400 hover:text-white'}`}
+              className={`text-xs w-7 h-7 inline-flex items-center justify-center rounded-lg cursor-pointer ${effectiveIsLight ? 'text-slate-500 hover:text-slate-900' : 'text-slate-400 hover:text-white'}`}
               aria-label="Close visualizer pattern selection"
             >
               ✕
@@ -2723,11 +2727,12 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
               return (
                 <button
                   key={m.id}
+                  type="button"
                   onClick={() => {
                     setMode(m.id);
                     setShowModePicker(false);
                   }}
-                  className={`p-2 rounded-xl text-left border transition-all text-[11px] ${
+                  className={`p-2 rounded-xl text-left border transition-all text-[11px] cursor-pointer ${
                     isSelected
                       ? effectiveIsLight
                         ? 'bg-sky-100 border-sky-400 text-sky-800 font-semibold shadow-sm'
@@ -2761,7 +2766,8 @@ function areVisualizerPropsEqual(
     prevProps.baseFreq === nextProps.baseFreq &&
     prevProps.alphaBeatHz === nextProps.alphaBeatHz &&
     prevProps.brainwaveName === nextProps.brainwaveName &&
-    prevProps.isLight === nextProps.isLight
+    prevProps.isLight === nextProps.isLight &&
+    prevProps.isMusicalMode === nextProps.isMusicalMode
   );
 }
 

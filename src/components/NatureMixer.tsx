@@ -497,7 +497,7 @@ const PresetCard = React.memo<PresetCardProps>(function PresetCard({
             <button
               type="button"
               onClick={(e) => onToggleFavorite(preset.id, e)}
-              className={`p-1.5 rounded-lg border transition-all active:scale-90 cursor-pointer ${
+              className={`w-8 h-8 rounded-lg border inline-flex items-center justify-center shrink-0 transition-all active:scale-90 cursor-pointer ${
                 isFav
                   ? 'bg-rose-500/20 border-rose-500/40 text-rose-400'
                   : 'bg-slate-900/80 border-slate-750 text-slate-500 hover:text-rose-400 hover:border-slate-650'
@@ -511,11 +511,11 @@ const PresetCard = React.memo<PresetCardProps>(function PresetCard({
             {/* Download / Protection Controls */}
             {preset.isCustom ? (
               // Custom Preset: Downloadable by Logged-in Users & Admin
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 <button
                   type="button"
                   onClick={(e) => onDownloadPreset(preset, e)}
-                  className={`p-1.5 rounded-lg border transition-all active:scale-90 cursor-pointer ${
+                  className={`w-8 h-8 rounded-lg border inline-flex items-center justify-center shrink-0 transition-all active:scale-90 cursor-pointer ${
                     isLoggedIn || isAdmin
                       ? 'bg-purple-950/60 border-purple-500/40 text-purple-300 hover:bg-purple-900/60 hover:text-purple-200'
                       : 'bg-slate-900/80 border-slate-750 text-slate-500 hover:text-amber-400 hover:border-amber-500/40'
@@ -538,11 +538,11 @@ const PresetCard = React.memo<PresetCardProps>(function PresetCard({
                   <button
                     type="button"
                     onClick={(e) => onExportWavClick(preset, e)}
-                    className="p-2 min-w-[36px] min-h-[36px] rounded-xl border bg-emerald-950/60 border-emerald-500/40 text-emerald-300 hover:bg-emerald-900/60 hover:text-emerald-100 transition-all active:scale-95 cursor-pointer flex items-center justify-center group"
+                    className="w-8 h-8 rounded-lg border bg-emerald-950/60 border-emerald-500/40 text-emerald-300 hover:bg-emerald-900/60 hover:text-emerald-100 transition-all active:scale-95 cursor-pointer inline-flex items-center justify-center shrink-0 group"
                     title={`Export Offline Audio (Studio WAV / MP3) for "${preset.name}"`}
                     aria-label={`Export Offline Audio for ${preset.name}`}
                   >
-                    <Download className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+                    <Download className="w-3.5 h-3.5 text-emerald-400 group-hover:scale-110 transition-transform" />
                   </button>
                 )}
               </div>
@@ -553,11 +553,11 @@ const PresetCard = React.memo<PresetCardProps>(function PresetCard({
                   <button
                     type="button"
                     onClick={(e) => onExportWavClick(preset, e)}
-                    className="p-2 min-w-[36px] min-h-[36px] rounded-xl border bg-emerald-950/60 border-emerald-500/40 text-emerald-300 hover:bg-emerald-900/60 hover:text-emerald-100 transition-all active:scale-95 cursor-pointer flex items-center justify-center group"
+                    className="w-8 h-8 rounded-lg border bg-emerald-950/60 border-emerald-500/40 text-emerald-300 hover:bg-emerald-900/60 hover:text-emerald-100 transition-all active:scale-95 cursor-pointer inline-flex items-center justify-center shrink-0 group"
                     title={`Export Offline Audio (Studio WAV / MP3) for "${preset.name}"`}
                     aria-label={`Export Offline Audio for ${preset.name}`}
                   >
-                    <Download className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+                    <Download className="w-3.5 h-3.5 text-emerald-400 group-hover:scale-110 transition-transform" />
                   </button>
                 )}
 
@@ -565,7 +565,7 @@ const PresetCard = React.memo<PresetCardProps>(function PresetCard({
                   <button
                     type="button"
                     onClick={(e) => onDownloadPreset(preset, e)}
-                    className="p-1.5 rounded-lg border bg-sky-950/60 border-sky-500/40 text-sky-300 hover:bg-sky-900/60 transition-all active:scale-90 cursor-pointer"
+                    className="w-8 h-8 rounded-lg border inline-flex items-center justify-center shrink-0 bg-sky-950/60 border-sky-500/40 text-sky-300 hover:bg-sky-900/60 transition-all active:scale-90 cursor-pointer"
                     title="Admin Download: Creator Preset JSON"
                     aria-label="Admin download"
                   >
@@ -579,8 +579,9 @@ const PresetCard = React.memo<PresetCardProps>(function PresetCard({
               <button
                 type="button"
                 onClick={(e) => onDeletePreset(preset.id, e)}
-                className="p-1 text-slate-500 hover:text-rose-400 transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-lg border border-slate-750 bg-slate-900/80 text-slate-400 hover:text-rose-400 hover:border-rose-500/40 inline-flex items-center justify-center shrink-0 transition-colors cursor-pointer"
                 title="Delete Custom Preset"
+                aria-label="Delete Custom Preset"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
@@ -1029,11 +1030,12 @@ const NatureMixerComponent: React.FC<NatureMixerProps> = ({
           {/* Quick Action Tools */}
           <div className="flex items-center gap-2 flex-wrap">
             <button
+              type="button"
               onClick={handleRandomizeMix}
-              className="text-xs flex items-center gap-1.5 px-3 py-2 bg-slate-800/90 hover:bg-slate-750 text-slate-200 rounded-xl transition-colors border border-slate-700/80 active:scale-95 shadow-sm"
+              className="text-xs inline-flex items-center justify-center gap-1.5 px-3 py-1.5 min-h-[36px] bg-slate-800/90 hover:bg-slate-750 text-slate-200 rounded-xl transition-colors border border-slate-700/80 active:scale-95 shadow-sm cursor-pointer whitespace-nowrap"
               title="Generate random acoustic blend"
             >
-              <Dices className="w-3.5 h-3.5 text-indigo-400" />
+              <Dices className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
               <span>Random Blend</span>
             </button>
 
@@ -1041,38 +1043,40 @@ const NatureMixerComponent: React.FC<NatureMixerProps> = ({
               <button
                 type="button"
                 onClick={handleMuteAll}
-                className="text-xs flex items-center gap-1.5 px-3 py-2 bg-slate-800/90 hover:bg-slate-750 text-rose-300 rounded-xl transition-colors border border-slate-700/80 active:scale-95 shadow-sm cursor-pointer"
+                className="text-xs inline-flex items-center justify-center gap-1.5 px-3 py-1.5 min-h-[36px] bg-slate-800/90 hover:bg-slate-750 text-rose-300 rounded-xl transition-colors border border-slate-700/80 active:scale-95 shadow-sm cursor-pointer whitespace-nowrap"
                 title="Mute all active nature sound layers"
               >
-                <VolumeX className="w-3.5 h-3.5 text-rose-400" />
+                <VolumeX className="w-3.5 h-3.5 text-rose-400 shrink-0" />
                 <span>Mute All</span>
               </button>
             ) : (
               <button
                 type="button"
                 onClick={handleUnmuteAll}
-                className="text-xs flex items-center gap-1.5 px-3 py-2 bg-slate-800/90 hover:bg-slate-750 text-emerald-300 rounded-xl transition-colors border border-slate-700/80 active:scale-95 shadow-sm cursor-pointer"
+                className="text-xs inline-flex items-center justify-center gap-1.5 px-3 py-1.5 min-h-[36px] bg-slate-800/90 hover:bg-slate-750 text-emerald-300 rounded-xl transition-colors border border-slate-700/80 active:scale-95 shadow-sm cursor-pointer whitespace-nowrap"
                 title="Unmute & activate ambient nature soundscape"
               >
-                <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
+                <Volume2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 <span>Unmute All</span>
               </button>
             )}
 
             <button
+              type="button"
               onClick={() => setIsSavingPreset(!isSavingPreset)}
-              className="text-xs flex items-center gap-1.5 px-3.5 py-2 bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 rounded-xl transition-colors border border-sky-500/40 active:scale-95 font-medium shadow-sm cursor-pointer"
+              className="text-xs inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 min-h-[36px] bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 rounded-xl transition-colors border border-sky-500/40 active:scale-95 font-medium shadow-sm cursor-pointer whitespace-nowrap"
             >
-              <BookmarkPlus className="w-3.5 h-3.5" />
+              <BookmarkPlus className="w-3.5 h-3.5 shrink-0" />
               <span>Save Mix</span>
             </button>
 
             <button
+              type="button"
               onClick={handleImportPresetClick}
-              className="text-xs flex items-center gap-1.5 px-3.5 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 rounded-xl transition-colors border border-purple-500/40 active:scale-95 font-medium shadow-sm cursor-pointer"
+              className="text-xs inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 min-h-[36px] bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 rounded-xl transition-colors border border-purple-500/40 active:scale-95 font-medium shadow-sm cursor-pointer whitespace-nowrap"
               title="Import custom soundscape JSON preset"
             >
-              <FileUp className="w-3.5 h-3.5" />
+              <FileUp className="w-3.5 h-3.5 shrink-0" />
               <span>Import Preset</span>
             </button>
 
@@ -1131,6 +1135,7 @@ const NatureMixerComponent: React.FC<NatureMixerProps> = ({
               </span>
             )}
             <button
+              type="button"
               onClick={() => onToggleVolumeNormalized ? onToggleVolumeNormalized() : audioEngine.setVolumeNormalization(!isVolumeNormalized)}
               className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                 isVolumeNormalized ? 'bg-emerald-500' : 'bg-slate-700'
@@ -1255,8 +1260,9 @@ const NatureMixerComponent: React.FC<NatureMixerProps> = ({
           />
           {presetSearchQuery && (
             <button
+              type="button"
               onClick={() => setPresetSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 p-0.5 rounded cursor-pointer"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 inline-flex items-center justify-center text-slate-400 hover:text-slate-200 rounded-md cursor-pointer"
               title="Clear search"
               aria-label="Clear soundscape search"
             >
@@ -1300,8 +1306,9 @@ const NatureMixerComponent: React.FC<NatureMixerProps> = ({
             return (
               <button
                 key={cat.id}
+                type="button"
                 onClick={() => setSelectedPresetCategory(cat.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all border flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 min-h-[34px] rounded-xl text-xs font-medium whitespace-nowrap transition-all border inline-flex items-center justify-center gap-1.5 cursor-pointer ${
                   isSelected
                     ? getCategoryActiveStyle(cat.id)
                     : 'bg-slate-900/80 hover:bg-slate-800/90 border-slate-750 text-slate-400 hover:text-slate-200'
@@ -1346,8 +1353,9 @@ const NatureMixerComponent: React.FC<NatureMixerProps> = ({
             return (
               <button
                 key={String(item.freq)}
+                type="button"
                 onClick={() => setSelectedFreqFilter(item.freq)}
-                className={`text-[11px] font-mono px-2 py-0.5 rounded-lg border whitespace-nowrap transition-colors flex items-center gap-1 ${
+                className={`text-[11px] font-mono px-2.5 py-1 min-h-[28px] rounded-lg border whitespace-nowrap transition-colors inline-flex items-center justify-center gap-1 cursor-pointer ${
                   isSelected
                     ? 'bg-indigo-500/25 border-indigo-400 text-indigo-200 font-semibold'
                     : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
@@ -1386,8 +1394,9 @@ const NatureMixerComponent: React.FC<NatureMixerProps> = ({
               <span className="leading-relaxed">{downloadNotice.message}</span>
             </div>
             <button
+              type="button"
               onClick={() => setDownloadNotice(null)}
-              className="px-2 py-1 rounded-lg bg-black/30 hover:bg-black/50 text-slate-300 text-[11px] shrink-0 transition-colors"
+              className="px-2.5 py-1 min-h-[28px] rounded-lg bg-black/30 hover:bg-black/50 text-slate-300 text-[11px] shrink-0 transition-colors cursor-pointer"
             >
               Dismiss
             </button>
@@ -1416,15 +1425,17 @@ const NatureMixerComponent: React.FC<NatureMixerProps> = ({
             </p>
             {presetSearchQuery ? (
               <button
+                type="button"
                 onClick={() => setPresetSearchQuery('')}
-                className="mt-2 text-xs font-semibold px-4 py-2 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 transition-colors cursor-pointer"
+                className="mt-2 text-xs font-semibold px-4 py-2 min-h-[36px] inline-flex items-center justify-center rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 transition-colors cursor-pointer"
               >
                 Clear Search Query
               </button>
             ) : selectedPresetCategory === 'favorites' ? (
               <button
+                type="button"
                 onClick={() => setSelectedPresetCategory('all')}
-                className="mt-2 text-xs font-semibold px-4 py-2 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 transition-colors cursor-pointer"
+                className="mt-2 text-xs font-semibold px-4 py-2 min-h-[36px] inline-flex items-center justify-center rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 transition-colors cursor-pointer"
               >
                 Browse All 32 Soundscapes
               </button>
@@ -1518,10 +1529,10 @@ const NatureMixerComponent: React.FC<NatureMixerProps> = ({
             <button
               type="button"
               onClick={onToggleMusicalMode ? onToggleMusicalMode : () => audioEngine.toggleAmbientChords()}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer flex items-center gap-1.5 shrink-0 ${
+              className={`px-4 py-2 min-h-[36px] rounded-xl border text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 ${
                 isMusicalMode
-                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-indigo-500/30 hover:brightness-110'
-                  : 'bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700'
+                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600 border-transparent text-white shadow-indigo-500/30 hover:brightness-110'
+                  : 'bg-slate-800 hover:bg-slate-750 text-slate-200 border-slate-700'
               }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
@@ -1552,8 +1563,9 @@ const NatureMixerComponent: React.FC<NatureMixerProps> = ({
             {soundCategoryFilterTabs.map((cat) => (
               <button
                 key={cat.id}
+                type="button"
                 onClick={() => setSoundCategoryFilter(cat.id as any)}
-                className={`text-xs px-2.5 py-1 rounded-xl border transition-all whitespace-nowrap cursor-pointer ${
+                className={`text-xs px-2.5 py-1 min-h-[30px] rounded-xl border transition-all inline-flex items-center justify-center whitespace-nowrap cursor-pointer ${
                   soundCategoryFilter === cat.id
                     ? 'bg-sky-500/20 text-sky-300 border-sky-400 font-medium'
                     : 'bg-slate-800/50 text-slate-400 border-slate-750 hover:text-slate-200'
@@ -1578,8 +1590,9 @@ const NatureMixerComponent: React.FC<NatureMixerProps> = ({
           />
           {layerSearchQuery && (
             <button
+              type="button"
               onClick={() => setLayerSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 p-0.5 rounded cursor-pointer"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 inline-flex items-center justify-center text-slate-400 hover:text-slate-200 rounded-md cursor-pointer"
               title="Clear layer search"
               aria-label="Clear acoustic layer search"
             >
@@ -1599,11 +1612,12 @@ const NatureMixerComponent: React.FC<NatureMixerProps> = ({
               Try searching for "rain", "stream", "bowls", "harp", "flute", "campfire", or reset filters.
             </p>
             <button
+              type="button"
               onClick={() => {
                 setLayerSearchQuery('');
                 setSoundCategoryFilter('all');
               }}
-              className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 transition-colors cursor-pointer"
+              className="mt-2 text-xs font-semibold px-3.5 py-1.5 min-h-[34px] inline-flex items-center justify-center rounded-xl bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 transition-colors cursor-pointer"
             >
               Reset Sound Filter
             </button>
@@ -1634,6 +1648,9 @@ function areNatureMixerPropsEqual(
   if (prev.isVolumeNormalized !== next.isVolumeNormalized) return false;
   if (prev.isLoggedIn !== next.isLoggedIn) return false;
   if (prev.isAdmin !== next.isAdmin) return false;
+  if (prev.isMusicalMode !== next.isMusicalMode) return false;
+  if (prev.musicalVolume !== next.musicalVolume) return false;
+  if (prev.baseFreq !== next.baseFreq) return false;
   if (prev.sounds !== next.sounds) {
     if (prev.sounds.length !== next.sounds.length) return false;
     for (let i = 0; i < prev.sounds.length; i++) {

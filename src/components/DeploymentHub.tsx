@@ -179,12 +179,13 @@ export default {
             </div>
           </div>
           <button
+            type="button"
             onClick={runCheck}
             disabled={checkLoading}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold text-xs transition shadow-lg hover:shadow-amber-500/25 disabled:opacity-50 whitespace-nowrap self-stretch md:self-auto justify-center"
+            className="min-h-[38px] inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold text-xs transition shadow-lg hover:shadow-amber-500/25 disabled:opacity-50 whitespace-nowrap self-stretch md:self-auto cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${checkLoading ? 'animate-spin' : ''}`} />
-            {checkLoading ? 'Verifying Connections...' : 'Test Connections'}
+            <span>{checkLoading ? 'Verifying Connections...' : 'Test Connections'}</span>
           </button>
         </div>
       </div>
@@ -249,9 +250,11 @@ export default {
           <div className="bg-slate-950/80 rounded-xl p-2.5 border border-slate-800 text-[11px] font-mono text-amber-300 break-all mb-3 select-all flex items-center justify-between">
             <span>{AURA_CLOUDFLARE_CONFIG.accountId}</span>
             <button
+              type="button"
               onClick={() => copyToClipboard(AURA_CLOUDFLARE_CONFIG.accountId, 'account_id_card')}
-              className="text-slate-400 hover:text-white transition ml-1"
+              className="w-7 h-7 rounded inline-flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition ml-1 shrink-0 cursor-pointer"
               title="Copy Account ID"
+              aria-label="Copy Account ID"
             >
               {copiedKey === 'account_id_card' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
             </button>
@@ -281,9 +284,11 @@ export default {
               <span className="text-slate-500 text-[10px] uppercase">Account ID:</span>
               <span className="font-bold">{AURA_CLOUDFLARE_CONFIG.accountId}</span>
               <button
+                type="button"
                 onClick={() => copyToClipboard(AURA_CLOUDFLARE_CONFIG.accountId, 'account_id_btn')}
-                className="p-1 hover:bg-slate-800 rounded transition text-slate-400 hover:text-white"
+                className="w-7 h-7 hover:bg-slate-800 rounded inline-flex items-center justify-center transition text-slate-400 hover:text-white shrink-0 cursor-pointer"
                 title="Copy Account ID"
+                aria-label="Copy Account ID"
               >
                 {copiedKey === 'account_id_btn' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
@@ -293,9 +298,11 @@ export default {
               <span className="text-slate-500 text-[10px] uppercase">Domain:</span>
               <span className="font-bold">{AURA_CLOUDFLARE_CONFIG.domain}</span>
               <button
+                type="button"
                 onClick={() => copyToClipboard(AURA_CLOUDFLARE_CONFIG.domain, 'domain_btn')}
-                className="p-1 hover:bg-slate-800 rounded transition text-slate-400 hover:text-white"
+                className="w-7 h-7 hover:bg-slate-800 rounded inline-flex items-center justify-center transition text-slate-400 hover:text-white shrink-0 cursor-pointer"
                 title="Copy Domain"
+                aria-label="Copy Domain"
               >
                 {copiedKey === 'domain_btn' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
@@ -365,8 +372,9 @@ export default {
                   <td className="py-3 px-4 font-sans text-slate-400 text-[11px]">{rec.purpose}</td>
                   <td className="py-3 px-4 text-right">
                     <button
+                      type="button"
                       onClick={() => copyToClipboard(rec.content, `dns_${idx}`)}
-                      className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] transition inline-flex items-center gap-1"
+                      className="min-h-[28px] px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] transition inline-flex items-center justify-center gap-1 cursor-pointer"
                     >
                       {copiedKey === `dns_${idx}` ? (
                         <>
@@ -450,42 +458,47 @@ export default {
             <span className="text-xs font-semibold text-white">Production Configuration Codebase</span>
           </div>
 
-          <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+          <div className="flex flex-wrap items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
             <button
+              type="button"
               onClick={() => setActiveConfigTab('wrangler')}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition ${
+              className={`min-h-[30px] px-3 py-1 rounded-lg text-xs font-medium inline-flex items-center justify-center whitespace-nowrap transition cursor-pointer ${
                 activeConfigTab === 'wrangler' ? 'bg-amber-500 text-slate-950 font-semibold' : 'text-slate-400 hover:text-white'
               }`}
             >
               wrangler.toml
             </button>
             <button
+              type="button"
               onClick={() => setActiveConfigTab('github')}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition ${
+              className={`min-h-[30px] px-3 py-1 rounded-lg text-xs font-medium inline-flex items-center justify-center whitespace-nowrap transition cursor-pointer ${
                 activeConfigTab === 'github' ? 'bg-amber-500 text-slate-950 font-semibold' : 'text-slate-400 hover:text-white'
               }`}
             >
               deploy.yml
             </button>
             <button
+              type="button"
               onClick={() => setActiveConfigTab('worker')}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition ${
+              className={`min-h-[30px] px-3 py-1 rounded-lg text-xs font-medium inline-flex items-center justify-center whitespace-nowrap transition cursor-pointer ${
                 activeConfigTab === 'worker' ? 'bg-amber-500 text-slate-950 font-semibold' : 'text-slate-400 hover:text-white'
               }`}
             >
               worker.js
             </button>
             <button
+              type="button"
               onClick={() => setActiveConfigTab('headers')}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition ${
+              className={`min-h-[30px] px-3 py-1 rounded-lg text-xs font-medium inline-flex items-center justify-center whitespace-nowrap transition cursor-pointer ${
                 activeConfigTab === 'headers' ? 'bg-amber-500 text-slate-950 font-semibold' : 'text-slate-400 hover:text-white'
               }`}
             >
               _headers
             </button>
             <button
+              type="button"
               onClick={() => setActiveConfigTab('redirects')}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition ${
+              className={`min-h-[30px] px-3 py-1 rounded-lg text-xs font-medium inline-flex items-center justify-center whitespace-nowrap transition cursor-pointer ${
                 activeConfigTab === 'redirects' ? 'bg-amber-500 text-slate-950 font-semibold' : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -496,8 +509,9 @@ export default {
 
         <div className="p-4 bg-slate-950/90 font-mono text-[11px] text-slate-300 overflow-x-auto relative">
           <button
+            type="button"
             onClick={() => copyToClipboard(configFiles[activeConfigTab], `code_${activeConfigTab}`)}
-            className="absolute top-4 right-4 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs transition flex items-center gap-1.5 border border-slate-700 shadow-md"
+            className="absolute top-4 right-4 min-h-[30px] px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs transition inline-flex items-center justify-center gap-1.5 border border-slate-700 shadow-md cursor-pointer"
           >
             {copiedKey === `code_${activeConfigTab}` ? (
               <>

@@ -213,7 +213,14 @@ export const AffiliateDashboard: React.FC = () => {
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             <span>{successToast}</span>
           </div>
-          <button onClick={() => setSuccessToast(null)} className="text-emerald-300 hover:text-white">✕</button>
+          <button
+            type="button"
+            onClick={() => setSuccessToast(null)}
+            className="w-6 h-6 rounded-md text-emerald-300 hover:text-white inline-flex items-center justify-center cursor-pointer"
+            aria-label="Dismiss notification"
+          >
+            ✕
+          </button>
         </div>
       )}
 
@@ -376,18 +383,19 @@ export const AffiliateDashboard: React.FC = () => {
                   {fetchedData.partner}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={handleStageProductInQueue}
-                  className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs flex items-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer"
+                  className="min-h-[36px] px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-all shadow-md active:scale-95 cursor-pointer"
                 >
                   <Layers className="w-3.5 h-3.5 text-indigo-300" />
                   <span>Stage in Draft Queue</span>
                 </button>
                 <button
+                  type="button"
                   onClick={handleImportFetched}
-                  className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer"
+                  className="min-h-[36px] px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-all shadow-md active:scale-95 cursor-pointer"
                 >
                   <Check className="w-4 h-4" />
                   <span>Publish to Sanctuary Shop</span>

@@ -118,8 +118,9 @@ export const MusicalPlayground: React.FC = () => {
         {/* Ambient Wind Chimes Toggle */}
         <div className="flex items-center gap-2 shrink-0">
           <button
+            type="button"
             onClick={() => setIsAutoChimes(!isAutoChimes)}
-            className={`text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${
+            className={`text-xs inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[34px] rounded-xl border transition-all cursor-pointer whitespace-nowrap ${
               isAutoChimes
                 ? 'bg-amber-500/20 border-amber-400 text-amber-200 shadow-sm'
                 : 'bg-slate-800/90 border-slate-700 text-slate-400 hover:text-slate-200'
@@ -150,6 +151,7 @@ export const MusicalPlayground: React.FC = () => {
             const isPressed = activeNoteIdx === idx;
             return (
               <button
+                type="button"
                 key={k.note}
                 onClick={() => handlePlayNote(idx)}
                 className={`relative h-20 sm:h-24 md:h-26 rounded-xl border transition-all duration-150 flex flex-col items-center justify-between p-2 select-none active:scale-95 cursor-pointer ${
@@ -160,7 +162,7 @@ export const MusicalPlayground: React.FC = () => {
                 aria-label={`Play ${k.note} ${k.freq}Hz`}
               >
                 {/* Key Shortcut Badge */}
-                <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-800/80 text-slate-400 border border-slate-700 leading-none">
+                <span className="text-[9px] font-mono px-1 py-0.5 rounded bg-slate-800/80 text-slate-400 border border-slate-700 leading-none">
                   {k.keyLabel}
                 </span>
 
@@ -199,11 +201,12 @@ export const MusicalPlayground: React.FC = () => {
 
           {/* Toggle Chords Button */}
           <button
+            type="button"
             onClick={handleToggleChords}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+            className={`px-3.5 py-1.5 min-h-[34px] rounded-xl text-xs font-semibold inline-flex items-center justify-center gap-1.5 border transition-all cursor-pointer whitespace-nowrap ${
               isChordsActive
-                ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/30'
-                : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
+                ? 'bg-indigo-600 hover:bg-indigo-500 text-white border-transparent shadow-md shadow-indigo-600/30'
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
             }`}
           >
             {isChordsActive ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-current" />}
@@ -219,6 +222,7 @@ export const MusicalPlayground: React.FC = () => {
             { id: 'mystic_cosmos', name: 'Mystic Cosmos', chords: 'Asus2 • Dsus2 • Esus4' },
           ].map((item) => (
             <button
+              type="button"
               key={item.id}
               onClick={() => handleProgressionChange(item.id)}
               className={`p-2 rounded-xl border text-left text-xs transition-all cursor-pointer ${

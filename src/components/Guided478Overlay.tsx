@@ -344,11 +344,12 @@ export const Guided478Overlay: React.FC<Guided478OverlayProps> = ({
             {[4, 8, 0].map((c) => (
               <button
                 key={c}
+                type="button"
                 onClick={() => setTargetCycles(c)}
-                className={`px-2 py-0.5 rounded-lg font-medium transition-all ${
+                className={`min-w-[26px] h-[26px] px-1.5 rounded-lg border font-medium inline-flex items-center justify-center transition-all cursor-pointer ${
                   targetCycles === c
-                    ? 'bg-sky-500/30 text-sky-200 border border-sky-400/50'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-sky-500/30 text-sky-200 border-sky-400/50'
+                    : 'border-transparent text-slate-400 hover:text-white'
                 }`}
                 title={c === 0 ? 'Continuous Endless Cycles' : `${c} Guided Cycles`}
               >
@@ -357,24 +358,26 @@ export const Guided478Overlay: React.FC<Guided478OverlayProps> = ({
             ))}
           </div>
 
-          {/* Audio Chime Cue Toggle */}
+          {/* Sanctuary Bowls Audio Cue Toggle */}
           <button
+            type="button"
             onClick={() => setAudioCueEnabled(!audioCueEnabled)}
-            className={`p-2 rounded-xl border transition-colors ${
+            className={`w-9 h-9 rounded-xl border inline-flex items-center justify-center shrink-0 transition-colors cursor-pointer ${
               audioCueEnabled
-                ? 'bg-sky-500/20 border-sky-400/50 text-sky-300'
+                ? 'bg-amber-500/20 border-amber-400/50 text-amber-300'
                 : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-slate-200'
             }`}
-            title={audioCueEnabled ? 'Audio Chime Cues: Active' : 'Audio Chime Cues: Muted'}
-            aria-label="Toggle audio cue chime"
+            title={audioCueEnabled ? 'Sanctuary Bowls Sound: Active' : 'Sanctuary Bowls Sound: Muted'}
+            aria-label="Toggle sanctuary bowls sound"
           >
             {audioCueEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
           </button>
 
           {/* Haptic Cue Toggle */}
           <button
+            type="button"
             onClick={() => setHapticEnabled(!hapticEnabled)}
-            className={`p-2 rounded-xl border transition-colors ${
+            className={`w-9 h-9 rounded-xl border inline-flex items-center justify-center shrink-0 transition-colors cursor-pointer ${
               hapticEnabled
                 ? 'bg-amber-500/20 border-amber-400/50 text-amber-300'
                 : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-slate-200'
@@ -393,8 +396,9 @@ export const Guided478Overlay: React.FC<Guided478OverlayProps> = ({
 
           {/* Fullscreen Button */}
           <button
+            type="button"
             onClick={handleToggleFullscreen}
-            className="p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white transition-colors"
+            className="w-9 h-9 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white inline-flex items-center justify-center shrink-0 transition-colors cursor-pointer"
             title="Toggle Fullscreen"
             aria-label="Toggle fullscreen"
           >
@@ -403,8 +407,9 @@ export const Guided478Overlay: React.FC<Guided478OverlayProps> = ({
 
           {/* Close Overlay Button */}
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 rounded-xl bg-slate-900/80 hover:bg-rose-950/60 border border-slate-800 hover:border-rose-500/40 text-slate-300 hover:text-rose-300 transition-colors"
+            className="w-9 h-9 rounded-xl bg-slate-900/80 hover:bg-rose-950/60 border border-slate-800 hover:border-rose-500/40 text-slate-300 hover:text-rose-300 inline-flex items-center justify-center shrink-0 transition-colors cursor-pointer"
             title="Exit Session (Esc)"
             aria-label="Close guided session"
           >
@@ -598,6 +603,7 @@ export const Guided478Overlay: React.FC<Guided478OverlayProps> = ({
         {/* Right: Primary Controls */}
         <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
           <button
+            type="button"
             onClick={() => {
               setPhaseIndex(0);
               setElapsedInPhase(0);
@@ -605,7 +611,7 @@ export const Guided478Overlay: React.FC<Guided478OverlayProps> = ({
               setIsActive(false);
               triggerHaptic([40]);
             }}
-            className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer"
+            className="min-h-[38px] px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-medium transition-all inline-flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer"
             title="Reset to beginning of session"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -613,6 +619,7 @@ export const Guided478Overlay: React.FC<Guided478OverlayProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={() => {
               if (isSessionComplete) {
                 handleRestartSession();
@@ -623,10 +630,10 @@ export const Guided478Overlay: React.FC<Guided478OverlayProps> = ({
                 triggerHaptic([40]);
               }
             }}
-            className={`flex-1 sm:flex-initial px-6 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95 cursor-pointer ${
+            className={`flex-1 sm:flex-initial min-h-[38px] px-6 py-2 rounded-xl border text-xs font-semibold inline-flex items-center justify-center gap-2 whitespace-nowrap transition-all shadow-lg active:scale-95 cursor-pointer ${
               isActive
-                ? 'bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700'
-                : 'bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-300 hover:to-indigo-400 text-slate-950 font-bold shadow-sky-500/25 ring-2 ring-sky-400/40 animate-pulse'
+                ? 'bg-slate-800 hover:bg-slate-750 text-slate-200 border-slate-700'
+                : 'bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-300 hover:to-indigo-400 border-transparent text-slate-950 font-bold shadow-sky-500/25 ring-2 ring-sky-400/40 animate-pulse'
             }`}
           >
             {isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
@@ -677,15 +684,17 @@ export const Guided478Overlay: React.FC<Guided478OverlayProps> = ({
 
             <div className="flex flex-col sm:flex-row items-center gap-2 pt-2">
               <button
+                type="button"
                 onClick={handleRestartSession}
-                className="w-full sm:w-1/2 py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full sm:w-1/2 min-h-[38px] py-2 px-4 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 text-xs font-semibold transition-all inline-flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Repeat Session</span>
               </button>
               <button
+                type="button"
                 onClick={onClose}
-                className="w-full sm:w-1/2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-300 hover:to-indigo-400 text-slate-950 text-xs font-bold transition-all shadow-md shadow-sky-500/25 cursor-pointer"
+                className="w-full sm:w-1/2 min-h-[38px] py-2 px-4 rounded-xl border border-transparent bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-300 hover:to-indigo-400 text-slate-950 text-xs font-bold inline-flex items-center justify-center whitespace-nowrap transition-all shadow-md shadow-sky-500/25 cursor-pointer"
               >
                 <span>Return to Sanctuary</span>
               </button>

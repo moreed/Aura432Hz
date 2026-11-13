@@ -32,28 +32,30 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ isAdmin = false }) =
         </div>
 
         {/* Sub-tab pills */}
-        <div className="flex items-center p-1 bg-slate-950/80 border border-slate-800 rounded-2xl shrink-0">
+        <div className="flex flex-wrap items-center gap-1 p-1 bg-slate-950/80 border border-slate-800 rounded-2xl shrink-0">
           <button
+            type="button"
             onClick={() => setActiveSubTab('gratitude')}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
+            className={`px-4 py-2 min-h-[36px] rounded-xl text-xs font-semibold transition-all inline-flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer ${
               activeSubTab === 'gratitude'
                 ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Heart className="w-3.5 h-3.5" />
+            <Heart className="w-3.5 h-3.5 shrink-0" />
             <span>Gratitude Journal</span>
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveSubTab('testimonials')}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
+            className={`px-4 py-2 min-h-[36px] rounded-xl text-xs font-semibold transition-all inline-flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer ${
               activeSubTab === 'testimonials'
                 ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Star className="w-3.5 h-3.5 fill-current" />
+            <Star className="w-3.5 h-3.5 fill-current shrink-0" />
             <span>Listener Experiences</span>
           </button>
         </div>

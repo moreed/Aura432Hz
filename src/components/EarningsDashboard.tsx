@@ -609,46 +609,50 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
           {/* Quick Action Buttons */}
           <div className="flex flex-wrap items-center gap-2.5">
             <button
+              type="button"
               onClick={handleOpenAddCommission}
-              className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium text-xs sm:text-sm shadow-md transition-all active:scale-95 cursor-pointer"
+              className="min-h-[38px] inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-transparent bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium text-xs sm:text-sm whitespace-nowrap shadow-md transition-all active:scale-95 cursor-pointer"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-4 h-4 shrink-0" />
               <span>Log Commission</span>
             </button>
 
             <button
+              type="button"
               onClick={handleOpenAddExpense}
-              className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-stone-800 hover:bg-stone-700/80 border border-amber-500/20 hover:border-amber-500/40 text-amber-200 font-medium text-xs sm:text-sm transition-all active:scale-95 shadow-sm cursor-pointer"
+              className="min-h-[38px] inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-stone-800 hover:bg-stone-700/80 border border-amber-500/20 hover:border-amber-500/40 text-amber-200 font-medium text-xs sm:text-sm whitespace-nowrap transition-all active:scale-95 shadow-sm cursor-pointer"
             >
-              <Plus className="w-4 h-4 text-rose-400" />
+              <Plus className="w-4 h-4 text-rose-400 shrink-0" />
               <span>Add Operating Cost</span>
             </button>
 
             {/* Import Ledger Button */}
             <button
+              type="button"
               onClick={() => {
                 setShowImportModal(true);
                 setImportError(null);
               }}
-              className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-sky-950/40 hover:bg-sky-900/60 border border-sky-500/30 hover:border-sky-400 text-sky-200 font-medium text-xs sm:text-sm transition-all active:scale-95 shadow-sm cursor-pointer"
+              className="min-h-[38px] inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-950/40 hover:bg-sky-900/60 border border-sky-500/30 hover:border-sky-400 text-sky-200 font-medium text-xs sm:text-sm whitespace-nowrap transition-all active:scale-95 shadow-sm cursor-pointer"
               title="Import commissions or operating costs from CSV or JSON"
             >
-              <Upload className="w-4 h-4 text-sky-400" />
+              <Upload className="w-4 h-4 text-sky-400 shrink-0" />
               <span>Import Ledger</span>
             </button>
 
             {/* Clear Ledger Button */}
             <button
+              type="button"
               onClick={() => setShowClearLedgerModal(true)}
-              className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-rose-950/30 hover:bg-rose-900/50 border border-rose-500/30 hover:border-rose-400 text-rose-300 font-medium text-xs sm:text-sm transition-all active:scale-95 shadow-sm cursor-pointer"
+              className="min-h-[38px] inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-950/30 hover:bg-rose-900/50 border border-rose-500/30 hover:border-rose-400 text-rose-300 font-medium text-xs sm:text-sm whitespace-nowrap transition-all active:scale-95 shadow-sm cursor-pointer"
               title="Wipe all commission earnings and operating cost transactions"
             >
-              <Trash2 className="w-4 h-4 text-rose-400" />
+              <Trash2 className="w-4 h-4 text-rose-400 shrink-0" />
               <span>Clear Ledger</span>
             </button>
 
             {/* Export & Print Group */}
-            <div className="relative flex items-center bg-stone-950/80 border border-stone-800 rounded-xl p-1 space-x-1">
+            <div className="relative h-[38px] flex items-center bg-stone-950/80 border border-stone-800 rounded-xl px-1 gap-1">
               <div className="relative flex items-center">
                 <button
                   type="button"
@@ -657,7 +661,7 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
                     triggerToast('Full Financial CSV report downloaded!');
                   }}
                   title="Download CSV for Excel / Google Sheets"
-                  className="flex items-center space-x-1 px-2 py-1.5 rounded-l-lg text-xs text-stone-300 hover:text-white hover:bg-stone-800 transition-colors cursor-pointer"
+                  className="h-7 inline-flex items-center justify-center gap-1 px-2 rounded-l-lg text-xs text-stone-300 hover:text-white hover:bg-stone-800 transition-colors cursor-pointer"
                 >
                   <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
                   <span className="hidden sm:inline">CSV</span>
@@ -666,7 +670,7 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
                   type="button"
                   onClick={() => setShowExportMenu(!showExportMenu)}
                   title="CSV Export Options (Commissions only, Expenses only, Full Report)"
-                  className="px-1 py-1.5 rounded-r-lg text-xs text-stone-400 hover:text-white hover:bg-stone-800 transition-colors cursor-pointer border-l border-stone-800"
+                  className="h-7 px-1.5 inline-flex items-center justify-center rounded-r-lg text-xs text-stone-400 hover:text-white hover:bg-stone-800 transition-colors cursor-pointer border-l border-stone-800"
                 >
                   <ChevronDown className="w-3 h-3" />
                 </button>
@@ -717,7 +721,7 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
                 type="button"
                 onClick={() => setShowPrintModal(true)}
                 title="Print Executive P&L Statement / Save PDF"
-                className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs text-stone-300 hover:text-white hover:bg-stone-800 transition-colors cursor-pointer"
+                className="h-7 inline-flex items-center justify-center gap-1 px-2.5 rounded-lg text-xs text-stone-300 hover:text-white hover:bg-stone-800 whitespace-nowrap transition-colors cursor-pointer"
               >
                 <Printer className="w-3.5 h-3.5 text-cyan-400" />
                 <span className="hidden sm:inline">Print Statement</span>
@@ -730,7 +734,7 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
                   triggerToast('Full JSON audit ledger backup downloaded!');
                 }}
                 title="Backup full JSON Ledger for Accounting"
-                className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs text-stone-300 hover:text-white hover:bg-stone-800 transition-colors cursor-pointer"
+                className="h-7 inline-flex items-center justify-center gap-1 px-2.5 rounded-lg text-xs text-stone-300 hover:text-white hover:bg-stone-800 whitespace-nowrap transition-colors cursor-pointer"
               >
                 <FileCode className="w-3.5 h-3.5 text-amber-400" />
                 <span className="hidden sm:inline">JSON</span>
@@ -738,10 +742,12 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
             </div>
 
             <button
+              type="button"
               onClick={handleManualRefresh}
               disabled={refreshing}
-              className="p-2 rounded-xl bg-stone-800/80 hover:bg-stone-800 border border-stone-700 text-stone-400 hover:text-stone-200 transition-colors cursor-pointer"
+              className="w-[38px] h-[38px] rounded-xl bg-stone-800/80 hover:bg-stone-800 border border-stone-700 text-stone-400 hover:text-stone-200 inline-flex items-center justify-center shrink-0 transition-colors cursor-pointer"
               title="Refresh database records"
+              aria-label="Refresh database records"
             >
               <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-amber-400' : ''}`} />
             </button>
@@ -788,10 +794,10 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
                         setCustomEndDate('');
                       }
                     }}
-                    className={`text-xs px-2.5 py-1 rounded-lg font-medium transition-all ${
+                    className={`h-7 text-xs px-2.5 rounded-lg border font-medium whitespace-nowrap inline-flex items-center justify-center transition-all cursor-pointer ${
                       active
-                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
-                        : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800/60'
+                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm'
+                        : 'border-transparent text-stone-400 hover:text-stone-200 hover:bg-stone-800/60'
                     }`}
                   >
                     {labels[preset]}
@@ -864,6 +870,7 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
           </div>
 
           <button
+            type="button"
             onClick={() => {
               setDatePreset('all');
               setCustomStartDate('');
@@ -872,7 +879,7 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
               setTypeFilter('all');
               setStatusFilter('all');
             }}
-            className="text-[11px] font-semibold text-amber-300 hover:text-amber-100 underline underline-offset-2 transition-colors ml-auto"
+            className="text-[11px] font-semibold text-amber-300 hover:text-amber-100 underline underline-offset-2 transition-colors ml-auto cursor-pointer"
           >
             Clear All Filters
           </button>
@@ -1129,6 +1136,7 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
               <span>Expense</span>
             </span>
             <button
+              type="button"
               onClick={() => setShowPrintModal(true)}
               className="text-amber-400 hover:text-amber-300 font-medium cursor-pointer"
             >
@@ -1142,40 +1150,43 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
       <div className="bg-stone-900/90 border border-stone-800 rounded-2xl overflow-hidden shadow-xl">
         {/* Explorer Subtabs & Search */}
         <div className="p-4 sm:p-5 border-b border-stone-800 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-stone-950/40">
-          <div className="flex items-center space-x-1 bg-stone-900 p-1 rounded-xl border border-stone-800">
+          <div className="flex flex-wrap items-center gap-1 bg-stone-900 p-1 rounded-xl border border-stone-800">
             <button
+              type="button"
               onClick={() => setActiveTab('all')}
-              className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${
+              className={`min-h-[32px] text-xs px-3 py-1 rounded-lg border font-medium whitespace-nowrap inline-flex items-center justify-center transition-all cursor-pointer ${
                 activeTab === 'all'
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                  : 'text-stone-400 hover:text-stone-200'
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                  : 'border-transparent text-stone-400 hover:text-stone-200'
               }`}
             >
               All Records ({filteredEarnings.length + filteredExpenses.length})
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('commissions')}
-              className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all flex items-center space-x-1 ${
+              className={`min-h-[32px] text-xs px-3 py-1 rounded-lg border font-medium whitespace-nowrap inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 activeTab === 'commissions'
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                  : 'text-stone-400 hover:text-stone-200'
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                  : 'border-transparent text-stone-400 hover:text-stone-200'
               }`}
             >
               <span>Commissions</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800">
+              <span className="text-[10px] px-1.5 py-0.5 leading-none rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800">
                 {filteredEarnings.length}
               </span>
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('expenses')}
-              className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all flex items-center space-x-1 ${
+              className={`min-h-[32px] text-xs px-3 py-1 rounded-lg border font-medium whitespace-nowrap inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 activeTab === 'expenses'
-                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                  : 'text-stone-400 hover:text-stone-200'
+                  ? 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                  : 'border-transparent text-stone-400 hover:text-stone-200'
               }`}
             >
               <span>Operating Costs</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-rose-950 text-rose-400 border border-rose-800">
+              <span className="text-[10px] px-1.5 py-0.5 leading-none rounded-full bg-rose-950 text-rose-400 border border-rose-800">
                 {filteredExpenses.length}
               </span>
             </button>
@@ -1190,12 +1201,14 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
                 placeholder="Search vendor, order, partner..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-stone-900 border border-stone-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-stone-200 placeholder:text-stone-500 focus:outline-none focus:border-amber-500/40"
+                className="w-full h-[34px] bg-stone-900 border border-stone-800 rounded-xl pl-9 pr-8 text-xs text-stone-200 placeholder:text-stone-500 focus:outline-none focus:border-amber-500/40"
               />
               {searchQuery && (
                 <button
+                  type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-500 hover:text-stone-300"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 inline-flex items-center justify-center text-stone-500 hover:text-stone-300 cursor-pointer"
+                  aria-label="Clear search"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -1206,7 +1219,7 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="bg-stone-900 border border-stone-800 rounded-xl px-2.5 py-1.5 text-xs text-stone-300 focus:outline-none focus:border-amber-500/40"
+              className="h-[34px] bg-stone-900 border border-stone-800 rounded-xl px-2.5 text-xs text-stone-300 focus:outline-none focus:border-amber-500/40"
             >
               <option value="all">All Categories</option>
               {activeTab !== 'expenses' && (
@@ -1232,7 +1245,7 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-stone-900 border border-stone-800 rounded-xl px-2.5 py-1.5 text-xs text-stone-300 focus:outline-none focus:border-amber-500/40"
+              className="h-[34px] bg-stone-900 border border-stone-800 rounded-xl px-2.5 text-xs text-stone-300 focus:outline-none focus:border-amber-500/40"
             >
               <option value="all">All Statuses</option>
               <option value="received">Received / Paid</option>
@@ -1312,9 +1325,10 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
                         </td>
                         <td className="py-3 px-4 text-center whitespace-nowrap">
                           <button
+                            type="button"
                             onClick={() => handleToggleCommissionStatus(comm)}
                             title="Click to toggle status"
-                            className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border transition-transform active:scale-95 ${
+                            className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border transition-transform active:scale-95 cursor-pointer ${
                               comm.status === 'received'
                                 ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20'
                                 : comm.status === 'pending'
@@ -1333,15 +1347,17 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
                         <td className="py-3 px-4 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end space-x-1 opacity-80 group-hover:opacity-100">
                             <button
+                              type="button"
                               onClick={() => handleOpenEditCommission(comm)}
-                              className="p-1.5 rounded-lg hover:bg-stone-800 text-stone-400 hover:text-amber-300 transition-colors"
+                              className="w-7 h-7 rounded-lg hover:bg-stone-800 text-stone-400 hover:text-amber-300 inline-flex items-center justify-center transition-colors cursor-pointer"
                               title="Edit commission"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
                             </button>
                             <button
+                              type="button"
                               onClick={() => setDeleteConfirmId(comm.id)}
-                              className="p-1.5 rounded-lg hover:bg-stone-800 text-stone-400 hover:text-rose-400 transition-colors"
+                              className="w-7 h-7 rounded-lg hover:bg-stone-800 text-stone-400 hover:text-rose-400 inline-flex items-center justify-center transition-colors cursor-pointer"
                               title="Delete commission"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -1408,9 +1424,10 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
                         </td>
                         <td className="py-3 px-4 text-center whitespace-nowrap">
                           <button
+                            type="button"
                             onClick={() => handleToggleExpenseStatus(exp)}
                             title="Click to toggle status"
-                            className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border transition-transform active:scale-95 ${
+                            className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border transition-transform active:scale-95 cursor-pointer ${
                               exp.status === 'paid'
                                 ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20'
                                 : 'bg-rose-500/10 text-rose-300 border-rose-500/30 hover:bg-rose-500/20'
@@ -1427,15 +1444,17 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
                         <td className="py-3 px-4 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end space-x-1 opacity-80 group-hover:opacity-100">
                             <button
+                              type="button"
                               onClick={() => handleOpenEditExpense(exp)}
-                              className="p-1.5 rounded-lg hover:bg-stone-800 text-stone-400 hover:text-amber-300 transition-colors"
+                              className="w-7 h-7 rounded-lg hover:bg-stone-800 text-stone-400 hover:text-amber-300 inline-flex items-center justify-center transition-colors cursor-pointer"
                               title="Edit expense"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
                             </button>
                             <button
+                              type="button"
                               onClick={() => setDeleteConfirmId(exp.id)}
-                              className="p-1.5 rounded-lg hover:bg-stone-800 text-stone-400 hover:text-rose-400 transition-colors"
+                              className="w-7 h-7 rounded-lg hover:bg-stone-800 text-stone-400 hover:text-rose-400 inline-flex items-center justify-center transition-colors cursor-pointer"
                               title="Delete expense"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -1497,12 +1516,14 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
             </p>
             <div className="flex items-center justify-end space-x-2.5">
               <button
+                type="button"
                 onClick={() => setDeleteConfirmId(null)}
-                className="px-3.5 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-medium"
+                className="min-h-[36px] px-3.5 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-medium inline-flex items-center justify-center cursor-pointer"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={() => {
                   if (deleteConfirmId.startsWith('comm-')) {
                     handleDeleteCommission(deleteConfirmId);
@@ -1510,7 +1531,7 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
                     handleDeleteExpense(deleteConfirmId);
                   }
                 }}
-                className="px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow-md"
+                className="min-h-[36px] px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow-md inline-flex items-center justify-center cursor-pointer"
               >
                 Delete Entry
               </button>
@@ -1538,8 +1559,10 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setShowCommissionModal(false)}
-                className="p-1 rounded-lg hover:bg-stone-800 text-stone-400 hover:text-stone-200"
+                className="w-8 h-8 rounded-lg hover:bg-stone-800 text-stone-400 hover:text-stone-200 inline-flex items-center justify-center shrink-0 cursor-pointer"
+                aria-label="Close modal"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1762,8 +1785,10 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setShowExpenseModal(false)}
-                className="p-1 rounded-lg hover:bg-stone-800 text-stone-400 hover:text-stone-200"
+                className="w-8 h-8 rounded-lg hover:bg-stone-800 text-stone-400 hover:text-stone-200 inline-flex items-center justify-center shrink-0 cursor-pointer"
+                aria-label="Close modal"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1982,7 +2007,7 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
                     const html = generatePrintableHTML(dateFilteredOnlyEarnings, dateFilteredOnlyExpenses, summary, periodLabel);
                     printIsolatedDocument(html);
                   }}
-                  className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs transition-all shadow-md active:scale-95 cursor-pointer"
+                  className="min-h-[36px] inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 border border-transparent text-white font-semibold text-xs whitespace-nowrap transition-all shadow-md active:scale-95 cursor-pointer"
                   title="Open Print Dialog or Save as PDF"
                 >
                   <Printer className="w-3.5 h-3.5" />
@@ -1995,7 +2020,7 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
                     downloadFinancialHTMLReport(dateFilteredOnlyEarnings, dateFilteredOnlyExpenses, summary, periodLabel);
                     triggerToast('Financial Statement HTML downloaded successfully!');
                   }}
-                  className="flex items-center space-x-1 px-3 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white text-xs font-medium border border-stone-700 transition-colors cursor-pointer"
+                  className="min-h-[36px] inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white text-xs font-medium border border-stone-700 whitespace-nowrap transition-colors cursor-pointer"
                   title="Download Standalone HTML Document"
                 >
                   <FileDown className="w-3.5 h-3.5 text-amber-400" />
@@ -2008,7 +2033,7 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
                     exportFinancialCSV(dateFilteredOnlyEarnings, dateFilteredOnlyExpenses, summary, periodLabel);
                     triggerToast('Financial CSV spreadsheet downloaded!');
                   }}
-                  className="flex items-center space-x-1 px-3 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white text-xs font-medium border border-stone-700 transition-colors cursor-pointer"
+                  className="min-h-[36px] inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white text-xs font-medium border border-stone-700 whitespace-nowrap transition-colors cursor-pointer"
                   title="Download Full CSV Report"
                 >
                   <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
@@ -2018,9 +2043,10 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = () => {
                 <button
                   type="button"
                   onClick={() => setShowPrintModal(false)}
-                  className="p-2 rounded-xl hover:bg-stone-800 text-stone-400 hover:text-stone-200 transition-colors cursor-pointer"
+                  className="w-9 h-9 rounded-xl bg-stone-800/60 hover:bg-stone-800 border border-stone-700 text-stone-400 hover:text-stone-200 inline-flex items-center justify-center shrink-0 transition-colors cursor-pointer"
+                  aria-label="Close modal"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             </div>

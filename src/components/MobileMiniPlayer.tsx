@@ -45,8 +45,9 @@ export const MobileMiniPlayer: React.FC<MobileMiniPlayerProps> = ({
       {/* Current Soundscape Info */}
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
         <button
+          type="button"
           onClick={onOpenAmbient}
-          className="w-8 h-8 rounded-xl bg-sky-500/20 border border-sky-500/40 text-sky-300 flex items-center justify-center shrink-0 cursor-pointer"
+          className="w-9 h-9 p-0 rounded-xl bg-sky-500/20 border border-sky-500/40 text-sky-300 inline-flex items-center justify-center shrink-0 cursor-pointer"
           title="Open Fullscreen Ambient Sanctuary"
           aria-label="Open Fullscreen Ambient Sanctuary"
         >
@@ -69,28 +70,31 @@ export const MobileMiniPlayer: React.FC<MobileMiniPlayerProps> = ({
       <div className="flex items-center gap-1.5 shrink-0">
         {onOpenExport && (
           <button
+            type="button"
             onClick={onOpenExport}
-            className="p-2 rounded-xl bg-slate-800 text-teal-300 border border-slate-700 active:scale-90 transition-all cursor-pointer"
+            className="w-9 h-9 p-0 rounded-xl bg-slate-800 text-teal-300 border border-slate-700 inline-flex items-center justify-center shrink-0 active:scale-90 transition-all cursor-pointer"
             title="Export Studio Audio (WAV)"
             aria-label="Export Studio Audio"
           >
-            <Download className="w-3.5 h-3.5" />
+            <Download className="w-4 h-4" />
           </button>
         )}
 
         <button
+          type="button"
           onClick={onOpenTimer}
-          className="p-2 rounded-xl bg-slate-800 text-indigo-300 border border-slate-700 active:scale-90 transition-all cursor-pointer"
+          className="w-9 h-9 p-0 rounded-xl bg-slate-800 text-indigo-300 border border-slate-700 inline-flex items-center justify-center shrink-0 active:scale-90 transition-all cursor-pointer"
           title="Sleep Timer"
           aria-label="Set Sleep Timer"
         >
-          <Timer className="w-3.5 h-3.5" />
+          <Timer className="w-4 h-4" />
         </button>
 
         {/* Primary Play/Pause Button */}
         <button
+          type="button"
           onClick={onTogglePlay}
-          className={`p-2.5 rounded-xl font-bold transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center ${
+          className={`w-9 h-9 p-0 rounded-xl font-bold transition-all shadow-md active:scale-95 cursor-pointer inline-flex items-center justify-center shrink-0 ${
             isPlaying
               ? 'bg-rose-500 text-white shadow-rose-500/20'
               : 'bg-sky-400 text-slate-950 shadow-sky-400/20'

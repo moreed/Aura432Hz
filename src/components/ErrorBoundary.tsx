@@ -68,7 +68,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 this.setState({ hasError: false, error: null });
                 this.props.onClose?.();
               }}
-              className="absolute top-3.5 right-3.5 p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              className="absolute top-3.5 right-3.5 w-8 h-8 inline-flex items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
               title="Dismiss Notice"
               aria-label="Dismiss Notice"
             >
@@ -96,10 +96,19 @@ export class ErrorBoundary extends Component<Props, State> {
               <button
                 type="button"
                 onClick={() => {
+                  const msg = this.state.error?.message || '';
+                  if (
+                    msg.includes('useState') ||
+                    msg.includes('dynamically imported module') ||
+                    msg.includes('Invalid hook call')
+                  ) {
+                    window.location.reload();
+                    return;
+                  }
                   this.setState({ hasError: false, error: null });
                   this.props.onReset?.();
                 }}
-                className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-aurora-teal to-teal-400 text-midnight font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer hover:opacity-95 transition-all active:scale-95 shadow-sm"
+                className="flex-1 py-2 px-3 min-h-[36px] rounded-xl border border-transparent bg-gradient-to-r from-aurora-teal to-teal-400 text-midnight font-bold text-xs inline-flex items-center justify-center gap-1.5 cursor-pointer hover:opacity-95 transition-all active:scale-95 shadow-sm whitespace-nowrap"
               >
                 <RefreshCw className="w-3.5 h-3.5 text-midnight" />
                 <span>Retry</span>
@@ -111,7 +120,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   this.setState({ hasError: false, error: null });
                   this.props.onClose?.();
                 }}
-                className="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-300 text-xs font-semibold border border-slate-700 transition-colors cursor-pointer"
+                className="py-2 px-3 min-h-[36px] rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-300 text-xs font-semibold border border-slate-700 inline-flex items-center justify-center transition-colors cursor-pointer whitespace-nowrap"
               >
                 Dismiss
               </button>

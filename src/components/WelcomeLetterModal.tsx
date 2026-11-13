@@ -54,9 +54,11 @@ export const WelcomeLetterModal: React.FC<WelcomeLetterModalProps> = ({
           </div>
 
           <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-200 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
+            className="w-8 h-8 inline-flex items-center justify-center text-slate-400 hover:text-slate-200 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
             title="Close Welcome Letter"
+            aria-label="Close Welcome Letter"
           >
             <X className="w-5 h-5" />
           </button>
@@ -143,11 +145,11 @@ export const WelcomeLetterModal: React.FC<WelcomeLetterModalProps> = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="p-4 bg-slate-950/80 border-t border-slate-800 flex items-center justify-end gap-2.5">
+        <div className="p-4 bg-slate-950/80 border-t border-slate-800 flex flex-wrap items-center justify-end gap-2.5">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition-colors cursor-pointer"
+            className="px-4 py-2 min-h-[38px] inline-flex items-center justify-center rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition-colors cursor-pointer"
           >
             Close
           </button>
@@ -157,7 +159,7 @@ export const WelcomeLetterModal: React.FC<WelcomeLetterModalProps> = ({
               onClose();
               if (onStartListening) onStartListening();
             }}
-            className="px-5 py-2 rounded-xl bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-300 hover:to-indigo-400 text-slate-950 font-bold text-xs shadow-md transition-all cursor-pointer active:scale-95"
+            className="px-5 py-2 min-h-[38px] inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-300 hover:to-indigo-400 text-slate-950 font-bold text-xs border border-transparent shadow-md transition-all cursor-pointer active:scale-95 whitespace-nowrap"
           >
             Start Listening Now
           </button>

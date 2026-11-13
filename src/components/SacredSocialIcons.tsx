@@ -441,8 +441,9 @@ export const SocialAccountsModal: React.FC<SocialAccountsModalProps> = ({
     >
       <div className="bg-slate-900 border border-slate-700/80 rounded-2xl sm:rounded-3xl w-full max-w-lg p-4 sm:p-6 landscape:p-4 shadow-2xl relative text-left max-h-[92dvh] landscape:max-h-[94dvh] overflow-y-auto overscroll-contain my-auto">
         <button
+          type="button"
           onClick={onClose}
-          className="absolute top-5 right-5 text-slate-400 hover:text-slate-200 p-1.5 rounded-xl hover:bg-slate-800 transition-colors"
+          className="absolute top-5 right-5 w-8 h-8 inline-flex items-center justify-center text-slate-400 hover:text-slate-200 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
           aria-label="Close"
         >
           <X className="w-4 h-4" />

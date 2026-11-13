@@ -257,9 +257,11 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
             />
             {searchQuery && (
               <button
+                type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 p-0.5 rounded cursor-pointer"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 inline-flex items-center justify-center text-slate-400 hover:text-slate-200 rounded cursor-pointer"
                 title="Clear search query"
+                aria-label="Clear search query"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -270,8 +272,9 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
             {categories.map((cat) => (
               <button
                 key={cat.id}
+                type="button"
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`text-xs px-3 py-1.5 rounded-xl border whitespace-nowrap transition-all font-medium cursor-pointer ${
+                className={`min-h-[34px] text-xs px-3 py-1.5 rounded-xl border whitespace-nowrap inline-flex items-center justify-center transition-all font-medium cursor-pointer ${
                   selectedCategory === cat.id
                     ? 'bg-indigo-500/25 border-indigo-400 text-indigo-200 font-semibold shadow-sm'
                     : 'bg-slate-850 hover:bg-slate-800 border-slate-750 text-slate-400 hover:text-slate-200'
@@ -286,7 +289,7 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
               <button
                 type="button"
                 onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+                className={`min-h-[28px] px-2 py-1 rounded-lg text-xs font-semibold inline-flex items-center justify-center gap-1 transition-all cursor-pointer ${
                   viewMode === 'grid'
                     ? 'bg-indigo-500 text-white shadow-sm'
                     : 'text-slate-400 hover:text-slate-200'
@@ -300,7 +303,7 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
               <button
                 type="button"
                 onClick={() => setViewMode('list')}
-                className={`p-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+                className={`min-h-[28px] px-2 py-1 rounded-lg text-xs font-semibold inline-flex items-center justify-center gap-1 transition-all cursor-pointer ${
                   viewMode === 'list'
                     ? 'bg-indigo-500 text-white shadow-sm'
                     : 'text-slate-400 hover:text-slate-200'
@@ -501,7 +504,7 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
                           handleOpenEditorialForArticle(readingPost.id);
                           setReadingPost(null);
                         }}
-                        className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-300 hover:text-indigo-200 border border-slate-700 hover:border-indigo-400/60 transition-colors flex items-center gap-1.5 text-xs font-semibold cursor-pointer shadow-sm no-print"
+                        className="min-h-[36px] px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-300 hover:text-indigo-200 border border-slate-700 hover:border-indigo-400/60 transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap text-xs font-semibold cursor-pointer shadow-sm no-print"
                         title="Edit this article in Editorial Desk"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
@@ -511,7 +514,7 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
                       <button
                         type="button"
                         onClick={() => setArticleToDelete(readingPost)}
-                        className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-rose-950/60 text-rose-400 hover:text-rose-300 border border-slate-700 hover:border-rose-500/60 transition-colors flex items-center gap-1.5 text-xs font-semibold cursor-pointer shadow-sm no-print"
+                        className="min-h-[36px] px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-rose-950/60 text-rose-400 hover:text-rose-300 border border-slate-700 hover:border-rose-500/60 transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap text-xs font-semibold cursor-pointer shadow-sm no-print"
                         title="Delete this article"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -523,18 +526,20 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
                   <button
                     type="button"
                     onClick={() => window.print()}
-                    className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 transition-colors flex items-center gap-1.5 text-xs font-semibold cursor-pointer shadow-sm no-print"
+                    className="min-h-[36px] px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap text-xs font-semibold cursor-pointer shadow-sm no-print"
                     title="Print Article &amp; Scholarly Citations"
                   >
                     <Printer className="w-3.5 h-3.5 text-sky-400" />
                     <span className="hidden sm:inline">Print Article</span>
                   </button>
                   <button
+                    type="button"
                     onClick={() => setReadingPost(null)}
-                    className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-100 transition-colors shrink-0 cursor-pointer no-print"
+                    className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 hover:text-slate-100 transition-colors inline-flex items-center justify-center shrink-0 cursor-pointer no-print"
                     title="Close Article"
+                    aria-label="Close Article"
                   >
-                    <X className="w-5 h-5" />
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
               </div>

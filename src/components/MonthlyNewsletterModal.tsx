@@ -110,9 +110,11 @@ export const MonthlyNewsletterModal: React.FC<MonthlyNewsletterModalProps> = ({
           </div>
 
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-100 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
+            className="w-9 h-9 inline-flex items-center justify-center text-slate-400 hover:text-slate-100 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
             title="Close Newsletter"
+            aria-label="Close Newsletter"
           >
             <X className="w-5 h-5" />
           </button>
@@ -128,12 +130,13 @@ export const MonthlyNewsletterModal: React.FC<MonthlyNewsletterModalProps> = ({
               const isSelected = n.id === currentNewsletter?.id;
               return (
                 <button
+                  type="button"
                   key={n.id}
                   onClick={() => setSelectedNewsletterId(n.id)}
-                  className={`px-3 py-1 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 min-h-[32px] inline-flex items-center justify-center rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer border ${
                     isSelected
-                      ? 'bg-sky-500/20 text-sky-200 border border-sky-400/60 shadow-sm font-semibold'
-                      : 'bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-750'
+                      ? 'bg-sky-500/20 text-sky-200 border-sky-400/60 shadow-sm font-semibold'
+                      : 'bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border-slate-750'
                   }`}
                 >
                   {n.editionMonth} {n.year}
@@ -212,7 +215,7 @@ export const MonthlyNewsletterModal: React.FC<MonthlyNewsletterModalProps> = ({
                         <span className="font-semibold text-xs text-slate-100 group-hover:text-sky-300 transition-colors">
                           {preset.name}
                         </span>
-                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-slate-900 border border-slate-750 text-sky-400">
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-slate-900 border border-slate-750 text-sky-400">
                           {preset.freq}Hz
                         </span>
                       </div>
@@ -245,11 +248,12 @@ export const MonthlyNewsletterModal: React.FC<MonthlyNewsletterModalProps> = ({
                 </h3>
                 {onOpenShop && (
                   <button
+                    type="button"
                     onClick={() => {
                       onOpenShop();
                       onClose();
                     }}
-                    className="text-[11px] text-amber-400 hover:text-amber-300 flex items-center gap-1 font-medium transition-colors"
+                    className="text-[11px] text-amber-400 hover:text-amber-300 inline-flex items-center gap-1 font-medium transition-colors cursor-pointer"
                   >
                     <span>View Shop</span>
                     <ChevronRight className="w-3 h-3" />
@@ -391,8 +395,9 @@ export const MonthlyNewsletterModal: React.FC<MonthlyNewsletterModalProps> = ({
             <span>Curated monthly by Aura 432Hz Sound Therapists &amp; Engineers</span>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="px-4 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition-colors cursor-pointer"
+            className="px-4 py-1.5 min-h-[34px] inline-flex items-center justify-center rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition-colors cursor-pointer"
           >
             Close
           </button>

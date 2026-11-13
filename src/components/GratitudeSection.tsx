@@ -213,9 +213,11 @@ export const GratitudeSection: React.FC<GratitudeSectionProps> = ({ isAdmin = fa
 
                   <div className="flex items-center gap-1">
                     <button
+                      type="button"
                       onClick={() => handleCopy(item)}
-                      className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-700/60 rounded-lg transition-colors"
+                      className="w-7 h-7 text-slate-400 hover:text-slate-200 hover:bg-slate-700/60 rounded-lg inline-flex items-center justify-center transition-colors cursor-pointer"
                       title="Copy reflection"
+                      aria-label="Copy reflection"
                     >
                       {copiedId === item.id ? (
                         <Check className="w-3.5 h-3.5 text-emerald-400" />
@@ -225,8 +227,9 @@ export const GratitudeSection: React.FC<GratitudeSectionProps> = ({ isAdmin = fa
                     </button>
                     {isAdmin && (
                       <button
+                        type="button"
                         onClick={() => handleDelete(item.id)}
-                        className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-700/60 rounded-lg transition-colors cursor-pointer"
+                        className="w-7 h-7 text-slate-400 hover:text-rose-400 hover:bg-slate-700/60 rounded-lg inline-flex items-center justify-center transition-colors cursor-pointer"
                         title="Admin only: Delete entry"
                         aria-label="Delete entry"
                       >

@@ -405,12 +405,18 @@ export default function App() {
     };
   }, []);
 
+  const skipNextTabScrollTopRef = useRef(false);
+
   // Scroll to top & sync URL path ONLY when changing navigation tabs
   useEffect(() => {
     setIsTabsBarHidden(false);
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    if (document.documentElement) document.documentElement.scrollTop = 0;
-    if (document.body) document.body.scrollTop = 0;
+    if (skipNextTabScrollTopRef.current) {
+      skipNextTabScrollTopRef.current = false;
+    } else {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      if (document.documentElement) document.documentElement.scrollTop = 0;
+      if (document.body) document.body.scrollTop = 0;
+    }
 
     const targetPath = activeTab === 'player' ? '/' : `/${activeTab}`;
     if (window.location.pathname !== targetPath && !window.location.hash) {
@@ -482,6 +488,7 @@ export default function App() {
   const [shopHighlightProductId, setShopHighlightProductId] = useState<string | null>(null);
 
   const handleOpenShopProduct = (productId: string) => {
+    skipNextTabScrollTopRef.current = true;
     setShopHighlightProductId(productId);
     setActiveTab('gear');
     window.scrollTo({ top: 380, behavior: 'smooth' });
@@ -1055,6 +1062,7 @@ export default function App() {
             </span>
             <div className="flex items-center gap-2">
               <button
+                type="button"
                 onClick={() => {
                   setShowAdminPreview(false);
                   setForceVisitorMode(false);
@@ -1187,6 +1195,7 @@ export default function App() {
           <span className="font-medium text-[11px] sm:text-xs text-sky-100 truncate max-w-full">{siteContent.announcementText}</span>
           {currentUser?.role === 'admin' && (
             <button
+              type="button"
               onClick={() => setActiveTab('admin')}
               className="text-[9px] sm:text-[10px] font-semibold text-amber-300 hover:text-amber-200 underline ml-1 cursor-pointer shrink-0"
               title="Edit Announcement in Sanctuary CMS"
@@ -1221,7 +1230,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => setIsSearchModalOpen(true)}
-              className="w-9 h-9 sm:w-9.5 sm:h-9.5 lg:w-auto lg:h-auto lg:px-3 lg:py-1.5 p-0 flex items-center justify-center gap-1.5 rounded-xl text-xs font-semibold bg-aurora-teal/15 hover:bg-aurora-teal/25 border border-aurora-teal/40 text-aurora-teal transition-all shadow-sm active:scale-95 group shrink-0 cursor-pointer"
+              className="w-9 h-9 sm:w-9.5 sm:h-9.5 lg:w-auto lg:h-9 lg:px-3 lg:py-0 p-0 inline-flex items-center justify-center gap-1.5 rounded-xl text-xs font-semibold bg-aurora-teal/15 hover:bg-aurora-teal/25 border border-aurora-teal/40 text-aurora-teal transition-all shadow-sm active:scale-95 group shrink-0 cursor-pointer whitespace-nowrap"
               title="Search Soundscapes, Acoustic Layers, Products, Science & Blog (Cmd+K or /)"
               aria-label="Search sanctuary"
             >
@@ -1236,7 +1245,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => setIsAmbientMode(true)}
-              className="w-9 h-9 sm:w-9.5 sm:h-9.5 lg:w-auto lg:h-auto lg:px-3 lg:py-1.5 p-0 flex items-center justify-center gap-1.5 rounded-xl text-xs font-semibold bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/40 text-amber-200 transition-all shadow-sm active:scale-95 group shrink-0 cursor-pointer"
+              className="w-9 h-9 sm:w-9.5 sm:h-9.5 lg:w-auto lg:h-9 lg:px-3 lg:py-0 p-0 inline-flex items-center justify-center gap-1.5 rounded-xl text-xs font-semibold bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/40 text-amber-200 transition-all shadow-sm active:scale-95 group shrink-0 cursor-pointer whitespace-nowrap"
               title="Launch Distraction-Free Fullscreen Ambient Sanctuary (Esc to exit)"
               aria-label="Launch Distraction-Free Fullscreen Ambient Sanctuary"
             >
@@ -1249,7 +1258,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => setIsTimerModalOpen(true)}
-              className={`w-9 h-9 sm:w-9.5 sm:h-9.5 ${timerSecondsRemaining !== null ? 'w-auto px-2 sm:px-2.5' : 'p-0'} lg:w-auto lg:h-auto lg:px-3 lg:py-1.5 flex items-center justify-center gap-1 sm:gap-1.5 rounded-xl text-xs font-medium border transition-all shrink-0 cursor-pointer group ${
+              className={`${timerSecondsRemaining !== null ? 'w-auto h-9 sm:h-9.5 px-2 sm:px-2.5' : 'w-9 h-9 sm:w-9.5 sm:h-9.5 p-0'} lg:w-auto lg:h-9 lg:px-3 lg:py-0 inline-flex items-center justify-center gap-1 sm:gap-1.5 rounded-xl text-xs font-medium border transition-all shrink-0 cursor-pointer group whitespace-nowrap ${
                 timerSecondsRemaining !== null
                   ? 'bg-cosmic-lavender/25 border-cosmic-lavender/60 text-cosmic-lavender shadow-sm shadow-cosmic-lavender/20'
                   : 'bg-slate-900 border-slate-700/80 text-slate-300 hover:bg-slate-800'
@@ -1269,7 +1278,7 @@ export default function App() {
             <button
               type="button"
               onClick={handleToggleTheme}
-              className={`w-9 h-9 sm:w-9.5 sm:h-9.5 lg:w-auto lg:h-auto lg:px-3 lg:py-1.5 p-0 flex items-center justify-center gap-1.5 rounded-xl text-xs font-semibold border transition-all shadow-sm active:scale-95 shrink-0 cursor-pointer group ${
+              className={`w-9 h-9 sm:w-9.5 sm:h-9.5 lg:w-auto lg:h-9 lg:px-3 lg:py-0 p-0 inline-flex items-center justify-center gap-1.5 rounded-xl text-xs font-semibold border transition-all shadow-sm active:scale-95 shrink-0 cursor-pointer group whitespace-nowrap ${
                 theme === 'light'
                   ? 'bg-amber-100 hover:bg-amber-200 border-amber-300 text-amber-950 shadow-amber-200/50'
                   : 'bg-slate-900 hover:bg-slate-800 border-slate-700/80 text-amber-300 hover:text-amber-200'
@@ -1290,7 +1299,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setIsToolsDropdownOpen(!isToolsDropdownOpen)}
-                className="w-9 h-9 sm:w-9.5 sm:h-9.5 lg:w-auto lg:h-auto lg:px-2.5 lg:py-1.5 p-0 flex items-center justify-center gap-1 rounded-xl text-xs font-medium bg-slate-900 border border-slate-700/80 text-slate-300 hover:bg-slate-800 hover:text-slate-100 transition-colors shadow-sm shrink-0 cursor-pointer group"
+                className="w-9 h-9 sm:w-9.5 sm:h-9.5 lg:w-auto lg:h-9 lg:px-2.5 lg:py-0 p-0 inline-flex items-center justify-center gap-1 rounded-xl text-xs font-medium bg-slate-900 border border-slate-700/80 text-slate-300 hover:bg-slate-800 hover:text-slate-100 transition-colors shadow-sm shrink-0 cursor-pointer group whitespace-nowrap"
                 title="Sanctuary Tools, Offline Download, Safety Certificate & EULA"
                 aria-label="Sanctuary Tools, Offline Download, Safety Certificate and Settings"
               >
@@ -1443,7 +1452,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setIsLoginModalOpen(true)}
-                  className="w-9 h-9 sm:w-9.5 sm:h-9.5 lg:w-auto lg:h-auto lg:px-2.5 lg:py-1.5 p-0 flex items-center justify-center gap-1.5 rounded-xl text-xs font-medium bg-slate-900 border border-slate-700 hover:border-sky-500/50 text-slate-200 transition-colors shadow-sm group cursor-pointer"
+                  className="w-9 h-9 sm:w-9.5 sm:h-9.5 lg:w-auto lg:h-9 lg:px-2.5 lg:py-0 p-0 inline-flex items-center justify-center gap-1.5 rounded-xl text-xs font-medium bg-slate-900 border border-slate-700 hover:border-sky-500/50 text-slate-200 transition-colors shadow-sm group cursor-pointer whitespace-nowrap"
                   title="View user account & session details"
                   aria-label="User account and session details"
                 >
@@ -1454,7 +1463,7 @@ export default function App() {
                   />
                   <span className="hidden lg:inline max-w-[80px] truncate">{currentUser.displayName}</span>
                   <span
-                    className={`hidden lg:inline text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${
+                    className={`hidden lg:inline-flex items-center text-[9px] px-1.5 py-0.5 leading-none rounded font-bold uppercase ${
                       currentUser.role === 'admin'
                         ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
                         : 'bg-sky-500/20 text-sky-300 border border-sky-500/40'
@@ -1468,7 +1477,7 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => setActiveTab('admin')}
-                    className={`hidden xl:flex px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-colors items-center gap-1.5 cursor-pointer group ${
+                    className={`hidden xl:inline-flex h-9 px-2.5 py-0 rounded-xl text-xs font-semibold border transition-colors items-center justify-center gap-1.5 cursor-pointer group whitespace-nowrap ${
                       activeTab === 'admin'
                         ? 'bg-indigo-500/30 border-indigo-400 text-indigo-200 shadow-sm'
                         : 'bg-indigo-950/60 border-indigo-800/80 text-indigo-300 hover:bg-indigo-900'
@@ -1485,7 +1494,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setIsLoginModalOpen(true)}
-                className="w-9 h-9 sm:w-9.5 sm:h-9.5 lg:w-auto lg:h-auto lg:px-3 lg:py-1.5 p-0 flex items-center justify-center gap-1 rounded-xl text-xs font-bold bg-gradient-to-r from-aurora-teal to-cosmic-lavender hover:opacity-95 text-midnight transition-all shadow-md active:scale-95 shrink-0 cursor-pointer group"
+                className="w-9 h-9 sm:w-9.5 sm:h-9.5 lg:w-auto lg:h-9 lg:px-3 lg:py-0 p-0 inline-flex items-center justify-center gap-1 rounded-xl border border-transparent text-xs font-bold bg-gradient-to-r from-aurora-teal to-cosmic-lavender hover:opacity-95 text-midnight transition-all shadow-md active:scale-95 shrink-0 cursor-pointer group whitespace-nowrap"
                 title="1-Click Login with Google or Instant Guest"
                 aria-label="1-Click Login with Google or Instant Guest"
               >
@@ -1535,10 +1544,10 @@ export default function App() {
                 type="button"
                 onClick={() => setActiveTab('player')}
                 aria-current={activeTab === 'player' ? 'page' : undefined}
-                className={`group py-1.5 sm:py-2 px-1 sm:px-1.5 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 active:scale-95 text-center cursor-pointer border ${
+                className={`group min-h-[48px] sm:min-h-[40px] py-1.5 sm:py-2 px-1 sm:px-1.5 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 active:scale-95 text-center cursor-pointer border whitespace-nowrap ${
                   activeTab === 'player'
                     ? 'bg-aurora-teal/20 text-white border-aurora-teal/60 shadow-sm shadow-aurora-teal/20'
-                    : 'bg-slate-900/80 text-slate-100 border border-slate-700/80 hover:bg-slate-800 hover:text-white hover:border-slate-600'
+                    : 'bg-slate-900/80 text-slate-100 border-slate-700/80 hover:bg-slate-800 hover:text-white hover:border-slate-600'
                 }`}
                 title="Sanctuary Player (432Hz Cosmic Tuning & Ambient Waves)"
               >
@@ -1551,10 +1560,10 @@ export default function App() {
                 type="button"
                 onClick={() => setActiveTab('mixer')}
                 aria-current={activeTab === 'mixer' ? 'page' : undefined}
-                className={`group py-1.5 sm:py-2 px-1 sm:px-1.5 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 active:scale-95 text-center relative cursor-pointer border ${
+                className={`group min-h-[48px] sm:min-h-[40px] py-1.5 sm:py-2 px-1 sm:px-1.5 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 active:scale-95 text-center relative cursor-pointer border whitespace-nowrap ${
                   activeTab === 'mixer'
                     ? 'bg-aurora-teal/20 text-white border-aurora-teal/60 shadow-sm shadow-aurora-teal/20'
-                    : 'bg-slate-900/80 text-slate-100 border border-slate-700/80 hover:bg-slate-850 hover:text-white hover:border-slate-600'
+                    : 'bg-slate-900/80 text-slate-100 border-slate-700/80 hover:bg-slate-850 hover:text-white hover:border-slate-600'
                 }`}
                 title="Soundscapes & Multi-track Acoustic Nature Mixer"
               >
@@ -1562,7 +1571,7 @@ export default function App() {
                 <span className="truncate md:hidden">Mixer</span>
                 <span className="hidden md:inline truncate">Soundscapes</span>
                 {natureSounds.filter((s) => s.enabled).length > 0 && (
-                  <span className="text-[9px] px-1 sm:px-1.5 py-0.2 rounded-full bg-teal-950 text-teal-200 border border-teal-400/60 font-mono font-medium">
+                  <span className="text-[9px] px-1 sm:px-1.5 py-0.5 leading-none rounded-full bg-teal-950 text-teal-200 border border-teal-400/60 font-mono font-medium shrink-0">
                     {natureSounds.filter((s) => s.enabled).length}
                   </span>
                 )}
@@ -1573,10 +1582,10 @@ export default function App() {
                 type="button"
                 onClick={() => setActiveTab('breath')}
                 aria-current={activeTab === 'breath' ? 'page' : undefined}
-                className={`group py-1.5 sm:py-2 px-1 sm:px-1.5 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 active:scale-95 text-center cursor-pointer border ${
+                className={`group min-h-[48px] sm:min-h-[40px] py-1.5 sm:py-2 px-1 sm:px-1.5 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 active:scale-95 text-center cursor-pointer border whitespace-nowrap ${
                   activeTab === 'breath'
                     ? 'bg-emerald-500/25 text-emerald-100 border-emerald-400/60 shadow-sm shadow-emerald-500/20'
-                    : 'bg-slate-900/80 text-slate-100 border border-slate-700/80 hover:bg-slate-850 hover:text-white hover:border-slate-600'
+                    : 'bg-slate-900/80 text-slate-100 border-slate-700/80 hover:bg-slate-850 hover:text-white hover:border-slate-600'
                 }`}
                 title="Breathwork Pacer (4-7-8 Vagal Stimulation & Coherence)"
               >
@@ -1590,10 +1599,10 @@ export default function App() {
                 type="button"
                 onClick={() => setActiveTab('musical')}
                 aria-current={activeTab === 'musical' ? 'page' : undefined}
-                className={`group py-1.5 sm:py-2 px-1 sm:px-1.5 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 active:scale-95 text-center cursor-pointer border ${
+                className={`group min-h-[48px] sm:min-h-[40px] py-1.5 sm:py-2 px-1 sm:px-1.5 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 active:scale-95 text-center cursor-pointer border whitespace-nowrap ${
                   activeTab === 'musical'
                     ? 'bg-cosmic-lavender/25 text-white border-cosmic-lavender/60 shadow-sm shadow-cosmic-lavender/20'
-                    : 'bg-slate-900/80 text-slate-100 border border-slate-700/80 hover:bg-slate-850 hover:text-white hover:border-slate-600'
+                    : 'bg-slate-900/80 text-slate-100 border-slate-700/80 hover:bg-slate-850 hover:text-white hover:border-slate-600'
                 }`}
                 title="Harmonic Sound Harp & Interactive Solfeggio Strings"
               >
@@ -1607,10 +1616,10 @@ export default function App() {
                 type="button"
                 onClick={() => setActiveTab('gear')}
                 aria-current={activeTab === 'gear' ? 'page' : undefined}
-                className={`group py-1.5 sm:py-2 px-1 sm:px-2 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 active:scale-95 text-center cursor-pointer border relative overflow-visible ${
+                className={`group min-h-[48px] sm:min-h-[40px] py-1.5 sm:py-2 px-1 sm:px-2 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 active:scale-95 text-center cursor-pointer border relative overflow-visible whitespace-nowrap ${
                   activeTab === 'gear'
                     ? 'bg-amber-500/25 text-amber-100 border-amber-400/60 shadow-sm shadow-amber-500/20'
-                    : 'bg-slate-900/80 text-slate-100 border border-slate-700/80 hover:bg-slate-850 hover:text-white hover:border-slate-600'
+                    : 'bg-slate-900/80 text-slate-100 border-slate-700/80 hover:bg-slate-850 hover:text-white hover:border-slate-600'
                 }`}
                 title="Aura Shop: Sacred Sound Gear, Singing Bowls & Audio Tools (Launching Soon)"
               >
@@ -1626,10 +1635,10 @@ export default function App() {
                 type="button"
                 onClick={() => setActiveTab('community')}
                 aria-current={activeTab === 'community' ? 'page' : undefined}
-                className={`group py-1.5 sm:py-2 px-1 sm:px-1.5 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 active:scale-95 text-center cursor-pointer border ${
+                className={`group min-h-[48px] sm:min-h-[40px] py-1.5 sm:py-2 px-1 sm:px-1.5 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 active:scale-95 text-center cursor-pointer border whitespace-nowrap ${
                   activeTab === 'community'
                     ? 'bg-rose-500/25 text-rose-100 border-rose-400/60 shadow-sm shadow-rose-500/20'
-                    : 'bg-slate-900/80 text-slate-100 border border-slate-700/80 hover:bg-slate-850 hover:text-white hover:border-slate-600'
+                    : 'bg-slate-900/80 text-slate-100 border-slate-700/80 hover:bg-slate-850 hover:text-white hover:border-slate-600'
                 }`}
                 title="Sanctuary Global Meditation Community & Intentions"
               >
@@ -1642,10 +1651,10 @@ export default function App() {
                 type="button"
                 onClick={() => setActiveTab('blog')}
                 aria-current={activeTab === 'blog' ? 'page' : undefined}
-                className={`group py-1.5 sm:py-2 px-1 sm:px-1.5 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 active:scale-95 text-center cursor-pointer border ${
+                className={`group min-h-[48px] sm:min-h-[40px] py-1.5 sm:py-2 px-1 sm:px-1.5 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 active:scale-95 text-center cursor-pointer border whitespace-nowrap ${
                   activeTab === 'blog'
                     ? 'bg-cosmic-lavender/25 text-white border-cosmic-lavender/60 shadow-sm shadow-cosmic-lavender/20'
-                    : 'bg-slate-900/80 text-slate-100 border border-slate-700/80 hover:bg-slate-850 hover:text-white hover:border-slate-600'
+                    : 'bg-slate-900/80 text-slate-100 border-slate-700/80 hover:bg-slate-850 hover:text-white hover:border-slate-600'
                 }`}
                 title="Science & Blog: Historical Treatises, Acoustic Research & Clinical Studies"
               >
@@ -1659,10 +1668,10 @@ export default function App() {
                 type="button"
                 onClick={() => setActiveTab('contact')}
                 aria-current={activeTab === 'contact' ? 'page' : undefined}
-                className={`group py-1.5 sm:py-2 px-1 sm:px-1.5 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 active:scale-95 text-center cursor-pointer border ${
+                className={`group min-h-[48px] sm:min-h-[40px] py-1.5 sm:py-2 px-1 sm:px-1.5 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 active:scale-95 text-center cursor-pointer border whitespace-nowrap ${
                   activeTab === 'contact'
                     ? 'bg-aurora-teal/20 text-white border-aurora-teal/60 shadow-sm shadow-aurora-teal/20'
-                    : 'bg-slate-900/80 text-slate-100 border border-slate-700/80 hover:bg-slate-850 hover:text-white hover:border-slate-600'
+                    : 'bg-slate-900/80 text-slate-100 border-slate-700/80 hover:bg-slate-850 hover:text-white hover:border-slate-600'
                 }`}
                 title="Sanctuary Concierge & Community Feedback"
               >
@@ -1677,7 +1686,7 @@ export default function App() {
                   type="button"
                   onClick={() => setActiveTab('admin')}
                   aria-current={activeTab === 'admin' ? 'page' : undefined}
-                  className={`group py-1.5 sm:py-2 px-1 sm:px-1.5 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 active:scale-95 text-center cursor-pointer border col-span-4 sm:col-span-4 md:col-span-1 landscape:col-span-1 ${
+                  className={`group min-h-[48px] sm:min-h-[40px] py-1.5 sm:py-2 px-1 sm:px-1.5 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 active:scale-95 text-center cursor-pointer border col-span-4 sm:col-span-4 md:col-span-1 landscape:col-span-1 whitespace-nowrap ${
                     activeTab === 'admin'
                       ? 'bg-cosmic-lavender/30 text-white border-cosmic-lavender/70 shadow-sm shadow-cosmic-lavender/20'
                       : 'bg-indigo-950/40 text-cosmic-lavender border-cosmic-lavender/30 hover:bg-indigo-900/50 hover:text-white'
@@ -1769,7 +1778,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={handleTogglePlay}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-aurora-teal to-cosmic-lavender hover:from-teal-300 hover:to-purple-300 text-midnight font-bold text-xs transition-all shadow-md active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer shadow-aurora-teal/20"
+                  className="min-h-[38px] px-4 py-2 rounded-xl border border-transparent bg-gradient-to-r from-aurora-teal to-cosmic-lavender hover:from-teal-300 hover:to-purple-300 text-midnight font-bold text-xs transition-all shadow-md active:scale-95 inline-flex items-center justify-center gap-1.5 cursor-pointer shadow-aurora-teal/20 whitespace-nowrap"
                 >
                   {isPlaying ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
                   <span>{isPlaying ? 'Pause' : 'Start listening'}</span>
@@ -1779,7 +1788,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={handleToggleMusicalMode}
-                  className={`px-3 sm:px-3.5 py-2 rounded-xl text-xs font-semibold transition-all shadow-md active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer border ${
+                  className={`min-h-[38px] px-3 sm:px-3.5 py-2 rounded-xl text-xs font-semibold transition-all shadow-md active:scale-95 inline-flex items-center justify-center gap-1.5 cursor-pointer border whitespace-nowrap ${
                     isMusicalMode
                       ? 'bg-cosmic-lavender/25 text-white border-cosmic-lavender/50 shadow-cosmic-lavender/20'
                       : 'bg-slate-800/80 hover:bg-slate-750 text-slate-300 border-slate-700/80'
@@ -1789,7 +1798,7 @@ export default function App() {
                   <Music className={`w-3.5 h-3.5 ${isMusicalMode ? 'text-cosmic-lavender animate-pulse' : 'text-slate-400'}`} />
                   <span>{isMusicalMode ? 'Music: ON' : 'Musical Mode'}</span>
                   {isMusicalMode && (
-                    <span className="text-[10px] bg-cosmic-lavender/30 text-cosmic-lavender px-1.5 py-0.5 rounded-full font-mono">
+                    <span className="text-[10px] bg-cosmic-lavender/30 text-cosmic-lavender px-1.5 py-0.5 leading-none rounded-full font-mono">
                       {audioEngine.getSolfeggioKeyName(baseFreq).split(' ')[1] || 'Pad'}
                     </span>
                   )}
@@ -1798,7 +1807,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setIsHowItWorksOpen(true)}
-                  className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-all flex items-center justify-center gap-1 cursor-pointer"
+                  className="min-h-[38px] px-3 py-2 rounded-xl border border-transparent bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-all inline-flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
                   title="Sanctuary 3-Step Guided Experience"
                 >
                   <Info className="w-3.5 h-3.5 text-slate-400" />
@@ -1809,7 +1818,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setIsExportModalOpen(true)}
-                  className="px-3 sm:px-3.5 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 hover:text-emerald-200 text-xs font-semibold transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer group"
+                  className="min-h-[38px] px-3 sm:px-3.5 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 hover:text-emerald-200 text-xs font-semibold transition-all shadow-sm active:scale-95 inline-flex items-center justify-center gap-1.5 cursor-pointer group whitespace-nowrap"
                   title="Export offline 16-bit 44.1kHz studio WAV audio for active soundscape"
                   aria-label="Export WAV audio"
                 >
@@ -1845,7 +1854,7 @@ export default function App() {
                     <button
                       type="button"
                       onClick={handleToggleMusicalMode}
-                      className={`p-3 sm:px-4 border rounded-2xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 text-xs font-semibold cursor-pointer shrink-0 ${
+                      className={`min-h-[44px] py-2.5 px-3.5 sm:px-4 border rounded-2xl transition-all shadow-md active:scale-95 inline-flex items-center justify-center gap-2 text-xs font-semibold cursor-pointer shrink-0 whitespace-nowrap ${
                         isMusicalMode
                           ? 'bg-gradient-to-r from-indigo-950/90 via-purple-950/90 to-indigo-900/90 text-indigo-200 border-indigo-400/80 shadow-indigo-500/25 ring-1 ring-indigo-400/40'
                           : 'bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-indigo-300 border-slate-700/80'
@@ -1861,7 +1870,7 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => setIsTimerModalOpen(true)}
-                      className={`p-3 sm:px-4 rounded-2xl border transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 text-xs font-semibold cursor-pointer shrink-0 ${
+                      className={`min-h-[44px] py-2.5 px-3.5 sm:px-4 rounded-2xl border transition-all shadow-md active:scale-95 inline-flex items-center justify-center gap-2 text-xs font-semibold cursor-pointer shrink-0 whitespace-nowrap ${
                         timerSecondsRemaining !== null
                           ? 'bg-indigo-600/30 border-indigo-400 text-indigo-200 shadow-indigo-500/20 ring-1 ring-indigo-400/40'
                           : 'bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-indigo-300 border-slate-700/80'
@@ -1888,7 +1897,7 @@ export default function App() {
                             }
                           : undefined
                       }
-                      className={`relative px-6 sm:px-8 py-3.5 rounded-2xl font-bold text-xs sm:text-sm transition-all shadow-xl flex items-center justify-center gap-2.5 active:scale-95 cursor-pointer shrink-0 ${
+                      className={`relative min-h-[46px] px-6 sm:px-8 py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all shadow-xl inline-flex items-center justify-center gap-2.5 active:scale-95 cursor-pointer shrink-0 whitespace-nowrap ${
                         isPlaying
                           ? 'animate-sanctuary-pulse transform-gpu bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-400 hover:to-pink-500 text-white shadow-rose-500/25 ring-1 ring-rose-300/40'
                           : 'bg-gradient-to-r from-aurora-teal via-teal-300 to-cosmic-lavender hover:from-teal-300 hover:to-purple-300 text-midnight shadow-aurora-teal/35 ring-1 ring-aurora-teal/60'
@@ -1931,7 +1940,7 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => setIsAmbientMode(true)}
-                      className="sm:hidden p-3 bg-slate-900/90 hover:bg-slate-800 text-amber-300 border border-amber-500/40 rounded-2xl transition-all shadow-md active:scale-95 flex items-center justify-center cursor-pointer shrink-0"
+                      className="sm:hidden min-h-[44px] min-w-[44px] p-2.5 bg-slate-900/90 hover:bg-slate-800 text-amber-300 border border-amber-500/40 rounded-2xl transition-all shadow-md active:scale-95 inline-flex items-center justify-center cursor-pointer shrink-0"
                       title="Fullscreen Ambient Sanctuary"
                       aria-label="Fullscreen Ambient Sanctuary"
                     >
@@ -2021,15 +2030,16 @@ export default function App() {
                         return (
                           <button
                             key={s.freq}
+                            type="button"
                             onClick={() => setBaseFreq(s.freq)}
-                            className={`py-2 px-2 rounded-xl border text-center transition-all ${
+                            className={`py-2 px-2 min-h-[54px] flex flex-col items-center justify-center rounded-xl border text-center transition-all cursor-pointer ${
                               isCurrent
                                 ? 'bg-indigo-500/25 border-indigo-400 text-indigo-200 font-semibold shadow-sm'
                                 : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
                             }`}
                           >
                             <div className="text-xs font-mono font-medium">{s.label}</div>
-                            <div className="text-[9px] text-slate-400 truncate mt-0.5">
+                            <div className="text-[9px] text-slate-400 truncate max-w-full mt-0.5">
                               {s.name.split('/')[0].split('&')[0].trim()}
                             </div>
                           </button>
@@ -2049,11 +2059,12 @@ export default function App() {
                         return (
                           <button
                             key={item.id}
+                            type="button"
                             onClick={() => {
                               setBaseFreq(item.freq);
                               setBrainwaveMode(item.mode);
                             }}
-                            className={`p-2.5 rounded-2xl text-left border transition-all text-xs flex flex-col justify-between ${
+                            className={`p-2.5 rounded-2xl text-left border transition-all text-xs flex flex-col justify-between cursor-pointer ${
                               isSelected
                                 ? 'bg-sky-500/20 border-sky-400 text-sky-100 shadow-md shadow-sky-500/10 font-medium'
                                 : 'bg-slate-900/60 border-slate-800/80 text-slate-400 hover:text-slate-200 hover:border-slate-700'
@@ -2094,11 +2105,12 @@ export default function App() {
                         </div>
                       </div>
                       <button
+                        type="button"
                         onClick={() => {
                           setRecommendedBreathPattern(currentSolfeggio.recommendedBreath.patternId);
                           setActiveTab('breath');
                         }}
-                        className="w-full sm:w-auto px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500/25 to-indigo-500/25 hover:from-sky-500/35 hover:to-indigo-500/35 border border-sky-400/40 text-sky-200 hover:text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shrink-0 cursor-pointer active:scale-95 shadow-sm"
+                        className="w-full sm:w-auto px-4 py-2 min-h-[38px] rounded-xl bg-gradient-to-r from-sky-500/25 to-indigo-500/25 hover:from-sky-500/35 hover:to-indigo-500/35 border border-sky-400/40 text-sky-200 hover:text-white text-xs font-semibold inline-flex items-center justify-center gap-1.5 transition-all shrink-0 cursor-pointer active:scale-95 shadow-sm whitespace-nowrap"
                         title={`Start ${currentSolfeggio.recommendedBreath.patternName} with ${baseFreq}Hz`}
                       >
                         <span>Start Breathwork</span>
@@ -2189,8 +2201,9 @@ export default function App() {
                               return (
                                 <button
                                   key={modeKey}
+                                  type="button"
                                   onClick={() => setBrainwaveMode(modeKey)}
-                                  className={`p-2 rounded-xl text-left border transition-all text-xs ${
+                                  className={`p-2 rounded-xl text-left border transition-all text-xs cursor-pointer ${
                                     isSelected
                                       ? 'bg-sky-500/20 border-sky-400 text-sky-200 font-medium'
                                       : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
@@ -2306,8 +2319,9 @@ export default function App() {
                       {/* Sub-tab pills for Featured vs Favorites */}
                       <div className="flex items-center bg-slate-950/80 border border-slate-800 rounded-xl p-0.5 text-[11px]">
                         <button
+                          type="button"
                           onClick={() => setPresetViewTab('featured')}
-                          className={`px-2.5 py-0.5 rounded-lg transition-all font-medium ${
+                          className={`px-2.5 py-1 rounded-lg transition-all font-medium cursor-pointer ${
                             presetViewTab === 'featured'
                               ? 'bg-sky-500/20 text-sky-300 font-semibold'
                               : 'text-slate-400 hover:text-slate-200'
@@ -2316,8 +2330,9 @@ export default function App() {
                           Featured
                         </button>
                         <button
+                          type="button"
                           onClick={() => setPresetViewTab('favorites')}
-                          className={`px-2.5 py-0.5 rounded-lg transition-all flex items-center gap-1 font-medium ${
+                          className={`px-2.5 py-1 rounded-lg transition-all inline-flex items-center gap-1 font-medium cursor-pointer ${
                             presetViewTab === 'favorites'
                               ? 'bg-rose-500/20 text-rose-300 font-semibold'
                               : 'text-slate-400 hover:text-slate-200'
@@ -2340,8 +2355,9 @@ export default function App() {
                 </div>
 
                 <button
+                  type="button"
                   onClick={() => setActiveTab('mixer')}
-                  className="text-xs text-sky-400 hover:text-sky-300 font-semibold flex items-center gap-1 transition-colors px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 shadow-sm"
+                  className="min-h-[36px] text-xs text-sky-400 hover:text-sky-300 font-semibold inline-flex items-center justify-center gap-1 transition-colors px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 shadow-sm cursor-pointer whitespace-nowrap"
                 >
                   <span>Browse All 32 Soundscapes</span>
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -2458,8 +2474,9 @@ export default function App() {
                           Tap the heart icon on any soundscape to bookmark your preferred meditation atmospheres here.
                         </p>
                         <button
+                          type="button"
                           onClick={() => setPresetViewTab('featured')}
-                          className="mt-1 text-xs text-sky-400 hover:text-sky-300 font-medium"
+                          className="mt-1 text-xs text-sky-400 hover:text-sky-300 font-medium cursor-pointer"
                         >
                           View Featured Presets
                         </button>
@@ -2559,12 +2576,13 @@ export default function App() {
                     <span className="text-sky-300 font-mono truncate">{activeNatureList.map((n) => n.name).join(' • ')}</span>
                   </span>
                   <button
+                    type="button"
                     onClick={() => {
                       natureSounds.forEach((s) => {
                         if (s.enabled) handleNatureSoundChange(s.id, false, s.volume);
                       });
                     }}
-                    className="text-[11px] text-slate-400 hover:text-rose-400 transition-colors shrink-0 ml-2"
+                    className="text-[11px] text-slate-400 hover:text-rose-400 transition-colors shrink-0 ml-2 cursor-pointer"
                   >
                     Clear Layers
                   </button>
@@ -2939,6 +2957,7 @@ export default function App() {
           <span>"{siteContent.dailyAffirmation}"</span>
           {currentUser?.role === 'admin' && (
             <button
+              type="button"
               onClick={() => setActiveTab('admin')}
               className="ml-2 text-[10px] text-amber-300 hover:text-amber-200 underline not-italic cursor-pointer shrink-0"
               title="Edit Affirmation in Sanctuary CMS"
@@ -2990,6 +3009,7 @@ export default function App() {
               <ul className="space-y-1 sm:space-y-1.5 text-slate-300 text-xs">
                 <li>
                   <button
+                    type="button"
                     onClick={() => setActiveTab('player')}
                     className="w-full text-left py-1.5 sm:py-1 min-h-[36px] sm:min-h-0 text-slate-300 hover:text-white transition-colors duration-150 cursor-pointer flex items-center"
                   >
@@ -2998,6 +3018,7 @@ export default function App() {
                 </li>
                 <li>
                   <button
+                    type="button"
                     onClick={() => setActiveTab('mixer')}
                     className="w-full text-left py-1.5 sm:py-1 min-h-[36px] sm:min-h-0 text-slate-300 hover:text-white transition-colors duration-150 cursor-pointer flex items-center"
                   >
@@ -3006,6 +3027,7 @@ export default function App() {
                 </li>
                 <li>
                   <button
+                    type="button"
                     onClick={() => setActiveTab('breath')}
                     className="w-full text-left py-1.5 sm:py-1 min-h-[36px] sm:min-h-0 text-slate-300 hover:text-white transition-colors duration-150 cursor-pointer flex items-center"
                   >
@@ -3014,6 +3036,7 @@ export default function App() {
                 </li>
                 <li>
                   <button
+                    type="button"
                     onClick={() => setActiveTab('community')}
                     className="w-full text-left py-1.5 sm:py-1 min-h-[36px] sm:min-h-0 text-slate-300 hover:text-rose-200 transition-colors duration-150 cursor-pointer flex items-center gap-1.5"
                   >
@@ -3033,6 +3056,7 @@ export default function App() {
               <ul className="space-y-1 sm:space-y-1.5 text-slate-300 text-xs">
                 <li>
                   <button
+                    type="button"
                     onClick={() => setActiveTab('blog')}
                     className="w-full text-left py-1.5 sm:py-1 min-h-[36px] sm:min-h-0 text-slate-300 hover:text-white transition-colors duration-150 cursor-pointer flex items-center"
                   >
@@ -3062,6 +3086,7 @@ export default function App() {
                 </li>
                 <li>
                   <button
+                    type="button"
                     onClick={() => openLegalModal('safety')}
                     className="w-full text-left py-1.5 sm:py-1 min-h-[36px] sm:min-h-0 text-slate-300 hover:text-white transition-colors duration-150 cursor-pointer flex items-center"
                   >
@@ -3070,6 +3095,7 @@ export default function App() {
                 </li>
                 <li>
                   <button
+                    type="button"
                     onClick={() => setIsNewsletterModalOpen(true)}
                     className="w-full text-left py-1.5 sm:py-1 min-h-[36px] sm:min-h-0 text-purple-300 hover:text-purple-200 transition-colors duration-150 cursor-pointer flex items-center gap-1.5"
                   >
@@ -3089,6 +3115,7 @@ export default function App() {
               <ul className="space-y-1 sm:space-y-1.5 text-slate-300 text-xs">
                 <li>
                   <button
+                    type="button"
                     onClick={() => setActiveTab('gear')}
                     className="w-full text-left py-1.5 sm:py-1 min-h-[36px] sm:min-h-0 text-slate-300 hover:text-amber-200 transition-colors duration-150 cursor-pointer flex items-center gap-1.5"
                   >
@@ -3100,6 +3127,7 @@ export default function App() {
                 </li>
                 <li>
                   <button
+                    type="button"
                     onClick={() => setActiveTab('contact')}
                     className="w-full text-left py-1.5 sm:py-1 min-h-[36px] sm:min-h-0 text-slate-300 hover:text-sky-200 transition-colors duration-150 cursor-pointer flex items-center gap-1.5"
                   >
@@ -3109,6 +3137,7 @@ export default function App() {
                 </li>
                 <li>
                   <button
+                    type="button"
                     onClick={() => openLegalModal('about')}
                     className="w-full text-left py-1.5 sm:py-1 min-h-[36px] sm:min-h-0 text-slate-300 hover:text-white transition-colors duration-150 cursor-pointer flex items-center"
                   >
@@ -3117,6 +3146,7 @@ export default function App() {
                 </li>
                 <li>
                   <button
+                    type="button"
                     onClick={() => setIsNewsletterModalOpen(true)}
                     className="w-full text-left py-1.5 sm:py-1 min-h-[36px] sm:min-h-0 text-slate-300 hover:text-white transition-colors duration-150 cursor-pointer flex items-center"
                   >
@@ -3135,6 +3165,7 @@ export default function App() {
               <ul className="space-y-1 sm:space-y-1.5 text-slate-300 text-xs">
                 <li>
                   <button
+                    type="button"
                     onClick={() => openLegalModal('privacy')}
                     className="w-full text-left py-1.5 sm:py-1 min-h-[36px] sm:min-h-0 text-slate-300 hover:text-white transition-colors duration-150 cursor-pointer flex items-center"
                   >
@@ -3143,6 +3174,7 @@ export default function App() {
                 </li>
                 <li>
                   <button
+                    type="button"
                     onClick={() => openLegalModal('terms')}
                     className="w-full text-left py-1.5 sm:py-1 min-h-[36px] sm:min-h-0 text-slate-300 hover:text-white transition-colors duration-150 cursor-pointer flex items-center"
                   >
@@ -3151,6 +3183,7 @@ export default function App() {
                 </li>
                 <li>
                   <button
+                    type="button"
                     onClick={() => openLegalModal('cookies')}
                     className="w-full text-left py-1.5 sm:py-1 min-h-[36px] sm:min-h-0 text-slate-300 hover:text-white transition-colors duration-150 cursor-pointer flex items-center"
                   >
@@ -3159,6 +3192,7 @@ export default function App() {
                 </li>
                 <li>
                   <button
+                    type="button"
                     onClick={() => openLegalModal('affiliate')}
                     className="w-full text-left py-1.5 sm:py-1 min-h-[36px] sm:min-h-0 text-slate-300 hover:text-white transition-colors duration-150 cursor-pointer flex items-center"
                   >
@@ -3167,6 +3201,7 @@ export default function App() {
                 </li>
                 <li>
                   <button
+                    type="button"
                     onClick={() => setIsCookieSettingsOpen(true)}
                     className="w-full text-left py-1.5 sm:py-1 min-h-[36px] sm:min-h-0 text-slate-300 hover:text-amber-200 transition-colors duration-150 cursor-pointer flex items-center gap-1.5"
                   >
@@ -3177,6 +3212,7 @@ export default function App() {
                 {currentUser?.role === 'admin' && (
                   <li>
                     <button
+                      type="button"
                       onClick={() => setActiveTab('admin')}
                       className="w-full text-left py-1.5 sm:py-1 min-h-[36px] sm:min-h-0 text-sky-400 hover:text-sky-300 font-semibold transition-colors duration-150 cursor-pointer flex items-center"
                       title="Studio Control Center & Editorial CMS"

@@ -1079,8 +1079,9 @@ export const EditorialManager: React.FC<EditorialManagerProps> = ({ onArticleSav
               ].map((item) => (
                 <button
                   key={item.id}
+                  type="button"
                   onClick={() => setActiveFilter(item.id as any)}
-                  className={`text-xs px-3 py-1 rounded-xl border transition-all cursor-pointer ${
+                  className={`min-h-[30px] text-xs px-3 py-1 rounded-xl border inline-flex items-center justify-center whitespace-nowrap transition-all cursor-pointer ${
                     activeFilter === item.id
                       ? 'bg-sky-500/20 text-sky-300 border-sky-400 font-semibold shadow-sm'
                       : 'bg-slate-850 text-slate-400 border-slate-750 hover:text-slate-200'

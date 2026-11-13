@@ -1214,41 +1214,115 @@ class AudioEngine {
     });
   }
 
-  // Soft Breath Guidance Chime for Inhale/Exhale transitions
-  public playBreathCue(phase: 'inhale' | 'exhale' | 'hold') {
-    this.initContext();
+  // Sanctuary Singing Bowls guidance tones for Inhale / Hold / Exhale transitions
+  public async playBreathCue(phase: 'inhale' | 'exhale' | 'hold') {
+    try {
+      await this.initContext();
+    } catch {
+      return;
+    }
     if (!this.ctx || !this.masterGain) return;
+    if (this.ctx.state === 'suspended') {
+      try {
+        await this.ctx.resume();
+      } catch {
+        return;
+      }
+    }
 
     const now = this.ctx.currentTime;
-    const base = this.baseFreq;
-    const freq = phase === 'inhale' ? base * 1.5 : phase === 'exhale' ? base : base * 1.25;
 
-    const chimeGain = this.ctx.createGain();
-    chimeGain.gain.setValueAtTime(0.0001, now);
-    chimeGain.gain.linearRampToValueAtTime(0.2, now + 0.04);
-    chimeGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.8);
-    chimeGain.connect(this.masterGain);
+    // Normalize base frequency into a warm, soothing singing-bowl register (190Hz - 460Hz)
+    let bowlBase = Number.isFinite(this.baseFreq) && this.baseFreq > 0 ? this.baseFreq : 432;
+    while (bowlBase > 460) bowlBase /= 2;
+    while (bowlBase < 190) bowlBase *= 2;
 
-    const osc1 = this.ctx.createOscillator();
-    osc1.type = 'sine';
-    osc1.frequency.setValueAtTime(freq, now);
+    // Distinct Tibetan / Himalayan Sanctuary Bowl voicing per breath phase:
+    // - inhale: warm heart-opening bowl (0.75 * base, e.g. 324Hz at 432Hz tuning)
+    // - hold: gentle suspended rim shimmer (1.0 * base, e.g. 432Hz)
+    // - exhale: deep grounding bass bowl (0.5 * base, e.g. 216Hz)
+    const config =
+      phase === 'inhale'
+        ? {
+            fundamental: bowlBase * 0.75,
+            attack: 0.065,
+            decay: 3.1,
+            peakGain: 0.24,
+            filterCutoff: 1850,
+            pitchSettle: 1.0015,
+            partials: [
+              { ratio: 1.0, gain: 0.56, decayScale: 1.0, detuneHz: 0 },
+              { ratio: 1.0, gain: 0.34, decayScale: 0.96, detuneHz: 1.2 },
+              { ratio: 2.0, gain: 0.14, decayScale: 0.72, detuneHz: 0 },
+              { ratio: 2.756, gain: 0.11, decayScale: 0.54, detuneHz: 0.6 },
+            ],
+          }
+        : phase === 'hold'
+        ? {
+            fundamental: bowlBase,
+            attack: 0.11,
+            decay: 2.5,
+            peakGain: 0.17,
+            filterCutoff: 1650,
+            pitchSettle: 1.0,
+            partials: [
+              { ratio: 1.0, gain: 0.58, decayScale: 1.0, detuneHz: 0 },
+              { ratio: 1.0, gain: 0.3, decayScale: 0.94, detuneHz: 0.8 },
+              { ratio: 2.756, gain: 0.08, decayScale: 0.48, detuneHz: 0 },
+            ],
+          }
+        : {
+            fundamental: bowlBase * 0.5,
+            attack: 0.055,
+            decay: 3.8,
+            peakGain: 0.27,
+            filterCutoff: 1380,
+            pitchSettle: 0.9965,
+            partials: [
+              { ratio: 1.0, gain: 0.62, decayScale: 1.0, detuneHz: 0 },
+              { ratio: 1.0, gain: 0.36, decayScale: 0.95, detuneHz: 0.9 },
+              { ratio: 1.5, gain: 0.16, decayScale: 0.78, detuneHz: 0 },
+              { ratio: 2.756, gain: 0.1, decayScale: 0.52, detuneHz: 0.4 },
+            ],
+          };
 
-    const osc2 = this.ctx.createOscillator();
-    osc2.type = 'triangle';
-    osc2.frequency.setValueAtTime(freq * 2.01, now);
+    const bowlBus = this.ctx.createGain();
+    bowlBus.gain.setValueAtTime(config.peakGain, now);
 
-    const filter = this.ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(2200, now);
+    const warmthFilter = this.ctx.createBiquadFilter();
+    warmthFilter.type = 'lowpass';
+    warmthFilter.frequency.setValueAtTime(config.filterCutoff, now);
+    warmthFilter.Q.setValueAtTime(0.65, now);
 
-    osc1.connect(filter);
-    osc2.connect(filter);
-    filter.connect(chimeGain);
+    warmthFilter.connect(bowlBus);
+    bowlBus.connect(this.masterGain);
 
-    osc1.start(now);
-    osc2.start(now);
-    osc1.stop(now + 2.0);
-    osc2.stop(now + 2.0);
+    config.partials.forEach(({ ratio, gain, decayScale, detuneHz }) => {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const partialGain = this.ctx.createGain();
+
+      const startFreq = config.fundamental * ratio + detuneHz;
+      const partialDecay = config.decay * decayScale;
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(startFreq, now);
+      osc.frequency.exponentialRampToValueAtTime(
+        Math.max(40, startFreq * config.pitchSettle),
+        now + partialDecay
+      );
+
+      // Soft felt-mallet swell envelope with zero click
+      partialGain.gain.setValueAtTime(0.0001, now);
+      partialGain.gain.linearRampToValueAtTime(gain, now + config.attack);
+      partialGain.gain.exponentialRampToValueAtTime(0.0001, now + partialDecay);
+
+      osc.connect(partialGain);
+      partialGain.connect(warmthFilter);
+
+      osc.start(now);
+      osc.stop(now + partialDecay + 0.08);
+    });
   }
 
   // 432Hz Tuned Crystal Kalimba / Sound Harp Note

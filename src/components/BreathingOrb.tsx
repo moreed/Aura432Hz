@@ -164,11 +164,12 @@ export const BreathingOrb: React.FC<BreathingOrbProps> = ({
           {(['4-7-8', 'box', 'coherent'] as BreathingPattern[]).map((pKey) => (
             <button
               key={pKey}
+              type="button"
               onClick={() => setPatternKey(pKey)}
-              className={`px-2 py-0.5 rounded-lg transition-colors font-mono ${
+              className={`min-h-[26px] px-2 py-0.5 rounded-lg border transition-colors font-mono inline-flex items-center justify-center cursor-pointer ${
                 patternKey === pKey
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 font-semibold'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 font-semibold'
+                  : 'border-transparent text-slate-400 hover:text-slate-200'
               }`}
             >
               {pKey === '4-7-8' ? '4-7-8' : pKey === 'box' ? 'Box' : 'HRV'}

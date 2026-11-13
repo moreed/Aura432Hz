@@ -281,8 +281,9 @@ export const SacredLotusBreathVisualizer: React.FC<SacredLotusBreathVisualizerPr
               Cycle #{cycleCount}
             </span>
             <button
+              type="button"
               onClick={() => setShowGuideMenu(!showGuideMenu)}
-              className="text-[11px] px-2.5 py-0.5 rounded-full bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition-all flex items-center gap-1 cursor-pointer"
+              className="text-[11px] px-2.5 py-1 min-h-[28px] rounded-full bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition-all inline-flex items-center gap-1 cursor-pointer whitespace-nowrap"
               title="Change breathing technique"
             >
               <span>{selectedTechnique.name} ({selectedTechnique.subtitle})</span>
@@ -298,6 +299,7 @@ export const SacredLotusBreathVisualizer: React.FC<SacredLotusBreathVisualizerPr
               const isSelected = selectedTechnique.id === tech.id;
               return (
                 <button
+                  type="button"
                   key={tech.id}
                   onClick={() => handleSelectTechnique(tech)}
                   className={`p-2.5 rounded-xl text-left transition-all border cursor-pointer ${
@@ -573,10 +575,11 @@ export const SacredLotusBreathVisualizer: React.FC<SacredLotusBreathVisualizerPr
         </p>
 
         {/* Interactive Controls Bar: Play/Pause, Advance, Reset */}
-        <div className="flex items-center gap-2 pt-1">
+        <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
           <button
+            type="button"
             onClick={() => setIsPlaying(!isPlaying)}
-            className="px-3 py-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-amber-300 border border-amber-500/30 transition-all flex items-center gap-1.5 text-xs font-semibold shadow-md cursor-pointer"
+            className="px-3 py-1.5 min-h-[34px] rounded-xl bg-slate-900/80 hover:bg-slate-800 text-amber-300 border border-amber-500/30 transition-all inline-flex items-center justify-center gap-1.5 text-xs font-semibold shadow-md cursor-pointer whitespace-nowrap"
             title={isPlaying ? 'Pause breathwork pacing' : 'Resume breathwork pacing'}
           >
             {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-current" />}
@@ -584,8 +587,9 @@ export const SacredLotusBreathVisualizer: React.FC<SacredLotusBreathVisualizerPr
           </button>
 
           <button
+            type="button"
             onClick={handleAdvancePhase}
-            className="px-3 py-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-amber-300 border border-slate-800 hover:border-amber-500/30 transition-all flex items-center gap-1.5 text-xs font-medium cursor-pointer"
+            className="px-3 py-1.5 min-h-[34px] rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-amber-300 border border-slate-800 hover:border-amber-500/30 transition-all inline-flex items-center justify-center gap-1.5 text-xs font-medium cursor-pointer whitespace-nowrap"
             title="Advance to next breath phase"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
@@ -593,9 +597,11 @@ export const SacredLotusBreathVisualizer: React.FC<SacredLotusBreathVisualizerPr
           </button>
 
           <button
+            type="button"
             onClick={handleReset}
-            className="p-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-amber-300 border border-slate-800 hover:border-amber-500/30 transition-all cursor-pointer"
+            className="w-[34px] h-[34px] inline-flex items-center justify-center rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-amber-300 border border-slate-800 hover:border-amber-500/30 transition-all cursor-pointer shrink-0"
             title="Reset breath cycle"
+            aria-label="Reset breath cycle"
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>

@@ -60,8 +60,10 @@ export const SleepTimerModal: React.FC<SleepTimerModalProps> = ({
     >
       <div className="relative w-full max-w-md bg-slate-900 border border-slate-700/80 rounded-2xl sm:rounded-3xl p-4 sm:p-6 landscape:p-4 shadow-2xl max-h-[92dvh] landscape:max-h-[94dvh] overflow-y-auto overscroll-contain my-auto text-left">
         <button
+          type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-200 rounded-lg hover:bg-slate-800 transition-colors"
+          className="absolute top-4 right-4 w-8 h-8 inline-flex items-center justify-center text-slate-400 hover:text-slate-200 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+          aria-label="Close Sleep Timer"
         >
           <X className="w-5 h-5" />
         </button>
@@ -87,20 +89,22 @@ export const SleepTimerModal: React.FC<SleepTimerModalProps> = ({
             <p className="text-xs text-indigo-300/80 mb-4">
               Gentle fade-out will begin when the countdown nears completion.
             </p>
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex flex-wrap items-center justify-center gap-2">
               <button
+                type="button"
                 onClick={() => {
                   onCancelTimer();
                 }}
-                className="px-4 py-2 bg-rose-600/30 hover:bg-rose-600/40 text-rose-300 text-xs font-medium rounded-lg border border-rose-500/40 transition-colors"
+                className="px-4 py-2 min-h-[36px] inline-flex items-center justify-center bg-rose-600/30 hover:bg-rose-600/40 text-rose-300 text-xs font-medium rounded-lg border border-rose-500/40 transition-colors cursor-pointer whitespace-nowrap"
               >
                 Cancel Timer
               </button>
               <button
+                type="button"
                 onClick={() => {
                   onStartTimer(Math.floor(activeSecondsRemaining / 60) + 15, fadeOutMinutes);
                 }}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg border border-slate-700 transition-colors"
+                className="px-4 py-2 min-h-[36px] inline-flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg border border-slate-700 transition-colors cursor-pointer whitespace-nowrap"
               >
                 +15 Minutes
               </button>
@@ -118,12 +122,13 @@ export const SleepTimerModal: React.FC<SleepTimerModalProps> = ({
                   const selected = !isCustom && selectedMinutes === m;
                   return (
                     <button
+                      type="button"
                       key={m}
                       onClick={() => {
                         setSelectedMinutes(m);
                         setIsCustom(false);
                       }}
-                      className={`py-2.5 rounded-xl text-xs font-medium border transition-all ${
+                      className={`py-2.5 min-h-[38px] rounded-xl text-xs font-medium border transition-all cursor-pointer ${
                         selected
                           ? 'bg-sky-500/20 border-sky-400 text-sky-200 shadow-sm'
                           : 'bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-700/60'
@@ -140,10 +145,10 @@ export const SleepTimerModal: React.FC<SleepTimerModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsCustom(true)}
-                  className={`text-xs px-3 py-2 rounded-lg border transition-all ${
+                  className={`text-xs px-3 h-[34px] inline-flex items-center rounded-lg border transition-all cursor-pointer whitespace-nowrap ${
                     isCustom
                       ? 'bg-sky-500/20 border-sky-400 text-sky-300 font-medium'
-                      : 'bg-slate-800 border-slate-700 text-slate-400'
+                      : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200'
                   }`}
                 >
                   Custom Min:
@@ -158,7 +163,7 @@ export const SleepTimerModal: React.FC<SleepTimerModalProps> = ({
                     setCustomInput(e.target.value);
                     setIsCustom(true);
                   }}
-                  className="w-20 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-sky-400"
+                  className="w-20 h-[34px] bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-sky-400"
                 />
               </div>
             </div>
@@ -178,9 +183,10 @@ export const SleepTimerModal: React.FC<SleepTimerModalProps> = ({
               <div className="flex items-center gap-2">
                 {[1, 3, 5].map((f) => (
                   <button
+                    type="button"
                     key={f}
                     onClick={() => setFadeOutMinutes(f)}
-                    className={`flex-1 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                    className={`flex-1 py-1.5 min-h-[32px] rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
                       fadeOutMinutes === f
                         ? 'bg-indigo-600/30 border-indigo-400 text-indigo-200'
                         : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200'
@@ -194,14 +200,16 @@ export const SleepTimerModal: React.FC<SleepTimerModalProps> = ({
 
             <div className="flex items-center gap-3">
               <button
+                type="button"
                 onClick={onClose}
-                className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-xl border border-slate-700 transition-colors"
+                className="flex-1 py-2.5 min-h-[40px] inline-flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-xl border border-slate-700 transition-colors cursor-pointer"
               >
                 Close
               </button>
               <button
+                type="button"
                 onClick={handleStart}
-                className="flex-1 py-2.5 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-slate-950 text-xs font-semibold rounded-xl shadow-lg shadow-sky-500/20 transition-all flex items-center justify-center gap-1.5"
+                className="flex-1 py-2.5 min-h-[40px] bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-slate-950 text-xs font-semibold rounded-xl border border-transparent shadow-lg shadow-sky-500/20 transition-all inline-flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <Clock className="w-4 h-4" /> Start Sleep Timer
               </button>
