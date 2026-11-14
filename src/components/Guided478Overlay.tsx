@@ -21,12 +21,13 @@ import {
   ShieldCheck,
   ChevronRight,
 } from 'lucide-react';
-import { audioEngine } from '../services/audioEngine';
+import { audioEngine, SanctuaryBowlTone } from '../services/audioEngine';
 
 interface Guided478OverlayProps {
   isOpen: boolean;
   onClose: () => void;
   onCompleteCycle?: (cycles: number) => void;
+  sanctuaryBowlTone?: SanctuaryBowlTone;
 }
 
 type PhaseType = 'inhale' | 'hold' | 'exhale';
@@ -87,6 +88,7 @@ export const Guided478Overlay: React.FC<Guided478OverlayProps> = ({
   isOpen,
   onClose,
   onCompleteCycle,
+  sanctuaryBowlTone = 'warm_tibetan',
 }) => {
   // Session execution state
   const [isActive, setIsActive] = useState<boolean>(false);
@@ -138,7 +140,7 @@ export const Guided478Overlay: React.FC<Guided478OverlayProps> = ({
 
     // Audio Cue
     if (audioCueEnabled) {
-      audioEngine.playBreathCue(nextPhase.type);
+      audioEngine.playBreathCue(nextPhase.type, sanctuaryBowlTone);
     }
 
     // Haptic Cue for phase entry
@@ -172,7 +174,7 @@ export const Guided478Overlay: React.FC<Guided478OverlayProps> = ({
 
     setPhaseIndex(nextIdx);
     setElapsedInPhase(0);
-  }, [phaseIndex, audioCueEnabled, targetCycles, onCompleteCycle, triggerHaptic]);
+  }, [phaseIndex, audioCueEnabled, sanctuaryBowlTone, targetCycles, onCompleteCycle, triggerHaptic]);
 
   // Main high-precision animation and timing loop
   const lastTickRef = useRef<number>(performance.now());
@@ -258,7 +260,7 @@ export const Guided478Overlay: React.FC<Guided478OverlayProps> = ({
     setIsActive(true);
     triggerHaptic([60, 40, 70]);
     if (audioCueEnabled) {
-      audioEngine.playBreathCue('inhale');
+      audioEngine.playBreathCue('inhale', sanctuaryBowlTone);
     }
   };
 
@@ -266,7 +268,7 @@ export const Guided478Overlay: React.FC<Guided478OverlayProps> = ({
     setIsActive(true);
     triggerHaptic([60, 40, 70]);
     if (audioCueEnabled) {
-      audioEngine.playBreathCue('inhale');
+      audioEngine.playBreathCue('inhale', sanctuaryBowlTone);
     }
   };
 

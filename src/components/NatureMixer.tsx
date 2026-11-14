@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import {
   CloudRain,
   Waves,
@@ -41,9 +41,10 @@ import {
   AlertCircle,
   Disc,
   Activity,
+  Shuffle,
 } from 'lucide-react';
 import { downloadJSON } from '../services/printService';
-import { NatureSoundState, audioEngine } from '../services/audioEngine';
+import { NatureSoundState, audioEngine, MusicalModeStyle, ProceduralMusicStatus } from '../services/audioEngine';
 import {
   MixPreset,
   BUILT_IN_MIX_PRESETS,
@@ -688,6 +689,36 @@ const NatureMixerComponent: React.FC<NatureMixerProps> = ({
   onMusicalVolumeChange,
   baseFreq = 432,
 }) => {
+  const [musicalModeStyle, setMusicalModeStyle] = useState<MusicalModeStyle>(() =>
+    audioEngine.getMusicalModeStyle()
+  );
+  const [proceduralStatus, setProceduralStatus] = useState<ProceduralMusicStatus>(() =>
+    audioEngine.getProceduralMusicStatus()
+  );
+
+  useEffect(() => {
+    const unsubStyle = audioEngine.subscribeMusicalModeStyle((style) => {
+      setMusicalModeStyle(style);
+    });
+    const unsubStatus = audioEngine.subscribeProceduralMusicStatus((status) => {
+      setProceduralStatus(status);
+    });
+    return () => {
+      unsubStyle();
+      unsubStatus();
+    };
+  }, []);
+
+  const handleSelectMusicalStyle = (style: MusicalModeStyle) => {
+    audioEngine.setMusicalModeStyle(style);
+    if (!isMusicalMode) {
+      if (onToggleMusicalMode) {
+        onToggleMusicalMode();
+      } else {
+        audioEngine.setMusicalMode(true);
+      }
+    }
+  };
   const [customPresets, setCustomPresets] = useState<MixPreset[]>(() => getCustomPresets());
   const [favoritePresetIds, setFavoritePresetIds] = useState<string[]>(() => getFavoritePresetIds());
   const [isSavingPreset, setIsSavingPreset] = useState(false);
@@ -1466,8 +1497,8 @@ const NatureMixerComponent: React.FC<NatureMixerProps> = ({
         )}
       </div>
 
-      {/* 3.5 MUSICAL MODE & SOLFEGGIO HARMONIC PAD CHANNEL */}
-      <div className={`p-4 sm:p-5 rounded-3xl border transition-all shadow-xl ${
+      {/* 3.5 MUSICAL MODE & ACOUSTIC MELODIES (PADS, OCARINA LULLABY & BASS NATIVE FLUTE) */}
+      <div className={`p-4 sm:p-5 rounded-3xl border transition-all shadow-xl space-y-3.5 ${
         isMusicalMode
           ? 'bg-gradient-to-r from-indigo-950/70 via-slate-900 to-purple-950/60 border-indigo-400/50 shadow-indigo-500/10'
           : 'bg-slate-900/70 backdrop-blur-xl border-slate-800'
@@ -1485,14 +1516,26 @@ const NatureMixerComponent: React.FC<NatureMixerProps> = ({
               <div className="flex items-center gap-2 flex-wrap">
                 <h4 className="text-sm sm:text-base font-semibold text-slate-100 flex items-center gap-1.5">
                   <span>Musical Mode</span>
-                  <span className="text-slate-400 font-normal hidden sm:inline">— Ethereal Harmonic Pads</span>
+                  <span className="text-slate-400 font-normal hidden sm:inline">
+                    {musicalModeStyle === 'wave_adaptive'
+                      ? `— Wave-Synced (${proceduralStatus.activeVoiceLabel})`
+                      : musicalModeStyle === 'ocarina_lullaby'
+                      ? '— Ocarina Lullaby Tunes'
+                      : musicalModeStyle === 'pads_and_ocarina'
+                      ? '— Ethereal Pads & Ocarina Lullaby'
+                      : musicalModeStyle === 'native_bass_flute'
+                      ? '— Bass Native American Style Flute'
+                      : musicalModeStyle === 'pads_and_bass_flute'
+                      ? '— Ethereal Pads & Bass Native Flute'
+                      : '— Ethereal Harmonic Pads'}
+                  </span>
                 </h4>
                 <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
                   isMusicalMode
                     ? 'bg-indigo-500/25 text-indigo-300 border border-indigo-400/40'
                     : 'bg-slate-800 text-slate-400 border border-slate-700'
                 }`}>
-                  {isMusicalMode ? 'Active' : 'Off'}
+                  {isMusicalMode ? 'ON' : 'OFF'}
                 </span>
                 {isMusicalMode && (
                   <span className="text-[10px] font-mono text-indigo-300/90 bg-indigo-950/60 px-2 py-0.5 rounded-full border border-indigo-500/30">
@@ -1501,8 +1544,30 @@ const NatureMixerComponent: React.FC<NatureMixerProps> = ({
                 )}
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                Generates warm, evolving ambient chord swells tuned in real-time to your active Solfeggio carrier frequency ({baseFreq}Hz).
+                {musicalModeStyle === 'wave_adaptive'
+                  ? `Synced to ${proceduralStatus.waveName}${proceduralStatus.beatHz > 0 ? ` (${proceduralStatus.beatHz}Hz)` : ''} — randomly weaves Ocarina lullabies, Bass Native Flute & pads as the wave changes.`
+                  : musicalModeStyle === 'ocarina_lullaby' || musicalModeStyle === 'pads_and_ocarina'
+                  ? `Warm ceramic ocarina lullaby phrases synced to ${proceduralStatus.waveName} & your ${baseFreq}Hz carrier.`
+                  : musicalModeStyle === 'native_bass_flute' || musicalModeStyle === 'pads_and_bass_flute'
+                  ? `Deep cedarwood Bass Native American style flute melodies synced to ${proceduralStatus.waveName} in ${baseFreq}Hz.`
+                  : `Generates warm, evolving ambient chord swells synced to ${proceduralStatus.waveName} (${baseFreq}Hz).`}
               </p>
+              {isMusicalMode && (
+                <div className="mt-1.5 flex items-center gap-2 flex-wrap text-[11px] text-indigo-300/90">
+                  <span className="font-mono">
+                    Playing: {proceduralStatus.activeVoiceLabel} · {proceduralStatus.motifName}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => audioEngine.shuffleProceduralMusic()}
+                    className="px-2 py-0.5 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-400/35 text-indigo-200 text-[10px] font-semibold inline-flex items-center gap-1 cursor-pointer transition-colors"
+                    title="Randomly generate a fresh wave-synced melody"
+                  >
+                    <Shuffle className="w-3 h-3" />
+                    <span>Shuffle Tune</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1518,7 +1583,7 @@ const NatureMixerComponent: React.FC<NatureMixerProps> = ({
                   value={musicalVolume}
                   onChange={(e) => onMusicalVolumeChange(parseFloat(e.target.value))}
                   className="w-20 sm:w-28 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-400"
-                  title="Musical Pad Volume"
+                  title="Musical Mode Volume"
                 />
                 <span className="text-[10px] font-mono text-indigo-300 w-8 text-right">
                   {Math.round(musicalVolume * 100)}%
@@ -1529,6 +1594,7 @@ const NatureMixerComponent: React.FC<NatureMixerProps> = ({
             <button
               type="button"
               onClick={onToggleMusicalMode ? onToggleMusicalMode : () => audioEngine.toggleAmbientChords()}
+              aria-pressed={isMusicalMode}
               className={`px-4 py-2 min-h-[36px] rounded-xl border text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 ${
                 isMusicalMode
                   ? 'bg-gradient-to-r from-indigo-500 to-purple-600 border-transparent text-white shadow-indigo-500/30 hover:brightness-110'
@@ -1536,8 +1602,49 @@ const NatureMixerComponent: React.FC<NatureMixerProps> = ({
               }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span>{isMusicalMode ? 'Turn Off Music' : 'Turn On Music'}</span>
+              <span>{isMusicalMode ? 'Music Mode: ON' : 'Music Mode: OFF'}</span>
             </button>
+          </div>
+        </div>
+
+        {/* Music Mode Acoustic Voice Selector */}
+        <div className="pt-3 border-t border-slate-800/80 flex flex-col xl:flex-row xl:items-center justify-between gap-2.5">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 shrink-0 flex items-center gap-1.5">
+            <Wind className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Music Mode Voice</span>
+          </span>
+          <div
+            role="radiogroup"
+            aria-label="Music mode acoustic voice"
+            className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-1.5 w-full xl:w-auto"
+          >
+            {([
+              { id: 'wave_adaptive', label: 'Wave-Synced Auto', sub: 'Randomly changes with played wave' },
+              { id: 'ethereal_pads', label: 'Ethereal Pads', sub: 'Warm harmonic swells' },
+              { id: 'ocarina_lullaby', label: 'Ocarina Lullaby', sub: 'Gentle clay lullabies' },
+              { id: 'pads_and_ocarina', label: 'Pads + Ocarina', sub: 'Layered lullaby & chords' },
+              { id: 'native_bass_flute', label: 'Bass Native Flute', sub: 'Deep cedar minor flute' },
+              { id: 'pads_and_bass_flute', label: 'Pads + Bass Flute', sub: 'Flute over ambient swells' },
+            ] as const).map((voice) => {
+              const selected = musicalModeStyle === voice.id;
+              return (
+                <button
+                  key={voice.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => handleSelectMusicalStyle(voice.id)}
+                  title={voice.sub}
+                  className={`min-h-[36px] px-3 py-1.5 rounded-xl border text-xs font-semibold inline-flex items-center justify-center transition-all cursor-pointer whitespace-nowrap ${
+                    selected
+                      ? 'bg-indigo-500/25 border-indigo-400/60 text-indigo-100 shadow-sm'
+                      : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                  }`}
+                >
+                  {voice.label}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>

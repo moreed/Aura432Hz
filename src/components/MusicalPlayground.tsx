@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Music, Volume2, Sparkles, Wand2, Bell, Play, Pause, Sliders, Layers } from 'lucide-react';
-import { audioEngine } from '../services/audioEngine';
+import { Music, Volume2, Sparkles, Wind, Bell, Play, Pause, Layers, Shuffle } from 'lucide-react';
+import { audioEngine, MusicalModeStyle, ProceduralMusicStatus } from '../services/audioEngine';
 
 interface KalimbaKey {
   note: string;
@@ -24,12 +24,35 @@ const KALIMBA_KEYS: KalimbaKey[] = [
 
 export const MusicalPlayground: React.FC = () => {
   const [activeNoteIdx, setActiveNoteIdx] = useState<number | null>(null);
-  const [isChordsActive, setIsChordsActive] = useState<boolean>(() => audioEngine.getIsChordsPlaying());
+  const [isChordsActive, setIsChordsActive] = useState<boolean>(() => audioEngine.isMusicalModeConfigured());
+  const [musicalModeStyle, setMusicalModeStyle] = useState<MusicalModeStyle>(() =>
+    audioEngine.getMusicalModeStyle()
+  );
+  const [proceduralStatus, setProceduralStatus] = useState<ProceduralMusicStatus>(() =>
+    audioEngine.getProceduralMusicStatus()
+  );
   const [chordProgression, setChordProgression] = useState<string>('celestial_harmony');
-  const [chordsVol, setChordsVol] = useState<number>(0.35);
+  const [chordsVol, setChordsVol] = useState<number>(() => audioEngine.getMusicalModeVolume() || 0.35);
 
   // Auto Wind Chimes mode
   const [isAutoChimes, setIsAutoChimes] = useState<boolean>(false);
+
+  useEffect(() => {
+    const unsubMode = audioEngine.subscribeMusicalMode((enabled) => {
+      setIsChordsActive(enabled);
+    });
+    const unsubStyle = audioEngine.subscribeMusicalModeStyle((style) => {
+      setMusicalModeStyle(style);
+    });
+    const unsubProc = audioEngine.subscribeProceduralMusicStatus((status) => {
+      setProceduralStatus(status);
+    });
+    return () => {
+      unsubMode();
+      unsubStyle();
+      unsubProc();
+    };
+  }, []);
 
   // Handle Note Strike
   const handlePlayNote = (idx: number) => {
@@ -64,10 +87,19 @@ export const MusicalPlayground: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Ambient Chords Controller
+  // Ambient Music Mode Controller
   const handleToggleChords = () => {
-    const active = audioEngine.toggleAmbientChords();
-    setIsChordsActive(active);
+    const next = !isChordsActive;
+    setIsChordsActive(next);
+    audioEngine.setMusicalMode(next);
+  };
+
+  const handleSelectMusicalStyle = (style: MusicalModeStyle) => {
+    audioEngine.setMusicalModeStyle(style);
+    if (!audioEngine.isMusicalModeConfigured()) {
+      audioEngine.setMusicalMode(true);
+      setIsChordsActive(true);
+    }
   };
 
   const handleProgressionChange = (pId: string) => {
@@ -182,8 +214,8 @@ export const MusicalPlayground: React.FC = () => {
         </div>
       </div>
 
-      {/* SECTION 2: Ambient Musical Chords Companion - Minimized & Compact */}
-      <div className="p-3 sm:p-4 rounded-xl bg-slate-950/50 border border-slate-800/90 space-y-3">
+      {/* SECTION 2: Music Mode Companion — Pads, Ocarina Lullaby & Bass Native American Flute */}
+      <div className="p-3.5 sm:p-4 rounded-xl bg-slate-950/50 border border-slate-800/90 space-y-3.5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
@@ -191,27 +223,95 @@ export const MusicalPlayground: React.FC = () => {
             </div>
             <div>
               <div className="text-xs font-semibold text-slate-200">
-                Continuous Ambient Pad Progression (432Hz)
+                Music Mode Companion (432Hz)
               </div>
               <div className="text-[10px] text-slate-400">
-                Harmonic chords layered under your meditation drone.
+                Ethereal harmonic pads, Ocarina lullaby tunes, or Bass Native American style flute.
               </div>
             </div>
           </div>
 
-          {/* Toggle Chords Button */}
-          <button
-            type="button"
-            onClick={handleToggleChords}
-            className={`px-3.5 py-1.5 min-h-[34px] rounded-xl text-xs font-semibold inline-flex items-center justify-center gap-1.5 border transition-all cursor-pointer whitespace-nowrap ${
-              isChordsActive
-                ? 'bg-indigo-600 hover:bg-indigo-500 text-white border-transparent shadow-md shadow-indigo-600/30'
-                : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
-            }`}
+          {/* Toggle & Shuffle Music Mode Buttons */}
+          <div className="flex items-center gap-2 shrink-0">
+            {isChordsActive && (
+              <button
+                type="button"
+                onClick={() => audioEngine.shuffleProceduralMusic()}
+                className="px-3 py-1.5 min-h-[34px] rounded-xl text-xs font-semibold inline-flex items-center justify-center gap-1.5 border border-indigo-400/40 bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-200 transition-all cursor-pointer whitespace-nowrap"
+                title="Randomly generate a new wave-synced melody"
+              >
+                <Shuffle className="w-3.5 h-3.5" />
+                <span>Shuffle</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleToggleChords}
+              aria-pressed={isChordsActive}
+              className={`px-3.5 py-1.5 min-h-[34px] rounded-xl text-xs font-semibold inline-flex items-center justify-center gap-1.5 border transition-all cursor-pointer whitespace-nowrap ${
+                isChordsActive
+                  ? 'bg-indigo-600 hover:bg-indigo-500 text-white border-transparent shadow-md shadow-indigo-600/30'
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+              }`}
+            >
+              {isChordsActive ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+              <span>{isChordsActive ? 'Music Mode: ON' : 'Music Mode: OFF'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Live Wave-Sync Procedural Readout */}
+        <div className="px-2.5 py-1.5 rounded-lg bg-slate-900/70 border border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-300">
+          <span>
+            Wave Sync: <strong className="text-indigo-300">{proceduralStatus.waveName}</strong>
+            {proceduralStatus.beatHz > 0 ? ` (${proceduralStatus.beatHz}Hz)` : ' (432Hz)'}
+          </span>
+          <span className="font-mono text-indigo-300/90 text-[10px]">
+            {isChordsActive
+              ? `${proceduralStatus.activeVoiceLabel} · ${proceduralStatus.motifName}`
+              : 'Adaptive Procedural Generator Ready'}
+          </span>
+        </div>
+
+        {/* Acoustic Instrument Voice Selector */}
+        <div className="space-y-1.5">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+            <Wind className="w-3 h-3 text-indigo-400" />
+            <span>Instrument &amp; Melody Voice</span>
+          </div>
+          <div
+            role="radiogroup"
+            aria-label="Music mode instrument voice"
+            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5"
           >
-            {isChordsActive ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-            <span>{isChordsActive ? 'Stop Chords' : 'Play Ambient Chords'}</span>
-          </button>
+            {([
+              { id: 'wave_adaptive', name: 'Wave-Synced Auto', desc: 'Changes randomly w/ wave' },
+              { id: 'ethereal_pads', name: 'Ethereal Pads', desc: 'Sustained chord swells' },
+              { id: 'ocarina_lullaby', name: 'Ocarina Lullaby', desc: 'Warm ceramic lullabies' },
+              { id: 'pads_and_ocarina', name: 'Pads + Ocarina', desc: 'Lullaby over warm pads' },
+              { id: 'native_bass_flute', name: 'Bass Native Flute', desc: 'Deep cedar wood flute' },
+              { id: 'pads_and_bass_flute', name: 'Pads + Bass Flute', desc: 'Flute over ambient swells' },
+            ] as const).map((voice) => {
+              const selected = musicalModeStyle === voice.id;
+              return (
+                <button
+                  type="button"
+                  key={voice.id}
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => handleSelectMusicalStyle(voice.id)}
+                  className={`p-2 rounded-xl border text-left text-xs transition-all cursor-pointer min-h-[52px] flex flex-col justify-center ${
+                    selected
+                      ? 'bg-indigo-500/20 border-indigo-400 text-slate-100 font-medium shadow-sm'
+                      : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                  }`}
+                >
+                  <div className="font-semibold text-slate-200 text-xs truncate">{voice.name}</div>
+                  <div className="text-[10px] text-indigo-300/80 truncate mt-0.5">{voice.desc}</div>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Progression Presets */}
@@ -237,11 +337,11 @@ export const MusicalPlayground: React.FC = () => {
           ))}
         </div>
 
-        {/* Chords Volume Slider */}
+        {/* Music Mode Volume Slider */}
         <div className="flex items-center gap-3 pt-1">
           <Volume2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
           <div className="flex-1 flex items-center gap-3">
-            <span className="text-[11px] text-slate-300 shrink-0 font-medium">Chords Vol</span>
+            <span className="text-[11px] text-slate-300 shrink-0 font-medium">Music Vol</span>
             <input
               type="range"
               min="0"

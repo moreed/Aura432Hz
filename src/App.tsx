@@ -220,19 +220,18 @@ export default function App() {
   const [musicalVolume, setMusicalVolume] = useState<number>(() => audioEngine.getMusicalModeVolume() || 0.6);
 
   const handleToggleMusicalMode = useCallback(() => {
-    setIsMusicalMode((prev) => {
-      const next = !prev;
-      audioEngine.setMusicalMode(next);
-      if (next && !audioEngine.getIsPlaying() && !isPlaying) {
-        setIsPlaying(true);
-        setIsFadingOut(false);
-        audioEngine.start(0.4, 0).catch((err) => {
-          console.error('AudioEngine start error:', err);
-        });
-      }
-      return next;
-    });
-  }, [isPlaying]);
+    const next = !isMusicalMode;
+    setIsMusicalMode(next);
+    audioEngine.setMusicalMode(next);
+    if (next && !audioEngine.getIsPlaying() && !isPlaying) {
+      setIsPlaying(true);
+      setIsFadingOut(false);
+      sessionStartTimeRef.current = Date.now();
+      audioEngine.start(0.4, 0).catch((err) => {
+        console.error('AudioEngine start error:', err);
+      });
+    }
+  }, [isMusicalMode, isPlaying]);
 
   const handleMusicalVolumeChange = useCallback((vol: number) => {
     setMusicalVolume(vol);
@@ -251,9 +250,13 @@ export default function App() {
     const unsubPlaying = audioEngine.subscribePlayingStatus((playing) => {
       setIsPlaying(playing);
     });
+    const unsubMusical = audioEngine.subscribeMusicalMode((enabled) => {
+      setIsMusicalMode(enabled);
+    });
     return () => {
       unsubFade();
       unsubPlaying();
+      unsubMusical();
     };
   }, []);
 
@@ -1788,6 +1791,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={handleToggleMusicalMode}
+                  aria-pressed={isMusicalMode}
                   className={`min-h-[38px] px-3 sm:px-3.5 py-2 rounded-xl text-xs font-semibold transition-all shadow-md active:scale-95 inline-flex items-center justify-center gap-1.5 cursor-pointer border whitespace-nowrap ${
                     isMusicalMode
                       ? 'bg-cosmic-lavender/25 text-white border-cosmic-lavender/50 shadow-cosmic-lavender/20'
@@ -1796,7 +1800,7 @@ export default function App() {
                   title={`Toggle Musical Mode: Ambient ethereal harmonic pads and slow chord swells (${audioEngine.getSolfeggioKeyName(baseFreq)})`}
                 >
                   <Music className={`w-3.5 h-3.5 ${isMusicalMode ? 'text-cosmic-lavender animate-pulse' : 'text-slate-400'}`} />
-                  <span>{isMusicalMode ? 'Music: ON' : 'Musical Mode'}</span>
+                  <span>{isMusicalMode ? 'Music Mode: ON' : 'Music Mode: OFF'}</span>
                   {isMusicalMode && (
                     <span className="text-[10px] bg-cosmic-lavender/30 text-cosmic-lavender px-1.5 py-0.5 leading-none rounded-full font-mono">
                       {audioEngine.getSolfeggioKeyName(baseFreq).split(' ')[1] || 'Pad'}
@@ -1854,16 +1858,17 @@ export default function App() {
                     <button
                       type="button"
                       onClick={handleToggleMusicalMode}
+                      aria-pressed={isMusicalMode}
                       className={`min-h-[44px] py-2.5 px-3.5 sm:px-4 border rounded-2xl transition-all shadow-md active:scale-95 inline-flex items-center justify-center gap-2 text-xs font-semibold cursor-pointer shrink-0 whitespace-nowrap ${
                         isMusicalMode
                           ? 'bg-gradient-to-r from-indigo-950/90 via-purple-950/90 to-indigo-900/90 text-indigo-200 border-indigo-400/80 shadow-indigo-500/25 ring-1 ring-indigo-400/40'
                           : 'bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-indigo-300 border-slate-700/80'
                       }`}
                       title={`Toggle Musical Mode: Ambient ethereal harmonic pads and slow chord swells (${audioEngine.getSolfeggioKeyName(baseFreq)})`}
-                      aria-label="Toggle Musical Mode"
+                      aria-label={isMusicalMode ? 'Music Mode ON — click to turn off' : 'Music Mode OFF — click to turn on'}
                     >
                       <Music className={`w-4 h-4 ${isMusicalMode ? 'text-indigo-400 animate-pulse' : 'text-indigo-300'}`} />
-                      <span>{isMusicalMode ? 'Music: ON' : 'Musical Mode'}</span>
+                      <span>{isMusicalMode ? 'Music Mode: ON' : 'Music Mode: OFF'}</span>
                     </button>
 
                     {/* 2. Sleep Timer */}

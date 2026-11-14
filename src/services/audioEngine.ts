@@ -19,6 +19,33 @@ export interface NatureSoundState {
 
 export type BrainwaveMode = 'alpha_healing' | 'alpha_flow' | 'theta_meditation' | 'delta_sleep' | 'pure_432';
 
+export type SanctuaryBowlTone = 'warm_tibetan' | 'deep_monastery' | 'crystal_temple';
+
+export type MusicalModeStyle =
+  | 'wave_adaptive'
+  | 'ethereal_pads'
+  | 'ocarina_lullaby'
+  | 'pads_and_ocarina'
+  | 'native_bass_flute'
+  | 'pads_and_bass_flute';
+
+export type ResolvedMusicalVoice =
+  | 'ethereal_pads'
+  | 'ocarina_lullaby'
+  | 'pads_and_ocarina'
+  | 'native_bass_flute'
+  | 'pads_and_bass_flute';
+
+export interface ProceduralMusicStatus {
+  style: MusicalModeStyle;
+  activeVoice: ResolvedMusicalVoice;
+  activeVoiceLabel: string;
+  waveMode: BrainwaveMode;
+  waveName: string;
+  beatHz: number;
+  motifName: string;
+}
+
 export interface BrainwaveConfig {
   name: string;
   beatHz: number; // binaural beat frequency
@@ -211,6 +238,8 @@ export const DEFAULT_NATURE_SOUNDS: NatureSoundState[] = [
   { id: 'bowls', name: 'Tibetan Bowls', category: 'musical', icon: 'Bell', volume: 0.45, enabled: true, color: 'text-yellow-400', description: 'Dual harmonic singing bowl drone tuned to 432Hz' },
   { id: 'koshi', name: 'Koshi Wind Chimes', category: 'musical', icon: 'Disc', volume: 0.4, enabled: false, color: 'text-amber-300', description: 'Acoustic bamboo chime arpeggios in 432Hz tuning' },
   { id: 'flute', name: 'Zen Flute', category: 'musical', icon: 'Music', volume: 0.35, enabled: false, color: 'text-emerald-300', description: 'Slow breathy bansuri flute tones drifting in 432Hz' },
+  { id: 'ocarina', name: 'Ocarina Lullaby', category: 'musical', icon: 'Music', volume: 0.4, enabled: false, color: 'text-sky-300', description: 'Warm ceramic ocarina lullaby tunes drifting gently in 432Hz' },
+  { id: 'native_bass_flute', name: 'Bass Native Flute', category: 'musical', icon: 'Wind', volume: 0.42, enabled: false, color: 'text-amber-300', description: 'Deep cedarwood Bass Native American style flute in 432Hz minor pentatonic' },
   { id: 'cello', name: 'Cello String Drone', category: 'musical', icon: 'Layers', volume: 0.35, enabled: false, color: 'text-rose-400', description: 'Warm bowing cello sub-harmonics (108Hz / 216Hz)' },
   { id: 'harp', name: 'Celestial Harp', category: 'musical', icon: 'Sparkles', volume: 0.35, enabled: false, color: 'text-indigo-300', description: 'Shimmering 432Hz pentatonic harp string plucks' },
   { id: 'tanpura', name: 'Sacred Tanpura', category: 'sacred', icon: 'Radio', volume: 0.4, enabled: false, color: 'text-orange-400', description: 'Rich Indian meditative drone overtone wash in 432Hz' },
@@ -267,22 +296,51 @@ class AudioEngine {
   private fadeRemainingSeconds = 0;
   private fadeDurationSeconds = 180;
   private fadeTimerInterval: number | null = null;
+  private instantStopTimeout: number | null = null;
   private fadeListeners: Set<(status: { isFadingOut: boolean; remainingSeconds: number; durationSeconds: number }) => void> = new Set();
   private playingListeners: Set<(isPlaying: boolean) => void> = new Set();
 
   // Musical accompaniment state
   private chordInterval: number | null = null;
+  private melodyInterval: number | null = null;
+  private melodyTimeouts: Set<number> = new Set();
+  private melodyStep = 0;
   private currentChordNodes: { oscs: OscillatorNode[]; gain: GainNode }[] = [];
   private chordsGain: GainNode | null = null;
+  private musicWaveModGain: GainNode | null = null;
+  private musicWaveLfo: OscillatorNode | null = null;
+  private musicWaveLfoDepth: GainNode | null = null;
   private chordsVolume = 0.55;
   private isChordsPlaying = false;
   private isMusicalModeEnabled = false;
   private currentChordProgression = 'solfeggio_adaptive';
+  private musicalModeStyle: MusicalModeStyle = 'wave_adaptive';
+  private activeResolvedVoice: ResolvedMusicalVoice = 'pads_and_ocarina';
+  private activeMotifName = 'Starlight Cradle';
+  private musicalStyleListeners: Set<(style: MusicalModeStyle) => void> = new Set();
+  private musicalModeListeners: Set<(enabled: boolean) => void> = new Set();
+  private proceduralStatusListeners: Set<(status: ProceduralMusicStatus) => void> = new Set();
   private lastChordTime = 0;
   private activeChordFrequencies: number[] = [];
 
   constructor() {
-    // AudioContext will be initialized on first user interaction to comply with autoplay policy
+    try {
+      const savedStyle = typeof localStorage !== 'undefined'
+        ? localStorage.getItem('aura_musical_mode_style')
+        : null;
+      if (
+        savedStyle === 'wave_adaptive' ||
+        savedStyle === 'ethereal_pads' ||
+        savedStyle === 'ocarina_lullaby' ||
+        savedStyle === 'pads_and_ocarina' ||
+        savedStyle === 'native_bass_flute' ||
+        savedStyle === 'pads_and_bass_flute'
+      ) {
+        this.musicalModeStyle = savedStyle;
+      }
+    } catch {
+      // ignore storage access errors
+    }
   }
 
   private async initContext() {
@@ -451,6 +509,10 @@ class AudioEngine {
   }
 
   public async start(fadeDurationSeconds: number = 2.0, mainHzDelaySeconds: number = 0) {
+    if (this.instantStopTimeout) {
+      clearTimeout(this.instantStopTimeout);
+      this.instantStopTimeout = null;
+    }
     this.isPlaying = true;
     this.notifyPlayingListeners();
     try {
@@ -479,8 +541,8 @@ class AudioEngine {
         });
       }
 
-      // Resume Musical Mode ambient chords if enabled
-      if (this.isMusicalModeEnabled) {
+      // Resume Musical Mode ambient chords if enabled and not already running
+      if (this.isMusicalModeEnabled && !this.isChordsPlaying) {
         this.startAmbientChords();
       }
     } catch (err) {
@@ -597,6 +659,10 @@ class AudioEngine {
    * Resume playback and cancel active fade out
    */
   public cancelFadeOutAndResume() {
+    if (this.instantStopTimeout) {
+      clearTimeout(this.instantStopTimeout);
+      this.instantStopTimeout = null;
+    }
     if (this.fadeTimerInterval) {
       clearInterval(this.fadeTimerInterval);
       this.fadeTimerInterval = null;
@@ -618,6 +684,10 @@ class AudioEngine {
   public instantStop() {
     this.isPlaying = false;
     this.notifyPlayingListeners();
+    if (this.instantStopTimeout) {
+      clearTimeout(this.instantStopTimeout);
+      this.instantStopTimeout = null;
+    }
     if (this.fadeTimerInterval) {
       clearInterval(this.fadeTimerInterval);
       this.fadeTimerInterval = null;
@@ -632,7 +702,8 @@ class AudioEngine {
       this.masterGain.gain.cancelScheduledValues(now);
       this.masterGain.gain.setValueAtTime(Math.max(0.0001, this.masterGain.gain.value), now);
       this.masterGain.gain.linearRampToValueAtTime(0.00001, now + releaseTime);
-      setTimeout(() => {
+      this.instantStopTimeout = window.setTimeout(() => {
+        this.instantStopTimeout = null;
         this.stop();
         if (this.masterGain && this.ctx) {
           const resetNow = this.ctx.currentTime;
@@ -646,6 +717,10 @@ class AudioEngine {
   }
 
   public stop() {
+    if (this.instantStopTimeout) {
+      clearTimeout(this.instantStopTimeout);
+      this.instantStopTimeout = null;
+    }
     if (this.fadeTimerInterval) {
       clearInterval(this.fadeTimerInterval);
       this.fadeTimerInterval = null;
@@ -659,6 +734,14 @@ class AudioEngine {
     this.stopToneNodes();
     this.stopAllNatureSounds();
     this.stopAmbientChords();
+    if (this.isMusicalModeEnabled) {
+      this.isMusicalModeEnabled = false;
+      this.musicalModeListeners.forEach((cb) => {
+        try {
+          cb(false);
+        } catch {}
+      });
+    }
 
     if (this.fadeInterval) {
       clearInterval(this.fadeInterval);
@@ -765,10 +848,16 @@ class AudioEngine {
   }
 
   public setBrainwaveMode(mode: BrainwaveMode) {
+    const waveChanged = this.brainwaveMode !== mode;
     if (this.isPlaying && this.ctx && this.oscLeft && this.toneGain) {
       this.transitionFrequencyWithZeroCrossing(this.baseFreq, mode);
     } else {
       this.brainwaveMode = mode;
+      if (waveChanged && this.isMusicalModeEnabled && this.isChordsPlaying) {
+        this.reharmonizeChords();
+      } else {
+        this.notifyProceduralStatusListeners();
+      }
     }
   }
 
@@ -1215,7 +1304,10 @@ class AudioEngine {
   }
 
   // Sanctuary Singing Bowls guidance tones for Inhale / Hold / Exhale transitions
-  public async playBreathCue(phase: 'inhale' | 'exhale' | 'hold') {
+  public async playBreathCue(
+    phase: 'inhale' | 'exhale' | 'hold',
+    bowlTone: SanctuaryBowlTone = 'warm_tibetan'
+  ) {
     try {
       await this.initContext();
     } catch {
@@ -1237,6 +1329,13 @@ class AudioEngine {
     while (bowlBase > 460) bowlBase /= 2;
     while (bowlBase < 190) bowlBase *= 2;
 
+    const toneOffset =
+      bowlTone === 'deep_monastery'
+        ? { pitchScale: 0.78, decayScale: 1.25, cutoffOffset: -360, crystalPure: false }
+        : bowlTone === 'crystal_temple'
+        ? { pitchScale: 1.0, decayScale: 1.12, cutoffOffset: 380, crystalPure: true }
+        : { pitchScale: 1.0, decayScale: 1.0, cutoffOffset: 0, crystalPure: false };
+
     // Distinct Tibetan / Himalayan Sanctuary Bowl voicing per breath phase:
     // - inhale: warm heart-opening bowl (0.75 * base, e.g. 324Hz at 432Hz tuning)
     // - hold: gentle suspended rim shimmer (1.0 * base, e.g. 432Hz)
@@ -1244,46 +1343,64 @@ class AudioEngine {
     const config =
       phase === 'inhale'
         ? {
-            fundamental: bowlBase * 0.75,
+            fundamental: bowlBase * 0.75 * toneOffset.pitchScale,
             attack: 0.065,
-            decay: 3.1,
+            decay: 3.1 * toneOffset.decayScale,
             peakGain: 0.24,
-            filterCutoff: 1850,
+            filterCutoff: Math.max(900, 1850 + toneOffset.cutoffOffset),
             pitchSettle: 1.0015,
-            partials: [
-              { ratio: 1.0, gain: 0.56, decayScale: 1.0, detuneHz: 0 },
-              { ratio: 1.0, gain: 0.34, decayScale: 0.96, detuneHz: 1.2 },
-              { ratio: 2.0, gain: 0.14, decayScale: 0.72, detuneHz: 0 },
-              { ratio: 2.756, gain: 0.11, decayScale: 0.54, detuneHz: 0.6 },
-            ],
+            partials: toneOffset.crystalPure
+              ? [
+                  { ratio: 1.0, gain: 0.62, decayScale: 1.0, detuneHz: 0 },
+                  { ratio: 1.0, gain: 0.34, decayScale: 0.98, detuneHz: 0.432 },
+                  { ratio: 2.004, gain: 0.16, decayScale: 0.8, detuneHz: 0 },
+                ]
+              : [
+                  { ratio: 1.0, gain: 0.56, decayScale: 1.0, detuneHz: 0 },
+                  { ratio: 1.0, gain: 0.34, decayScale: 0.96, detuneHz: 1.2 },
+                  { ratio: 2.0, gain: 0.14, decayScale: 0.72, detuneHz: 0 },
+                  { ratio: 2.756, gain: 0.11, decayScale: 0.54, detuneHz: 0.6 },
+                ],
           }
         : phase === 'hold'
         ? {
-            fundamental: bowlBase,
+            fundamental: bowlBase * toneOffset.pitchScale,
             attack: 0.11,
-            decay: 2.5,
+            decay: 2.5 * toneOffset.decayScale,
             peakGain: 0.17,
-            filterCutoff: 1650,
+            filterCutoff: Math.max(850, 1650 + toneOffset.cutoffOffset),
             pitchSettle: 1.0,
-            partials: [
-              { ratio: 1.0, gain: 0.58, decayScale: 1.0, detuneHz: 0 },
-              { ratio: 1.0, gain: 0.3, decayScale: 0.94, detuneHz: 0.8 },
-              { ratio: 2.756, gain: 0.08, decayScale: 0.48, detuneHz: 0 },
-            ],
+            partials: toneOffset.crystalPure
+              ? [
+                  { ratio: 1.0, gain: 0.6, decayScale: 1.0, detuneHz: 0 },
+                  { ratio: 1.0, gain: 0.3, decayScale: 0.96, detuneHz: 0.432 },
+                  { ratio: 1.5, gain: 0.12, decayScale: 0.7, detuneHz: 0 },
+                ]
+              : [
+                  { ratio: 1.0, gain: 0.58, decayScale: 1.0, detuneHz: 0 },
+                  { ratio: 1.0, gain: 0.3, decayScale: 0.94, detuneHz: 0.8 },
+                  { ratio: 2.756, gain: 0.08, decayScale: 0.48, detuneHz: 0 },
+                ],
           }
         : {
-            fundamental: bowlBase * 0.5,
+            fundamental: bowlBase * 0.5 * toneOffset.pitchScale,
             attack: 0.055,
-            decay: 3.8,
+            decay: 3.8 * toneOffset.decayScale,
             peakGain: 0.27,
-            filterCutoff: 1380,
+            filterCutoff: Math.max(760, 1380 + toneOffset.cutoffOffset),
             pitchSettle: 0.9965,
-            partials: [
-              { ratio: 1.0, gain: 0.62, decayScale: 1.0, detuneHz: 0 },
-              { ratio: 1.0, gain: 0.36, decayScale: 0.95, detuneHz: 0.9 },
-              { ratio: 1.5, gain: 0.16, decayScale: 0.78, detuneHz: 0 },
-              { ratio: 2.756, gain: 0.1, decayScale: 0.52, detuneHz: 0.4 },
-            ],
+            partials: toneOffset.crystalPure
+              ? [
+                  { ratio: 1.0, gain: 0.64, decayScale: 1.0, detuneHz: 0 },
+                  { ratio: 1.0, gain: 0.34, decayScale: 0.97, detuneHz: 0.432 },
+                  { ratio: 2.002, gain: 0.14, decayScale: 0.78, detuneHz: 0 },
+                ]
+              : [
+                  { ratio: 1.0, gain: 0.62, decayScale: 1.0, detuneHz: 0 },
+                  { ratio: 1.0, gain: 0.36, decayScale: 0.95, detuneHz: 0.9 },
+                  { ratio: 1.5, gain: 0.16, decayScale: 0.78, detuneHz: 0 },
+                  { ratio: 2.756, gain: 0.1, decayScale: 0.52, detuneHz: 0.4 },
+                ],
           };
 
     const bowlBus = this.ctx.createGain();
@@ -1302,7 +1419,7 @@ class AudioEngine {
       const osc = this.ctx.createOscillator();
       const partialGain = this.ctx.createGain();
 
-      const startFreq = config.fundamental * ratio + detuneHz;
+      const startFreq = Math.max(45, config.fundamental * ratio + detuneHz);
       const partialDecay = config.decay * decayScale;
 
       osc.type = 'sine';
@@ -1681,11 +1798,26 @@ class AudioEngine {
     return this.chordsVolume;
   }
 
+  public subscribeMusicalMode(cb: (enabled: boolean) => void): () => void {
+    this.musicalModeListeners.add(cb);
+    try {
+      cb(this.isMusicalModeEnabled);
+    } catch {}
+    return () => {
+      this.musicalModeListeners.delete(cb);
+    };
+  }
+
   public setMusicalMode(enabled: boolean, volume?: number) {
     this.isMusicalModeEnabled = enabled;
     if (volume !== undefined) {
       this.setChordsVolume(volume);
     }
+    this.musicalModeListeners.forEach((cb) => {
+      try {
+        cb(enabled);
+      } catch {}
+    });
     if (enabled) {
       if (!this.isChordsPlaying) {
         this.startAmbientChords();
@@ -1762,9 +1894,678 @@ class AudioEngine {
     return `${rounded}Hz Harmonic Resonance`;
   }
 
+  public getMusicalModeStyle(): MusicalModeStyle {
+    return this.musicalModeStyle;
+  }
+
+  public subscribeMusicalModeStyle(cb: (style: MusicalModeStyle) => void): () => void {
+    this.musicalStyleListeners.add(cb);
+    try {
+      cb(this.musicalModeStyle);
+    } catch {}
+    return () => {
+      this.musicalStyleListeners.delete(cb);
+    };
+  }
+
+  public setMusicalModeStyle(style: MusicalModeStyle) {
+    this.musicalModeStyle = style;
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('aura_musical_mode_style', style);
+      }
+    } catch {}
+    this.musicalStyleListeners.forEach((cb) => {
+      try {
+        cb(style);
+      } catch {}
+    });
+    if (this.isChordsPlaying) {
+      this.reharmonizeChords();
+    } else {
+      this.notifyProceduralStatusListeners();
+    }
+  }
+
+  public getProceduralMusicStatus(): ProceduralMusicStatus {
+    const waveCfg = BRAINWAVE_MODES[this.brainwaveMode] || BRAINWAVE_MODES.alpha_healing;
+    const voiceLabelMap: Record<ResolvedMusicalVoice, string> = {
+      ethereal_pads: 'Ethereal Pads',
+      ocarina_lullaby: 'Ocarina Lullaby',
+      pads_and_ocarina: 'Pads + Ocarina Lullaby',
+      native_bass_flute: 'Bass Native Flute',
+      pads_and_bass_flute: 'Pads + Bass Native Flute',
+    };
+    return {
+      style: this.musicalModeStyle,
+      activeVoice: this.activeResolvedVoice,
+      activeVoiceLabel: voiceLabelMap[this.activeResolvedVoice] || 'Ocarina Lullaby',
+      waveMode: this.brainwaveMode,
+      waveName: waveCfg.name,
+      beatHz: waveCfg.beatHz,
+      motifName: this.activeMotifName,
+    };
+  }
+
+  public subscribeProceduralMusicStatus(cb: (status: ProceduralMusicStatus) => void): () => void {
+    this.proceduralStatusListeners.add(cb);
+    try {
+      cb(this.getProceduralMusicStatus());
+    } catch {}
+    return () => {
+      this.proceduralStatusListeners.delete(cb);
+    };
+  }
+
+  private notifyProceduralStatusListeners() {
+    const status = this.getProceduralMusicStatus();
+    this.proceduralStatusListeners.forEach((cb) => {
+      try {
+        cb(status);
+      } catch {}
+    });
+  }
+
+  public shuffleProceduralMusic() {
+    if (this.isChordsPlaying) {
+      this.reharmonizeChords();
+    } else {
+      this.pickWaveSyncedVoice(true);
+      this.notifyProceduralStatusListeners();
+    }
+  }
+
+  private clearMelodyTimers() {
+    if (this.melodyInterval) {
+      clearInterval(this.melodyInterval);
+      this.melodyInterval = null;
+    }
+    this.melodyTimeouts.forEach((tid) => clearTimeout(tid));
+    this.melodyTimeouts.clear();
+  }
+
+  private getWaveMusicProfile(mode: BrainwaveMode) {
+    switch (mode) {
+      case 'delta_sleep':
+        return {
+          tempoScale: 1.28,
+          chordIntervalMs: 8800,
+          lfoHz: 3.5 / 8, // 0.4375Hz slow delta cradle breath
+          lfoDepth: 0.13,
+          filterCeiling: 1450,
+          weightedVoices: [
+            'ocarina_lullaby',
+            'ocarina_lullaby',
+            'pads_and_ocarina',
+            'pads_and_ocarina',
+            'native_bass_flute',
+          ] as ResolvedMusicalVoice[],
+          ocarinaScale: [1.0, 1.125, 1.25, 1.333, 1.5, 1.667],
+          fluteScale: [1.0, 1.2, 1.333, 1.5, 1.8],
+        };
+      case 'theta_meditation':
+        return {
+          tempoScale: 1.14,
+          chordIntervalMs: 8000,
+          lfoHz: 6.0 / 8, // 0.75Hz theta meditative pulse
+          lfoDepth: 0.14,
+          filterCeiling: 1680,
+          weightedVoices: [
+            'native_bass_flute',
+            'native_bass_flute',
+            'pads_and_bass_flute',
+            'pads_and_bass_flute',
+            'pads_and_ocarina',
+          ] as ResolvedMusicalVoice[],
+          ocarinaScale: [1.0, 1.2, 1.333, 1.5, 1.8, 2.0],
+          fluteScale: [1.0, 1.2, 1.333, 1.5, 1.667, 1.8, 2.0],
+        };
+      case 'alpha_flow':
+        return {
+          tempoScale: 0.92,
+          chordIntervalMs: 6500,
+          lfoHz: 8.5 / 8, // 1.0625Hz smooth flow shimmer
+          lfoDepth: 0.11,
+          filterCeiling: 2050,
+          weightedVoices: [
+            'pads_and_ocarina',
+            'pads_and_bass_flute',
+            'ocarina_lullaby',
+            'native_bass_flute',
+          ] as ResolvedMusicalVoice[],
+          ocarinaScale: [1.0, 1.125, 1.25, 1.5, 1.667, 2.0],
+          fluteScale: [1.0, 1.2, 1.333, 1.5, 1.8, 2.0],
+        };
+      case 'pure_432':
+        return {
+          tempoScale: 1.06,
+          chordIntervalMs: 7600,
+          lfoHz: 0.1, // 10s heart coherence breath
+          lfoDepth: 0.1,
+          filterCeiling: 2150,
+          weightedVoices: [
+            'ocarina_lullaby',
+            'native_bass_flute',
+            'pads_and_ocarina',
+            'pads_and_bass_flute',
+            'ethereal_pads',
+          ] as ResolvedMusicalVoice[],
+          ocarinaScale: [1.0, 1.125, 1.25, 1.333, 1.5, 1.667, 2.0],
+          fluteScale: [1.0, 1.2, 1.333, 1.5, 1.8, 2.0],
+        };
+      case 'alpha_healing':
+      default:
+        return {
+          tempoScale: 1.0,
+          chordIntervalMs: 7000,
+          lfoHz: 10.0 / 8, // 1.25Hz alpha healing pulse
+          lfoDepth: 0.11,
+          filterCeiling: 1880,
+          weightedVoices: [
+            'pads_and_ocarina',
+            'pads_and_bass_flute',
+            'ocarina_lullaby',
+            'native_bass_flute',
+            'ethereal_pads',
+          ] as ResolvedMusicalVoice[],
+          ocarinaScale: [1.0, 1.125, 1.25, 1.333, 1.5, 1.667],
+          fluteScale: [1.0, 1.2, 1.333, 1.5, 1.8, 2.0],
+        };
+    }
+  }
+
+  private pickWaveSyncedVoice(avoidRepeat: boolean = false): ResolvedMusicalVoice {
+    if (this.musicalModeStyle !== 'wave_adaptive') {
+      this.activeResolvedVoice = this.musicalModeStyle;
+      return this.activeResolvedVoice;
+    }
+    const profile = this.getWaveMusicProfile(this.brainwaveMode);
+    const pool = profile.weightedVoices;
+    let candidate = pool[Math.floor(Math.random() * pool.length)];
+    if (avoidRepeat && pool.length > 1) {
+      for (let attempt = 0; attempt < 4 && candidate === this.activeResolvedVoice; attempt++) {
+        candidate = pool[Math.floor(Math.random() * pool.length)];
+      }
+    }
+    this.activeResolvedVoice = candidate;
+    return candidate;
+  }
+
+  private syncWaveModulationBus(immediate: boolean = false) {
+    if (!this.ctx || !this.musicWaveLfo || !this.musicWaveLfoDepth) return;
+    const now = this.ctx.currentTime;
+    const profile = this.getWaveMusicProfile(this.brainwaveMode);
+    const tc = immediate ? 0.05 : 0.45;
+    this.musicWaveLfo.frequency.setTargetAtTime(profile.lfoHz, now, tc);
+    this.musicWaveLfoDepth.gain.setTargetAtTime(profile.lfoDepth, now, tc);
+  }
+
   /**
-   * Re-synchronizes ambient chords to the active Solfeggio frequency
-   * with a seamless cross-fade without audible pops or sudden cuts.
+   * Ceramic / Clay Ocarina Lullaby Synthesizer (432Hz-attuned Helmholtz resonator voice)
+   * Plays gentle, pure clay-flute lullaby phrases with soft breath chiff & delicate vibrato.
+   */
+  private triggerOcarinaNote(
+    freq: number,
+    durationSec: number,
+    targetNode: AudioNode,
+    volume: number = 0.24,
+    pan: number = 0
+  ) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    const safeFreq = Math.min(1150, Math.max(180, freq));
+
+    const panner = this.ctx.createStereoPanner ? this.ctx.createStereoPanner() : null;
+    if (panner) panner.pan.setValueAtTime(Math.max(-0.85, Math.min(0.85, pan)), t);
+
+    const noteGain = this.ctx.createGain();
+    noteGain.gain.setValueAtTime(0.0001, t);
+    noteGain.gain.linearRampToValueAtTime(volume, t + 0.085);
+    noteGain.gain.setValueAtTime(volume * 0.92, t + Math.max(0.15, durationSec * 0.55));
+    noteGain.gain.exponentialRampToValueAtTime(0.0001, t + durationSec);
+
+    const clayFilter = this.ctx.createBiquadFilter();
+    clayFilter.type = 'lowpass';
+    clayFilter.frequency.setValueAtTime(Math.min(1800, safeFreq * 2.8), t);
+    clayFilter.Q.setValueAtTime(0.8, t);
+
+    if (panner) {
+      clayFilter.connect(noteGain);
+      noteGain.connect(panner);
+      panner.connect(targetNode);
+    } else {
+      clayFilter.connect(noteGain);
+      noteGain.connect(targetNode);
+    }
+
+    // Main Helmholtz fundamental
+    const mainOsc = this.ctx.createOscillator();
+    mainOsc.type = 'sine';
+    // Gentle breath pitch scoop into stable tone
+    mainOsc.frequency.setValueAtTime(safeFreq * 0.985, t);
+    mainOsc.frequency.exponentialRampToValueAtTime(safeFreq, t + 0.06);
+
+    // Subtle 2nd ceramic cavity harmonic (~7%)
+    const overtoneOsc = this.ctx.createOscillator();
+    overtoneOsc.type = 'sine';
+    overtoneOsc.frequency.setValueAtTime(safeFreq * 2, t);
+    const overtoneGain = this.ctx.createGain();
+    overtoneGain.gain.setValueAtTime(0.075, t);
+
+    // Expressive lullaby vibrato ramping in after onset
+    const vibLfo = this.ctx.createOscillator();
+    vibLfo.type = 'sine';
+    vibLfo.frequency.setValueAtTime(4.2, t);
+    const vibDepth = this.ctx.createGain();
+    vibDepth.gain.setValueAtTime(0.01, t);
+    vibDepth.gain.linearRampToValueAtTime(safeFreq * 0.006, t + 0.35);
+    vibLfo.connect(vibDepth);
+    vibDepth.connect(mainOsc.frequency);
+
+    // Soft breath chiff on note onset (filtered noise puff)
+    const puffLen = Math.floor(this.ctx.sampleRate * 0.14);
+    const puffBuf = this.createPinkNoiseBuffer(puffLen);
+    const puffSrc = this.ctx.createBufferSource();
+    puffSrc.buffer = puffBuf;
+    const puffFilter = this.ctx.createBiquadFilter();
+    puffFilter.type = 'bandpass';
+    puffFilter.frequency.setValueAtTime(Math.min(2000, safeFreq * 1.4), t);
+    puffFilter.Q.setValueAtTime(2.6, t);
+    const puffGain = this.ctx.createGain();
+    puffGain.gain.setValueAtTime(0.0001, t);
+    puffGain.gain.linearRampToValueAtTime(0.06, t + 0.025);
+    puffGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.13);
+
+    mainOsc.connect(clayFilter);
+    overtoneOsc.connect(overtoneGain);
+    overtoneGain.connect(clayFilter);
+    puffSrc.connect(puffFilter);
+    puffFilter.connect(puffGain);
+    puffGain.connect(clayFilter);
+
+    mainOsc.start(t);
+    overtoneOsc.start(t);
+    vibLfo.start(t);
+    puffSrc.start(t);
+
+    mainOsc.stop(t + durationSec + 0.08);
+    overtoneOsc.stop(t + durationSec + 0.08);
+    vibLfo.stop(t + durationSec + 0.08);
+    puffSrc.stop(t + 0.15);
+  }
+
+  private scheduleOcarinaLullabyPhrase(
+    targetNode: AudioNode,
+    gainScale: number = 0.24,
+    trackWithMelodySet: boolean = true,
+    isStillActive?: () => boolean
+  ) {
+    if (!this.ctx) return;
+
+    const profile = this.getWaveMusicProfile(this.brainwaveMode);
+    const tempoScale = profile.tempoScale;
+
+    // Normalize root into warm sweet Alto Ocarina register (280Hz - 440Hz)
+    let root = Number.isFinite(this.baseFreq) && this.baseFreq > 0 ? this.baseFreq : 432;
+    while (root > 440) root /= 2;
+    while (root < 280) root *= 2;
+    // At 432Hz, warm sub-5th 324Hz keeps lullaby notes plush & tender (324Hz - 540Hz)
+    const lullabyRoot = root > 390 ? root * 0.75 : root;
+
+    const CURATED_LULLABIES: Array<{
+      name: string;
+      notes: Array<{ ratio: number; dur: number; stepDelayMs: number }>;
+    }> = [
+      {
+        name: 'Starlight Cradle',
+        notes: [
+          { ratio: 1.0, dur: 1.05, stepDelayMs: 0 },
+          { ratio: 1.0, dur: 1.05, stepDelayMs: 920 },
+          { ratio: 1.5, dur: 1.15, stepDelayMs: 1840 },
+          { ratio: 1.5, dur: 1.15, stepDelayMs: 2780 },
+          { ratio: 1.667, dur: 1.1, stepDelayMs: 3720 },
+          { ratio: 1.667, dur: 1.05, stepDelayMs: 4620 },
+          { ratio: 1.5, dur: 2.2, stepDelayMs: 5520 },
+        ],
+      },
+      {
+        name: 'Moonlit Drift',
+        notes: [
+          { ratio: 1.333, dur: 1.0, stepDelayMs: 0 },
+          { ratio: 1.333, dur: 1.0, stepDelayMs: 900 },
+          { ratio: 1.25, dur: 1.05, stepDelayMs: 1800 },
+          { ratio: 1.25, dur: 1.05, stepDelayMs: 2700 },
+          { ratio: 1.125, dur: 1.1, stepDelayMs: 3600 },
+          { ratio: 1.125, dur: 1.0, stepDelayMs: 4520 },
+          { ratio: 1.0, dur: 2.4, stepDelayMs: 5440 },
+        ],
+      },
+      {
+        name: 'Whispering Meadows',
+        notes: [
+          { ratio: 1.0, dur: 1.2, stepDelayMs: 0 },
+          { ratio: 1.25, dur: 1.15, stepDelayMs: 1050 },
+          { ratio: 1.5, dur: 1.35, stepDelayMs: 2100 },
+          { ratio: 1.333, dur: 1.1, stepDelayMs: 3300 },
+          { ratio: 1.25, dur: 1.1, stepDelayMs: 4280 },
+          { ratio: 1.125, dur: 1.15, stepDelayMs: 5250 },
+          { ratio: 1.0, dur: 2.4, stepDelayMs: 6250 },
+        ],
+      },
+      {
+        name: 'Lantern Lullaby',
+        notes: [
+          { ratio: 1.25, dur: 1.15, stepDelayMs: 0 },
+          { ratio: 1.5, dur: 1.1, stepDelayMs: 1000 },
+          { ratio: 1.333, dur: 1.15, stepDelayMs: 1980 },
+          { ratio: 1.125, dur: 1.2, stepDelayMs: 3000 },
+          { ratio: 1.25, dur: 1.15, stepDelayMs: 4100 },
+          { ratio: 1.0, dur: 2.5, stepDelayMs: 5150 },
+        ],
+      },
+      {
+        name: 'Cloud Harbor',
+        notes: [
+          { ratio: 1.5, dur: 1.2, stepDelayMs: 0 },
+          { ratio: 1.333, dur: 1.05, stepDelayMs: 1100 },
+          { ratio: 1.25, dur: 1.15, stepDelayMs: 2050 },
+          { ratio: 1.5, dur: 1.3, stepDelayMs: 3100 },
+          { ratio: 1.125, dur: 1.15, stepDelayMs: 4300 },
+          { ratio: 1.0, dur: 2.6, stepDelayMs: 5350 },
+        ],
+      },
+    ];
+
+    // 50% curated lullaby motif (picked randomly) / 50% procedural wave-synced lullaby walk
+    let chosenName = '';
+    let phraseNotes: Array<{ ratio: number; dur: number; stepDelayMs: number }> = [];
+    if (Math.random() < 0.55) {
+      const picked = CURATED_LULLABIES[Math.floor(Math.random() * CURATED_LULLABIES.length)];
+      chosenName = picked.name;
+      phraseNotes = picked.notes;
+    } else {
+      const scale = profile.ocarinaScale;
+      const noteCount = 6 + Math.floor(Math.random() * 2); // 6-7 gentle notes
+      let scaleIdx = Math.random() < 0.5 ? 0 : Math.min(scale.length - 1, 2 + Math.floor(Math.random() * 2));
+      let elapsedMs = 0;
+      chosenName = 'Procedural Wave Lullaby';
+      for (let i = 0; i < noteCount; i++) {
+        const isFinal = i === noteCount - 1;
+        const ratio = isFinal ? scale[0] : scale[scaleIdx];
+        const baseDur = isFinal ? 2.3 : 0.95 + Math.random() * 0.4;
+        phraseNotes.push({ ratio, dur: baseDur, stepDelayMs: elapsedMs });
+        elapsedMs += Math.round((880 + Math.random() * 280));
+        // Gentle stepwise cradle contour (-1, 0, or +1 step)
+        const step = Math.random() < 0.25 ? 0 : Math.random() < 0.5 ? 1 : -1;
+        scaleIdx = Math.max(0, Math.min(scale.length - 1, scaleIdx + step));
+      }
+    }
+
+    this.activeMotifName = chosenName;
+    this.melodyStep++;
+    this.notifyProceduralStatusListeners();
+
+    phraseNotes.forEach((n, idx) => {
+      const scaledDelay = Math.round(n.stepDelayMs * tempoScale);
+      const scaledDur = n.dur * tempoScale;
+      const tid = window.setTimeout(() => {
+        if (trackWithMelodySet) this.melodyTimeouts.delete(tid);
+        if (isStillActive && !isStillActive()) return;
+        const pan = Math.sin(idx * 0.7 + Math.random() * 0.4) * 0.24;
+        const noteVol = gainScale * (0.9 + Math.random() * 0.16);
+        this.triggerOcarinaNote(lullabyRoot * n.ratio, scaledDur, targetNode, noteVol, pan);
+      }, scaledDelay);
+      if (trackWithMelodySet) this.melodyTimeouts.add(tid);
+    });
+  }
+
+  /**
+   * Bass Native American Style Cedar Flute Synthesizer
+   * Deep low-register minor pentatonic phrasing (e.g., 144Hz - 288Hz in 432Hz tuning)
+   * with authentic slow-air breathiness, upward scoop ornamentation & warm cedar resonance.
+   */
+  private triggerBassNativeFluteNote(
+    freq: number,
+    durationSec: number,
+    targetNode: AudioNode,
+    volume: number = 0.28,
+    pan: number = 0,
+    withScoop: boolean = true
+  ) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    const safeFreq = Math.min(520, Math.max(96, freq));
+
+    const panner = this.ctx.createStereoPanner ? this.ctx.createStereoPanner() : null;
+    if (panner) panner.pan.setValueAtTime(Math.max(-0.85, Math.min(0.85, pan)), t);
+
+    const noteGain = this.ctx.createGain();
+    noteGain.gain.setValueAtTime(0.0001, t);
+    noteGain.gain.linearRampToValueAtTime(volume, t + 0.22);
+    noteGain.gain.setValueAtTime(volume * 0.88, t + Math.max(0.35, durationSec * 0.6));
+    noteGain.gain.exponentialRampToValueAtTime(0.0001, t + durationSec);
+
+    // Cedarwood acoustic bore resonance low-pass
+    const cedarFilter = this.ctx.createBiquadFilter();
+    cedarFilter.type = 'lowpass';
+    cedarFilter.frequency.setValueAtTime(Math.min(1150, safeFreq * 4.2), t);
+    cedarFilter.Q.setValueAtTime(1.3, t);
+
+    if (panner) {
+      cedarFilter.connect(noteGain);
+      noteGain.connect(panner);
+      panner.connect(targetNode);
+    } else {
+      cedarFilter.connect(noteGain);
+      noteGain.connect(targetNode);
+    }
+
+    // Fundamental pipe tone
+    const oscFund = this.ctx.createOscillator();
+    oscFund.type = 'sine';
+    if (withScoop) {
+      oscFund.frequency.setValueAtTime(safeFreq * 0.92, t);
+      oscFund.frequency.exponentialRampToValueAtTime(safeFreq, t + 0.085);
+    } else {
+      oscFund.frequency.setValueAtTime(safeFreq, t);
+    }
+
+    // Warm hollow wood 2nd harmonic (soft triangle)
+    const oscWood2 = this.ctx.createOscillator();
+    oscWood2.type = 'triangle';
+    oscWood2.frequency.setValueAtTime(safeFreq * 2, t);
+    if (withScoop) {
+      oscWood2.frequency.setValueAtTime(safeFreq * 2 * 0.92, t);
+      oscWood2.frequency.exponentialRampToValueAtTime(safeFreq * 2, t + 0.085);
+    }
+    const wood2Gain = this.ctx.createGain();
+    wood2Gain.gain.setValueAtTime(0.18, t);
+
+    // Gentle 3rd harmonic air richness
+    const oscWood3 = this.ctx.createOscillator();
+    oscWood3.type = 'sine';
+    oscWood3.frequency.setValueAtTime(safeFreq * 3, t);
+    const wood3Gain = this.ctx.createGain();
+    wood3Gain.gain.setValueAtTime(0.045, t);
+
+    // Deep meditative breath vibrato
+    const vibLfo = this.ctx.createOscillator();
+    vibLfo.type = 'sine';
+    vibLfo.frequency.setValueAtTime(3.4, t);
+    const vibDepth = this.ctx.createGain();
+    vibDepth.gain.setValueAtTime(0.01, t);
+    vibDepth.gain.linearRampToValueAtTime(safeFreq * 0.0085, t + 0.5);
+    vibLfo.connect(vibDepth);
+    vibDepth.connect(oscFund.frequency);
+
+    // Slow Air Chamber fipple breath noise texture
+    const airBuf = this.createPinkNoiseBuffer(Math.floor(this.ctx.sampleRate * Math.min(4.2, durationSec + 0.1)));
+    const airSrc = this.ctx.createBufferSource();
+    airSrc.buffer = airBuf;
+    const airFilter = this.ctx.createBiquadFilter();
+    airFilter.type = 'bandpass';
+    airFilter.frequency.setValueAtTime(Math.min(950, safeFreq * 3.1), t);
+    airFilter.Q.setValueAtTime(1.6, t);
+    const airGain = this.ctx.createGain();
+    airGain.gain.setValueAtTime(0.0001, t);
+    airGain.gain.linearRampToValueAtTime(0.095, t + 0.18);
+    airGain.gain.exponentialRampToValueAtTime(0.018, t + durationSec);
+
+    oscFund.connect(cedarFilter);
+    oscWood2.connect(wood2Gain);
+    wood2Gain.connect(cedarFilter);
+    oscWood3.connect(wood3Gain);
+    wood3Gain.connect(cedarFilter);
+    airSrc.connect(airFilter);
+    airFilter.connect(airGain);
+    airGain.connect(cedarFilter);
+
+    oscFund.start(t);
+    oscWood2.start(t);
+    oscWood3.start(t);
+    vibLfo.start(t);
+    airSrc.start(t);
+
+    oscFund.stop(t + durationSec + 0.1);
+    oscWood2.stop(t + durationSec + 0.1);
+    oscWood3.stop(t + durationSec + 0.1);
+    vibLfo.stop(t + durationSec + 0.1);
+    airSrc.stop(t + durationSec + 0.08);
+  }
+
+  private scheduleBassNativeFlutePhrase(
+    targetNode: AudioNode,
+    gainScale: number = 0.28,
+    trackWithMelodySet: boolean = true,
+    isStillActive?: () => boolean
+  ) {
+    if (!this.ctx) return;
+
+    const profile = this.getWaveMusicProfile(this.brainwaveMode);
+    const tempoScale = profile.tempoScale;
+
+    // Deep Bass Native American Flute register (130Hz - 216Hz; 144Hz Low D for 432Hz tuning!)
+    let root = Number.isFinite(this.baseFreq) && this.baseFreq > 0 ? this.baseFreq : 432;
+    while (root > 220) root /= 2;
+    while (root < 110) root *= 2;
+    const bassRoot = root > 190 ? root * (2 / 3) : root; // 432 -> 216 -> 144Hz deep cedar bass
+
+    // Minor Pentatonic Native American Flute Mode 1 & Mode 4 phrases
+    const CURATED_NATIVE_PHRASES: Array<{
+      name: string;
+      notes: Array<{ ratio: number; dur: number; stepDelayMs: number; scoop: boolean }>;
+    }> = [
+      {
+        name: 'Redwood Canyon Call',
+        notes: [
+          { ratio: 1.0, dur: 2.0, stepDelayMs: 0, scoop: true },
+          { ratio: 1.2, dur: 1.3, stepDelayMs: 1750, scoop: false },
+          { ratio: 1.333, dur: 1.5, stepDelayMs: 2850, scoop: true },
+          { ratio: 1.5, dur: 2.3, stepDelayMs: 4150, scoop: true },
+          { ratio: 1.2, dur: 1.4, stepDelayMs: 6200, scoop: false },
+          { ratio: 1.0, dur: 2.8, stepDelayMs: 7400, scoop: false },
+        ],
+      },
+      {
+        name: 'High Mesa Spirit',
+        notes: [
+          { ratio: 1.5, dur: 1.7, stepDelayMs: 0, scoop: true },
+          { ratio: 1.8, dur: 1.4, stepDelayMs: 1500, scoop: true },
+          { ratio: 2.0, dur: 2.1, stepDelayMs: 2700, scoop: false },
+          { ratio: 1.5, dur: 1.5, stepDelayMs: 4650, scoop: false },
+          { ratio: 1.333, dur: 1.6, stepDelayMs: 5950, scoop: true },
+          { ratio: 1.0, dur: 3.1, stepDelayMs: 7350, scoop: false },
+        ],
+      },
+      {
+        name: 'Cedar Twilight Breath',
+        notes: [
+          { ratio: 1.0, dur: 1.8, stepDelayMs: 0, scoop: true },
+          { ratio: 1.5, dur: 1.8, stepDelayMs: 1650, scoop: true },
+          { ratio: 1.333, dur: 1.3, stepDelayMs: 3300, scoop: false },
+          { ratio: 1.2, dur: 1.6, stepDelayMs: 4450, scoop: true },
+          { ratio: 1.0, dur: 3.2, stepDelayMs: 5900, scoop: false },
+        ],
+      },
+      {
+        name: 'River Stone Echo',
+        notes: [
+          { ratio: 1.2, dur: 1.6, stepDelayMs: 0, scoop: true },
+          { ratio: 1.333, dur: 1.5, stepDelayMs: 1450, scoop: false },
+          { ratio: 1.5, dur: 1.9, stepDelayMs: 2800, scoop: true },
+          { ratio: 1.333, dur: 1.3, stepDelayMs: 4550, scoop: false },
+          { ratio: 1.2, dur: 1.4, stepDelayMs: 5750, scoop: false },
+          { ratio: 1.0, dur: 3.0, stepDelayMs: 7050, scoop: true },
+        ],
+      },
+      {
+        name: 'Night Sky Cedar',
+        notes: [
+          { ratio: 1.0, dur: 2.2, stepDelayMs: 0, scoop: true },
+          { ratio: 1.333, dur: 1.5, stepDelayMs: 2050, scoop: true },
+          { ratio: 1.8, dur: 1.6, stepDelayMs: 3400, scoop: true },
+          { ratio: 1.5, dur: 1.9, stepDelayMs: 4900, scoop: false },
+          { ratio: 1.0, dur: 3.1, stepDelayMs: 6650, scoop: false },
+        ],
+      },
+    ];
+
+    let chosenName = '';
+    let phraseNotes: Array<{ ratio: number; dur: number; stepDelayMs: number; scoop: boolean }> = [];
+    if (Math.random() < 0.55) {
+      const picked = CURATED_NATIVE_PHRASES[Math.floor(Math.random() * CURATED_NATIVE_PHRASES.length)];
+      chosenName = picked.name;
+      phraseNotes = picked.notes;
+    } else {
+      const scale = profile.fluteScale;
+      const noteCount = 5 + Math.floor(Math.random() * 2); // 5-6 slow meditative notes
+      let scaleIdx = Math.random() < 0.5 ? 0 : Math.min(scale.length - 1, 3); // root or fifth entry
+      let elapsedMs = 0;
+      chosenName = 'Procedural Cedar Melody';
+      for (let i = 0; i < noteCount; i++) {
+        const isFinal = i === noteCount - 1;
+        const ratio = isFinal ? scale[0] : scale[scaleIdx];
+        const baseDur = isFinal ? 3.0 : 1.35 + Math.random() * 0.75;
+        phraseNotes.push({
+          ratio,
+          dur: baseDur,
+          stepDelayMs: elapsedMs,
+          scoop: i === 0 || (!isFinal && Math.random() < 0.55),
+        });
+        elapsedMs += Math.round(1250 + Math.random() * 550);
+        const step = Math.random() < 0.2 ? 0 : Math.random() < 0.52 ? 1 : -1;
+        scaleIdx = Math.max(0, Math.min(scale.length - 1, scaleIdx + step));
+      }
+    }
+
+    this.activeMotifName = chosenName;
+    this.melodyStep++;
+    this.notifyProceduralStatusListeners();
+
+    phraseNotes.forEach((n, idx) => {
+      const scaledDelay = Math.round(n.stepDelayMs * tempoScale);
+      const scaledDur = n.dur * tempoScale;
+      const tid = window.setTimeout(() => {
+        if (trackWithMelodySet) this.melodyTimeouts.delete(tid);
+        if (isStillActive && !isStillActive()) return;
+        const pan = Math.cos(idx * 0.8 + Math.random() * 0.4) * 0.18;
+        const noteVol = gainScale * (0.9 + Math.random() * 0.16);
+        this.triggerBassNativeFluteNote(
+          bassRoot * n.ratio,
+          scaledDur,
+          targetNode,
+          noteVol,
+          pan,
+          n.scoop
+        );
+      }, scaledDelay);
+      if (trackWithMelodySet) this.melodyTimeouts.add(tid);
+    });
+  }
+
+  /**
+   * Re-synchronizes ambient chords & procedural melody voices to the active Solfeggio frequency
+   * and Brainwave mode — randomly picking wave-matched variations whenever the played wave changes.
    */
   public reharmonizeChords() {
     if (!this.ctx || !this.isChordsPlaying) return;
@@ -1772,19 +2573,9 @@ class AudioEngine {
       clearInterval(this.chordInterval);
       this.chordInterval = null;
     }
-
-    const chordList = this.getSolfeggioHarmonicChords(this.baseFreq);
-    let step = 0;
-
-    const playNext = () => {
-      if (!this.isChordsPlaying || !this.ctx || !this.chordsGain) return;
-      const notes = chordList[step % chordList.length];
-      this.triggerAmbientChord(notes);
-      step++;
-    };
-
-    playNext();
-    this.chordInterval = window.setInterval(playNext, 7000);
+    this.clearMelodyTimers();
+    this.syncWaveModulationBus(false);
+    this.startMusicModeSchedulers(true);
   }
 
   public setChordProgression(progressionId: string) {
@@ -1805,9 +2596,89 @@ class AudioEngine {
     }
   }
 
+  private startMusicModeSchedulers(randomizeForWave: boolean = true) {
+    if (!this.ctx || !this.chordsGain || !this.isChordsPlaying) return;
+
+    const profile = this.getWaveMusicProfile(this.brainwaveMode);
+    let currentVoice = this.pickWaveSyncedVoice(randomizeForWave);
+
+    const chordList = this.getSolfeggioHarmonicChords(this.baseFreq);
+    let step = randomizeForWave ? Math.floor(Math.random() * chordList.length) : 0;
+
+    const runChordCycle = () => {
+      if (!this.isChordsPlaying || !this.ctx || !this.chordsGain) return;
+      const v = this.activeResolvedVoice;
+      const useFullPad =
+        v === 'ethereal_pads' ||
+        v === 'pads_and_ocarina' ||
+        v === 'pads_and_bass_flute';
+      // Randomly drift chord order slightly for organic procedural variation
+      const chordIdx = (step + (Math.random() < 0.25 ? 1 : 0)) % chordList.length;
+      const notes = chordList[chordIdx];
+      if (useFullPad) {
+        this.triggerAmbientChord(notes, 0.68, profile.filterCeiling);
+      } else {
+        // Gentle low-level harmonic anchor so AudioVisualizer pulse still breathes smoothly
+        this.triggerAmbientChord(notes, 0.2, profile.filterCeiling * 0.85);
+      }
+      step++;
+    };
+
+    const runMelodyCycle = () => {
+      if (!this.isChordsPlaying || !this.ctx || !this.chordsGain) return;
+      // In Wave-Synced Auto mode, randomly shift between Ocarina Lullaby, Bass Native Flute & pads on each cycle
+      if (this.musicalModeStyle === 'wave_adaptive') {
+        currentVoice = this.pickWaveSyncedVoice(true);
+      } else {
+        currentVoice = this.musicalModeStyle;
+        this.activeResolvedVoice = currentVoice;
+      }
+
+      if (currentVoice === 'ocarina_lullaby' || currentVoice === 'pads_and_ocarina') {
+        this.scheduleOcarinaLullabyPhrase(
+          this.chordsGain,
+          currentVoice === 'ocarina_lullaby' ? 0.3 : 0.22,
+          true,
+          () => this.isChordsPlaying
+        );
+      } else if (currentVoice === 'native_bass_flute' || currentVoice === 'pads_and_bass_flute') {
+        this.scheduleBassNativeFlutePhrase(
+          this.chordsGain,
+          currentVoice === 'native_bass_flute' ? 0.34 : 0.26,
+          true,
+          () => this.isChordsPlaying
+        );
+      } else {
+        this.activeMotifName = 'Harmonic Swell';
+        this.notifyProceduralStatusListeners();
+      }
+    };
+
+    runChordCycle();
+    this.chordInterval = window.setInterval(runChordCycle, profile.chordIntervalMs);
+
+    runMelodyCycle();
+    const melodyCycleMs = Math.round(10800 * profile.tempoScale);
+    this.melodyInterval = window.setInterval(runMelodyCycle, melodyCycleMs);
+  }
+
   public async startAmbientChords(progressionId: string = 'solfeggio_adaptive') {
+    if (this.instantStopTimeout) {
+      clearTimeout(this.instantStopTimeout);
+      this.instantStopTimeout = null;
+    }
+    if (this.chordInterval) {
+      clearInterval(this.chordInterval);
+      this.chordInterval = null;
+    }
+    this.clearMelodyTimers();
+
+    this.currentChordProgression = progressionId;
+    this.isChordsPlaying = true;
+    this.isMusicalModeEnabled = true;
+
     await this.initContext();
-    if (!this.ctx || !this.masterGain) return;
+    if (!this.ctx || !this.masterGain || !this.isChordsPlaying) return;
     if (this.ctx.state === 'suspended') {
       try {
         await this.ctx.resume();
@@ -1815,40 +2686,51 @@ class AudioEngine {
         console.warn('AudioContext resume notice:', err);
       }
     }
-    if (this.isChordsPlaying && this.chordInterval) {
+    if (!this.isChordsPlaying) return;
+
+    // Clear any intervals that may have started during concurrent awaits
+    if (this.chordInterval) {
       clearInterval(this.chordInterval);
       this.chordInterval = null;
     }
-
-    this.currentChordProgression = progressionId;
-    this.isChordsPlaying = true;
-    this.isMusicalModeEnabled = true;
+    this.clearMelodyTimers();
 
     const now = this.ctx.currentTime;
+    // Restore masterGain if an earlier instantStop() muted masterGain to 0.00001
+    if (!this.isFadingOut && this.masterGain.gain.value < 0.01) {
+      this.masterGain.gain.cancelScheduledValues(now);
+      this.masterGain.gain.setValueAtTime(Math.max(0.001, this.masterGain.gain.value), now);
+      this.masterGain.gain.linearRampToValueAtTime(Math.max(0.1, this.masterVol), now + 0.12);
+    }
+
+    if (!this.musicWaveModGain) {
+      this.musicWaveModGain = this.ctx.createGain();
+      this.musicWaveModGain.gain.setValueAtTime(1.0, now);
+      this.musicWaveModGain.connect(this.masterGain);
+    }
+
+    if (!this.musicWaveLfo) {
+      this.musicWaveLfo = this.ctx.createOscillator();
+      this.musicWaveLfo.type = 'sine';
+      this.musicWaveLfoDepth = this.ctx.createGain();
+      this.musicWaveLfo.connect(this.musicWaveLfoDepth);
+      this.musicWaveLfoDepth.connect(this.musicWaveModGain.gain);
+      this.musicWaveLfo.start(now);
+    }
+    this.syncWaveModulationBus(true);
+
     if (!this.chordsGain) {
       this.chordsGain = this.ctx.createGain();
-      this.chordsGain.connect(this.masterGain);
+      this.chordsGain.connect(this.musicWaveModGain);
     }
     this.chordsGain.gain.cancelScheduledValues(now);
     this.chordsGain.gain.setValueAtTime(0.0001, now);
     this.chordsGain.gain.linearRampToValueAtTime(this.chordsVolume * 0.95, now + 1.2);
 
-    // Derive harmonic chords dynamically attuned to this.baseFreq
-    const chordList = this.getSolfeggioHarmonicChords(this.baseFreq);
-    let step = 0;
-
-    const playNext = () => {
-      if (!this.isChordsPlaying || !this.ctx || !this.chordsGain) return;
-      const notes = chordList[step % chordList.length];
-      this.triggerAmbientChord(notes);
-      step++;
-    };
-
-    playNext();
-    this.chordInterval = window.setInterval(playNext, 7000); // Crossfade new chord every 7.0s
+    this.startMusicModeSchedulers(true);
   }
 
-  private triggerAmbientChord(frequencies: number[]) {
+  private triggerAmbientChord(frequencies: number[], peakScale: number = 0.68, filterPeakHz: number = 2200) {
     if (!this.ctx || !this.chordsGain) return;
 
     this.lastChordTime = performance.now();
@@ -1859,17 +2741,17 @@ class AudioEngine {
 
     const padGain = this.ctx.createGain();
     padGain.gain.setValueAtTime(0.0001, now);
-    padGain.gain.linearRampToValueAtTime(0.68, now + 2.6); // Lush, warm, clearly audible swelling attack
-    padGain.gain.setValueAtTime(0.68, now + 2.6); // Sustain anchor
-    padGain.gain.linearRampToValueAtTime(0.58, now + 6.2); // Warm gentle sustained presence
+    padGain.gain.linearRampToValueAtTime(peakScale, now + 2.6); // Lush, warm, clearly audible swelling attack
+    padGain.gain.setValueAtTime(peakScale, now + 2.6); // Sustain anchor
+    padGain.gain.linearRampToValueAtTime(peakScale * 0.85, now + 6.2); // Warm gentle sustained presence
     padGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
-    // Warm Resonant Lowpass Filter with shimmering swell at peak volume
+    // Warm Resonant Lowpass Filter with wave-synced shimmering swell
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(950, now);
-    filter.frequency.linearRampToValueAtTime(2200, now + 2.6); // Shimmering open swell at volume peak
-    filter.frequency.linearRampToValueAtTime(1200, now + 6.2);
+    filter.frequency.setValueAtTime(Math.min(1100, filterPeakHz * 0.5), now);
+    filter.frequency.linearRampToValueAtTime(filterPeakHz, now + 2.6);
+    filter.frequency.linearRampToValueAtTime(Math.max(950, filterPeakHz * 0.6), now + 6.2);
     filter.frequency.linearRampToValueAtTime(850, now + duration);
     filter.Q.setValueAtTime(1.1, now);
 
@@ -1929,6 +2811,7 @@ class AudioEngine {
       clearInterval(this.chordInterval);
       this.chordInterval = null;
     }
+    this.clearMelodyTimers();
 
     if (this.ctx && this.chordsGain) {
       const now = this.ctx.currentTime;
@@ -1943,6 +2826,32 @@ class AudioEngine {
           oscs.forEach((o) => o.stop(stopTime));
         } catch {}
       });
+    }
+
+    if (this.musicWaveLfo) {
+      try {
+        this.musicWaveLfo.stop();
+        this.musicWaveLfo.disconnect();
+      } catch {}
+      this.musicWaveLfo = null;
+    }
+    if (this.musicWaveLfoDepth) {
+      try {
+        this.musicWaveLfoDepth.disconnect();
+      } catch {}
+      this.musicWaveLfoDepth = null;
+    }
+    if (this.musicWaveModGain) {
+      try {
+        this.musicWaveModGain.disconnect();
+      } catch {}
+      this.musicWaveModGain = null;
+    }
+    if (this.chordsGain) {
+      try {
+        this.chordsGain.disconnect();
+      } catch {}
+      this.chordsGain = null;
     }
 
     setTimeout(() => {
@@ -2657,6 +3566,46 @@ class AudioEngine {
         break;
       }
 
+      case 'ocarina': {
+        // Gentle Ceramic Ocarina Lullaby Tunes in 432Hz
+        let active = true;
+        let ocarinaTimer: number | null = null;
+        const playLoop = () => {
+          if (!active) return;
+          this.scheduleOcarinaLullabyPhrase(soundGain, 0.24, false, () => active);
+        };
+        ocarinaTimer = window.setInterval(playLoop, 10000);
+        const initTimeout = window.setTimeout(playLoop, 300);
+
+        cleanup = () => {
+          active = false;
+          if (ocarinaTimer) clearInterval(ocarinaTimer);
+          clearTimeout(initTimeout);
+          soundGain.disconnect();
+        };
+        break;
+      }
+
+      case 'native_bass_flute': {
+        // Deep Cedarwood Bass Native American Style Flute in 432Hz Minor Pentatonic
+        let active = true;
+        let bassFluteTimer: number | null = null;
+        const playLoop = () => {
+          if (!active) return;
+          this.scheduleBassNativeFlutePhrase(soundGain, 0.28, false, () => active);
+        };
+        bassFluteTimer = window.setInterval(playLoop, 11500);
+        const initTimeout = window.setTimeout(playLoop, 350);
+
+        cleanup = () => {
+          active = false;
+          if (bassFluteTimer) clearInterval(bassFluteTimer);
+          clearTimeout(initTimeout);
+          soundGain.disconnect();
+        };
+        break;
+      }
+
       case 'cello': {
         // Deep Bowing Cello Drone (108Hz / 216Hz)
         const c1 = this.ctx.createOscillator();
@@ -2972,13 +3921,77 @@ class AudioEngine {
     sub.start(0);
     harm.start(0);
 
-    // Simulate active nature sounds with balanced gain into offline master
+    // Simulate active nature & acoustic tool sounds with balanced gain into offline master
     if (Array.isArray(activeNatureSounds)) {
       activeNatureSounds.forEach(({ id, volume }) => {
         if (!volume || volume <= 0) return;
         const soundGain = offlineCtx.createGain();
         soundGain.gain.value = volume * 0.42;
         soundGain.connect(master);
+
+        if (id === 'ocarina' || id === 'native_bass_flute') {
+          let root = Number.isFinite(targetFreq) && targetFreq > 0 ? targetFreq : 432;
+          if (id === 'ocarina') {
+            while (root > 440) root /= 2;
+            while (root < 280) root *= 2;
+            const lullabyRoot = root > 390 ? root * 0.75 : root;
+            const ratios = [1.0, 1.5, 1.667, 1.5, 1.333, 1.25, 1.125, 1.0];
+            const stepDur = 1.4;
+            const totalNotes = Math.min(240, Math.ceil(safeDuration / stepDur));
+            for (let n = 0; n < totalNotes; n++) {
+              const startT = n * stepDur;
+              if (startT >= safeDuration) break;
+              const noteDur = Math.min(stepDur * 0.9, safeDuration - startT);
+              if (noteDur <= 0.08) break;
+              const osc = offlineCtx.createOscillator();
+              osc.type = 'sine';
+              osc.frequency.value = lullabyRoot * ratios[n % ratios.length];
+              const env = offlineCtx.createGain();
+              env.gain.setValueAtTime(0.0001, startT);
+              env.gain.linearRampToValueAtTime(0.28, startT + 0.09);
+              env.gain.exponentialRampToValueAtTime(0.0001, startT + noteDur);
+              osc.connect(env);
+              env.connect(soundGain);
+              osc.start(startT);
+              osc.stop(startT + noteDur + 0.02);
+            }
+          } else {
+            while (root > 220) root /= 2;
+            while (root < 110) root *= 2;
+            const bassRoot = root > 190 ? root * (2 / 3) : root;
+            const ratios = [1.0, 1.2, 1.333, 1.5, 1.8, 1.5, 1.333, 1.0];
+            const stepDur = 2.0;
+            const totalNotes = Math.min(200, Math.ceil(safeDuration / stepDur));
+            for (let n = 0; n < totalNotes; n++) {
+              const startT = n * stepDur;
+              if (startT >= safeDuration) break;
+              const noteDur = Math.min(stepDur * 0.92, safeDuration - startT);
+              if (noteDur <= 0.1) break;
+              const freq = bassRoot * ratios[n % ratios.length];
+              const osc1 = offlineCtx.createOscillator();
+              osc1.type = 'sine';
+              osc1.frequency.value = freq;
+              const osc2 = offlineCtx.createOscillator();
+              osc2.type = 'triangle';
+              osc2.frequency.value = freq * 2;
+              const g2 = offlineCtx.createGain();
+              g2.gain.value = 0.14;
+              const env = offlineCtx.createGain();
+              env.gain.setValueAtTime(0.0001, startT);
+              env.gain.linearRampToValueAtTime(0.32, startT + 0.22);
+              env.gain.exponentialRampToValueAtTime(0.0001, startT + noteDur);
+              osc1.connect(env);
+              osc2.connect(g2);
+              g2.connect(env);
+              env.connect(soundGain);
+              osc1.start(startT);
+              osc2.start(startT);
+              osc1.stop(startT + noteDur + 0.03);
+              osc2.stop(startT + noteDur + 0.03);
+            }
+          }
+          return;
+        }
 
         // Seamless looped Pink/Brown noise generator for offline
         const noiseBuffer = offlineCtx.createBuffer(1, sampleRate * 5, sampleRate);

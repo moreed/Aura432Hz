@@ -8,7 +8,9 @@ import {
   Volume2,
   VolumeX,
   Heart,
+  Bell,
 } from 'lucide-react';
+import type { SanctuaryBowlTone } from '../services/audioEngine';
 
 export type BreathAnimationStyle = 'orb' | 'lotus' | 'wave';
 
@@ -33,6 +35,9 @@ export interface BreathVisualizerCanvasProps {
   completedCycles: number;
   animationStyle: BreathAnimationStyle;
   onChangeAnimationStyle: (style: BreathAnimationStyle) => void;
+  sanctuaryBowlTone: SanctuaryBowlTone;
+  onChangeBowlTone: (tone: SanctuaryBowlTone) => void;
+  onPreviewBowl: () => void;
   onToggleActive: () => void;
   onToggleAudioCue: () => void;
   orbRippleRef?: React.RefObject<HTMLDivElement | null>;
@@ -49,6 +54,16 @@ const ANIMATION_OPTIONS: Array<{
   { id: 'wave', label: 'Harmonic Wave', subtitle: 'Rising & settling tide', icon: Waves },
 ];
 
+const SANCTUARY_BOWL_TONES: Array<{
+  id: SanctuaryBowlTone;
+  label: string;
+  subtitle: string;
+}> = [
+  { id: 'warm_tibetan', label: 'Warm Tibetan', subtitle: 'Balanced bronze overtones' },
+  { id: 'deep_monastery', label: 'Deep Monastery', subtitle: 'Low grounding bass bowl' },
+  { id: 'crystal_temple', label: 'Crystal Temple', subtitle: 'Pure quartz shimmer' },
+];
+
 export const BreathVisualizerCanvas: React.FC<BreathVisualizerCanvasProps> = ({
   isActive,
   isInitialState,
@@ -63,6 +78,9 @@ export const BreathVisualizerCanvas: React.FC<BreathVisualizerCanvasProps> = ({
   completedCycles,
   animationStyle,
   onChangeAnimationStyle,
+  sanctuaryBowlTone,
+  onChangeBowlTone,
+  onPreviewBowl,
   onToggleActive,
   onToggleAudioCue,
   orbRippleRef,
@@ -168,33 +186,38 @@ export const BreathVisualizerCanvas: React.FC<BreathVisualizerCanvasProps> = ({
         </div>
 
         {/* 3 Inhale & Exhale Animation Options */}
-        <div
-          role="radiogroup"
-          aria-label="Inhale and exhale animation style"
-          className="grid grid-cols-3 sm:inline-flex items-center gap-1 p-1 rounded-xl bg-slate-900/90 border border-slate-800 w-full lg:w-auto"
-        >
-          {ANIMATION_OPTIONS.map((opt) => {
-            const Icon = opt.icon;
-            const selected = animationStyle === opt.id;
-            return (
-              <button
-                key={opt.id}
-                type="button"
-                role="radio"
-                aria-checked={selected}
-                onClick={() => onChangeAnimationStyle(opt.id)}
-                title={`${opt.label}: ${opt.subtitle}`}
-                className={`min-h-[34px] px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
-                  selected
-                    ? 'bg-sky-500/20 text-sky-200 border border-sky-400/50 shadow-sm'
-                    : 'border border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/70'
-                }`}
-              >
-                <Icon className={`w-3.5 h-3.5 shrink-0 ${selected ? 'text-sky-300' : 'text-slate-400'}`} />
-                <span className="truncate">{opt.label}</span>
-              </button>
-            );
-          })}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 shrink-0">
+            Inhale / Exhale Animation
+          </span>
+          <div
+            role="radiogroup"
+            aria-label="Inhale and exhale animation style"
+            className="grid grid-cols-3 sm:inline-flex items-center gap-1 p-1 rounded-xl bg-slate-900/90 border border-slate-800 w-full sm:w-auto"
+          >
+            {ANIMATION_OPTIONS.map((opt) => {
+              const Icon = opt.icon;
+              const selected = animationStyle === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => onChangeAnimationStyle(opt.id)}
+                  title={`${opt.label}: ${opt.subtitle}`}
+                  className={`min-h-[34px] px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+                    selected
+                      ? 'bg-sky-500/20 text-sky-200 border border-sky-400/50 shadow-sm'
+                      : 'border border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/70'
+                  }`}
+                >
+                  <Icon className={`w-3.5 h-3.5 shrink-0 ${selected ? 'text-sky-300' : 'text-slate-400'}`} />
+                  <span className="truncate">{opt.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -605,8 +628,80 @@ export const BreathVisualizerCanvas: React.FC<BreathVisualizerCanvasProps> = ({
           </p>
         </div>
 
+        {/* Sanctuary Bowls Sound Effect Settings Bar */}
+        <div className="mt-5 w-full max-w-2xl rounded-2xl bg-slate-900/75 border border-slate-800/90 p-3 flex flex-col md:flex-row md:items-center justify-between gap-2.5">
+          <div className="flex items-center justify-between md:justify-start gap-2.5">
+            <div className="flex items-center gap-2">
+              <div className={`w-7 h-7 rounded-lg flex items-center justify-center border shrink-0 ${
+                audioCueEnabled
+                  ? 'bg-amber-500/20 border-amber-400/45 text-amber-300'
+                  : 'bg-slate-800 border-slate-700 text-slate-400'
+              }`}>
+                <Bell className="w-3.5 h-3.5" />
+              </div>
+              <div>
+                <div className="text-xs font-semibold text-slate-100 leading-tight">
+                  Sanctuary Bowls Sound Effect
+                </div>
+                <div className="text-[10px] text-slate-400 leading-tight mt-0.5">
+                  Acoustic singing bowl cues on inhale, hold &amp; exhale
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={onPreviewBowl}
+              title="Preview current Sanctuary Bowl sound"
+              className="md:hidden min-h-[32px] px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-[11px] font-semibold text-amber-200 inline-flex items-center gap-1 cursor-pointer whitespace-nowrap"
+            >
+              <Volume2 className="w-3 h-3 text-amber-300 shrink-0" />
+              <span>Test Bowl</span>
+            </button>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-1.5 justify-between md:justify-end">
+            <div
+              role="radiogroup"
+              aria-label="Sanctuary Bowls resonance tone"
+              className="grid grid-cols-3 sm:inline-flex items-center gap-1 p-1 rounded-xl bg-slate-950/75 border border-slate-800 flex-1 sm:flex-initial"
+            >
+              {SANCTUARY_BOWL_TONES.map((tone) => {
+                const selected = sanctuaryBowlTone === tone.id;
+                return (
+                  <button
+                    key={tone.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => onChangeBowlTone(tone.id)}
+                    title={`${tone.label}: ${tone.subtitle}`}
+                    className={`min-h-[30px] px-2.5 py-1 rounded-lg text-[11px] font-semibold inline-flex items-center justify-center transition-all cursor-pointer whitespace-nowrap ${
+                      selected
+                        ? 'bg-amber-500/20 text-amber-200 border border-amber-400/50 shadow-sm'
+                        : 'border border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/70'
+                    }`}
+                  >
+                    {tone.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              onClick={onPreviewBowl}
+              title="Preview current Sanctuary Bowl sound"
+              className="hidden md:inline-flex min-h-[34px] px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-[11px] font-semibold text-amber-200 items-center justify-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
+            >
+              <Volume2 className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+              <span>Test Bowl</span>
+            </button>
+          </div>
+        </div>
+
         {/* Aligned Primary Action Controls */}
-        <div className="mt-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 w-full max-w-xl">
+        <div className="mt-3.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 w-full max-w-xl">
           <button
             type="button"
             onClick={onToggleActive}
@@ -630,7 +725,7 @@ export const BreathVisualizerCanvas: React.FC<BreathVisualizerCanvasProps> = ({
             type="button"
             onClick={onToggleAudioCue}
             aria-pressed={audioCueEnabled}
-            title="Play warm Sanctuary Singing Bowls on inhale, hold, and exhale transitions"
+            title="Enable or mute Sanctuary Bowls sound effect on inhale, hold, and exhale transitions"
             className={`min-h-[42px] px-4 py-2.5 rounded-xl border text-xs font-semibold inline-flex items-center justify-center gap-2 transition-colors cursor-pointer whitespace-nowrap ${
               audioCueEnabled
                 ? 'bg-amber-500/15 border-amber-400/45 text-amber-200 hover:bg-amber-500/25'

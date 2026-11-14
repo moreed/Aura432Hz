@@ -132,22 +132,26 @@ export const GlobalBottomPlayerBar: React.FC<GlobalBottomPlayerBarProps> = ({
         {/* Center: Main Playback & Auxiliary Controls (Protected from shrinking) */}
         <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 shrink-0">
 
-          {/* 1. Musical Mode (Ambient Ethereal Pads) Toggle */}
+          {/* 1. Musical Mode (Ambient Ethereal Pads & Acoustic Melodies) Toggle */}
           {onToggleMusicalMode && (
             <button
               type="button"
               onClick={onToggleMusicalMode}
-              className={`min-h-[38px] p-2 sm:px-3 sm:py-2 rounded-xl border active:scale-95 transition-all text-xs font-semibold inline-flex items-center justify-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap ${
+              aria-pressed={isMusicalMode}
+              className={`min-h-[38px] px-2.5 sm:px-3 py-2 rounded-xl border active:scale-95 transition-all text-xs font-semibold inline-flex items-center justify-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap ${
                 isMusicalMode
                   ? 'bg-cosmic-lavender/25 border-cosmic-lavender/60 text-cosmic-lavender shadow-sm shadow-cosmic-lavender/20'
                   : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300 hover:text-cosmic-lavender'
               }`}
-              title={isMusicalMode ? 'Musical Mode Active: Ambient Ethereal Pads (Click to turn off)' : 'Turn On Musical Mode: Ethereal Pads'}
-              aria-label="Toggle Musical Mode"
+              title={isMusicalMode ? 'Music Mode: ON (Click to turn off)' : 'Music Mode: OFF (Click to turn on)'}
+              aria-label={isMusicalMode ? 'Music Mode ON — click to turn off' : 'Music Mode OFF — click to turn on'}
             >
               <Music className={`w-4 h-4 ${isMusicalMode ? 'text-cosmic-lavender animate-pulse' : 'text-slate-400'} shrink-0`} />
+              <span className="sm:hidden">
+                {isMusicalMode ? 'ON' : 'OFF'}
+              </span>
               <span className="hidden sm:inline">
-                {isMusicalMode ? 'Music: ON' : 'Music'}
+                {isMusicalMode ? 'Music: ON' : 'Music: OFF'}
               </span>
             </button>
           )}

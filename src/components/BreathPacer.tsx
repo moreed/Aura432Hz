@@ -24,7 +24,7 @@ import {
   Gauge,
   Info,
 } from 'lucide-react';
-import { audioEngine } from '../services/audioEngine';
+import { audioEngine, SanctuaryBowlTone } from '../services/audioEngine';
 import { Guided478Overlay } from './Guided478Overlay';
 import { BUILT_IN_MIX_PRESETS, MixPreset } from '../services/storage';
 import { BreathVisualizerCanvas, BreathAnimationStyle } from './BreathVisualizerCanvas';
@@ -286,6 +286,15 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
     } catch {}
     return 'orb';
   });
+  const [sanctuaryBowlTone, setSanctuaryBowlTone] = useState<SanctuaryBowlTone>(() => {
+    try {
+      const saved = localStorage.getItem('aura_breath_bowl_tone');
+      if (saved === 'warm_tibetan' || saved === 'deep_monastery' || saved === 'crystal_temple') {
+        return saved;
+      }
+    } catch {}
+    return 'warm_tibetan';
+  });
 
   const [phaseIndex, setPhaseIndex] = useState<number>(0);
   const [phaseElapsed, setPhaseElapsed] = useState<number>(0);
@@ -307,11 +316,26 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
     } catch {}
   };
 
+  const handleChangeBowlTone = (tone: SanctuaryBowlTone) => {
+    setSanctuaryBowlTone(tone);
+    try {
+      localStorage.setItem('aura_breath_bowl_tone', tone);
+    } catch {}
+    if (!audioCueEnabled) {
+      setAudioCueEnabled(true);
+    }
+    audioEngine.playBreathCue(currentPhase.type, tone);
+  };
+
+  const handlePreviewBowl = () => {
+    audioEngine.playBreathCue(currentPhase.type, sanctuaryBowlTone);
+  };
+
   const handleToggleActive = () => {
     const nextActive = !isActive;
     setIsActive(nextActive);
     if (nextActive && audioCueEnabled) {
-      audioEngine.playBreathCue(currentPhase.type);
+      audioEngine.playBreathCue(currentPhase.type, sanctuaryBowlTone);
     }
   };
 
@@ -319,7 +343,7 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
     const next = !audioCueEnabled;
     setAudioCueEnabled(next);
     if (next) {
-      audioEngine.playBreathCue(currentPhase.type);
+      audioEngine.playBreathCue(currentPhase.type, sanctuaryBowlTone);
     }
   };
 
@@ -395,7 +419,7 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
           // Trigger Sanctuary Bowls transition tone
           if (audioCueEnabled) {
             const nextPhaseType = pattern.phases[nextIndex].type;
-            audioEngine.playBreathCue(nextPhaseType);
+            audioEngine.playBreathCue(nextPhaseType, sanctuaryBowlTone);
           }
 
           return 0;
@@ -405,7 +429,7 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
     }, 30);
 
     return () => clearInterval(timer);
-  }, [isActive, phaseIndex, pattern, currentPhase, audioCueEnabled, autoRandomizeOnCycle, selectedPattern]);
+  }, [isActive, phaseIndex, pattern, currentPhase, audioCueEnabled, sanctuaryBowlTone, autoRandomizeOnCycle, selectedPattern]);
 
   const handlePatternChange = (newPatternId: BreathPattern) => {
     setSelectedPattern(newPatternId);
@@ -798,7 +822,7 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
               title="Sanctuary singing bowls on breath transitions"
             >
               {audioCueEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
-              <span className="hidden sm:inline">Bowls</span>
+              <span className="hidden sm:inline">Sanctuary Bowls</span>
             </button>
 
             {/* Reset */}
@@ -1098,6 +1122,9 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
         completedCycles={completedCycles}
         animationStyle={animationStyle}
         onChangeAnimationStyle={handleChangeAnimationStyle}
+        sanctuaryBowlTone={sanctuaryBowlTone}
+        onChangeBowlTone={handleChangeBowlTone}
+        onPreviewBowl={handlePreviewBowl}
         onToggleActive={handleToggleActive}
         onToggleAudioCue={handleToggleAudioCue}
         orbRippleRef={orbRippleRef}
@@ -1108,6 +1135,7 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
         isOpen={show478Overlay}
         onClose={() => setShow478Overlay(false)}
         onCompleteCycle={() => setCompletedCycles((c) => c + 1)}
+        sanctuaryBowlTone={sanctuaryBowlTone}
       />
     </div>
   </div>
