@@ -26,6 +26,12 @@ interface AudioVisualizerProps {
   onOpenAmbientMode?: () => void;
   onTogglePlay?: () => void;
   isMusicalMode?: boolean;
+  timerSecondsRemaining?: number | null;
+  timerTotalSeconds?: number | null;
+  isFadingOut?: boolean;
+  fadeRemainingSeconds?: number;
+  fadeTotalSeconds?: number;
+  onOpenTimerModal?: () => void;
 }
 
 export type VisualizerMode =
@@ -84,6 +90,12 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
   onOpenAmbientMode,
   onTogglePlay,
   isMusicalMode,
+  timerSecondsRemaining = null,
+  timerTotalSeconds = null,
+  isFadingOut = false,
+  fadeRemainingSeconds = 0,
+  fadeTotalSeconds = 0,
+  onOpenTimerModal,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [mode, setMode] = useState<VisualizerMode>('sacred_lotus');
@@ -94,8 +106,74 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
   const animFrameRef = useRef<number | null>(null);
   const [padBloomState, setPadBloomState] = useState<{ isPeak: boolean; peakBloom: number }>({ isPeak: false, peakBloom: 0 });
   const lastBloomUpdateRef = useRef<number>(0);
+  const [engineFadeStatus, setEngineFadeStatus] = useState(() => ({
+    isFadingOut: audioEngine.getIsFadingOut(),
+    remainingSeconds: audioEngine.getFadeRemainingSeconds(),
+    durationSeconds: audioEngine.getFadeDurationSeconds(),
+  }));
+
+  useEffect(() => {
+    return audioEngine.subscribeFadeStatus((status) => {
+      setEngineFadeStatus(status);
+    });
+  }, []);
 
   const effectiveIsLight = isLight ?? (typeof document !== 'undefined' && document.documentElement.classList.contains('theme-light'));
+
+  const timerProgressInfo = useMemo(() => {
+    const activeFade = isFadingOut || engineFadeStatus.isFadingOut;
+    const activeTimer = timerSecondsRemaining !== null && timerSecondsRemaining > 0;
+
+    if (!activeFade && !activeTimer) {
+      return null;
+    }
+
+    const remainingSec = activeFade
+      ? Math.max(
+          0,
+          fadeRemainingSeconds > 0
+            ? fadeRemainingSeconds
+            : engineFadeStatus.remainingSeconds > 0
+            ? engineFadeStatus.remainingSeconds
+            : timerSecondsRemaining ?? 0
+        )
+      : Math.max(0, timerSecondsRemaining ?? 0);
+
+    const totalSec = activeFade
+      ? Math.max(
+          remainingSec || 1,
+          fadeTotalSeconds > 0
+            ? fadeTotalSeconds
+            : engineFadeStatus.durationSeconds > 0
+            ? engineFadeStatus.durationSeconds
+            : remainingSec || 1
+        )
+      : Math.max(remainingSec || 1, timerTotalSeconds || remainingSec || 1);
+
+    const ratio = Math.max(0, Math.min(1, remainingSec / totalSec));
+    const mins = Math.floor(remainingSec / 60);
+    const secs = remainingSec % 60;
+    const formatted = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+
+    return {
+      phase: activeFade ? ('fading' as const) : ('timer' as const),
+      label: activeFade ? 'Fading out' : 'Sleep timer',
+      remainingSec,
+      totalSec,
+      ratio,
+      percent: Math.round(ratio * 100),
+      formatted,
+    };
+  }, [
+    isFadingOut,
+    fadeRemainingSeconds,
+    fadeTotalSeconds,
+    engineFadeStatus.isFadingOut,
+    engineFadeStatus.remainingSeconds,
+    engineFadeStatus.durationSeconds,
+    timerSecondsRemaining,
+    timerTotalSeconds,
+  ]);
 
   // Memoized current visualizer mode info (eliminates O(N) array search on every frame/render)
   const currentModeInfo = useMemo(() => {
@@ -2417,6 +2495,139 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
         }}
       />
 
+      {/* Subtle Concentric Circular Progress Ring for Sleep Timer & Fade-Out Sequence */}
+      {timerProgressInfo && (() => {
+        const radius = 112;
+        const circumference = 2 * Math.PI * radius;
+        const dashOffset = circumference * (1 - timerProgressInfo.ratio);
+        const angleRad = -Math.PI / 2 + timerProgressInfo.ratio * Math.PI * 2;
+        const tipX = 120 + radius * Math.cos(angleRad);
+        const tipY = 120 + radius * Math.sin(angleRad);
+        const strokeColor =
+          timerProgressInfo.phase === 'fading'
+            ? effectiveIsLight
+              ? '#d97706'
+              : '#fbbf24'
+            : effectiveIsLight
+            ? '#0284c7'
+            : '#48E1D0';
+        const trackColor =
+          timerProgressInfo.phase === 'fading'
+            ? effectiveIsLight
+              ? 'rgba(217, 119, 6, 0.16)'
+              : 'rgba(251, 191, 36, 0.14)'
+            : effectiveIsLight
+            ? 'rgba(2, 132, 199, 0.14)'
+            : 'rgba(72, 225, 208, 0.14)';
+        const miniRadius = 5.5;
+        const miniCirc = 2 * Math.PI * miniRadius;
+        const miniOffset = miniCirc * (1 - timerProgressInfo.ratio);
+
+        return (
+          <>
+            <svg
+              viewBox="0 0 240 240"
+              aria-hidden="true"
+              className="absolute inset-4 sm:inset-5 w-[calc(100%-2rem)] h-[calc(100%-2rem)] sm:w-[calc(100%-2.5rem)] sm:h-[calc(100%-2.5rem)] pointer-events-none z-10"
+            >
+              <circle
+                cx="120"
+                cy="120"
+                r={radius}
+                fill="none"
+                stroke={trackColor}
+                strokeWidth="1.5"
+              />
+              <circle
+                cx="120"
+                cy="120"
+                r={radius}
+                fill="none"
+                stroke={strokeColor}
+                strokeWidth="2.25"
+                strokeLinecap="round"
+                strokeDasharray={circumference}
+                strokeDashoffset={dashOffset}
+                transform="rotate(-90 120 120)"
+                className="transition-[stroke-dashoffset,stroke] duration-700 ease-out"
+                style={{
+                  filter: `drop-shadow(0 0 5px ${
+                    timerProgressInfo.phase === 'fading'
+                      ? 'rgba(251, 191, 36, 0.45)'
+                      : 'rgba(72, 225, 208, 0.45)'
+                  })`,
+                }}
+              />
+              {timerProgressInfo.ratio > 0.01 && (
+                <circle
+                  cx={tipX}
+                  cy={tipY}
+                  r="3"
+                  fill={strokeColor}
+                  className={timerProgressInfo.phase === 'fading' ? 'animate-pulse' : ''}
+                />
+              )}
+            </svg>
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onOpenTimerModal) onOpenTimerModal();
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              role="status"
+              aria-live="polite"
+              aria-label={`${timerProgressInfo.label}, ${timerProgressInfo.formatted} remaining (${timerProgressInfo.percent}%)`}
+              title={
+                onOpenTimerModal
+                  ? `${timerProgressInfo.label}: ${timerProgressInfo.formatted} remaining — click to adjust`
+                  : `${timerProgressInfo.label}: ${timerProgressInfo.formatted} remaining`
+              }
+              className={`absolute bottom-[64px] left-1/2 -translate-x-1/2 z-20 inline-flex items-center gap-2 px-3 py-1 rounded-xl border backdrop-blur-md shadow-lg text-[11px] font-medium whitespace-nowrap transition-colors ${
+                onOpenTimerModal ? 'cursor-pointer' : 'cursor-default'
+              } ${
+                timerProgressInfo.phase === 'fading'
+                  ? effectiveIsLight
+                    ? 'bg-amber-50/95 border-amber-300 text-amber-800 hover:bg-amber-100/95'
+                    : 'bg-amber-950/85 border-amber-400/50 text-amber-200 hover:bg-amber-900/80'
+                  : effectiveIsLight
+                  ? 'bg-white/95 border-sky-300 text-sky-800 hover:bg-sky-50'
+                  : 'bg-slate-950/90 border-sky-400/45 text-sky-200 hover:bg-slate-900'
+              }`}
+            >
+              <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 shrink-0 -rotate-90" aria-hidden="true">
+                <circle
+                  cx="8"
+                  cy="8"
+                  r={miniRadius}
+                  fill="none"
+                  stroke={trackColor}
+                  strokeWidth="2"
+                />
+                <circle
+                  cx="8"
+                  cy="8"
+                  r={miniRadius}
+                  fill="none"
+                  stroke={strokeColor}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeDasharray={miniCirc}
+                  strokeDashoffset={miniOffset}
+                  className="transition-[stroke-dashoffset] duration-700 ease-out"
+                />
+              </svg>
+              <span>{timerProgressInfo.label}</span>
+              <span aria-hidden="true" className="opacity-50">·</span>
+              <span className="font-mono tabular-nums font-semibold">
+                {timerProgressInfo.formatted}
+              </span>
+            </button>
+          </>
+        );
+      })()}
+
       {/* Floating Swipe Direction Feedback Indicator */}
       {swipeFeedback && (
         <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none flex items-center gap-2 px-3.5 py-1.5 rounded-2xl backdrop-blur-xl border shadow-2xl animate-in fade-in zoom-in-95 duration-200 ${
@@ -2767,7 +2978,12 @@ function areVisualizerPropsEqual(
     prevProps.alphaBeatHz === nextProps.alphaBeatHz &&
     prevProps.brainwaveName === nextProps.brainwaveName &&
     prevProps.isLight === nextProps.isLight &&
-    prevProps.isMusicalMode === nextProps.isMusicalMode
+    prevProps.isMusicalMode === nextProps.isMusicalMode &&
+    prevProps.timerSecondsRemaining === nextProps.timerSecondsRemaining &&
+    prevProps.timerTotalSeconds === nextProps.timerTotalSeconds &&
+    prevProps.isFadingOut === nextProps.isFadingOut &&
+    prevProps.fadeRemainingSeconds === nextProps.fadeRemainingSeconds &&
+    prevProps.fadeTotalSeconds === nextProps.fadeTotalSeconds
   );
 }
 

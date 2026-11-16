@@ -226,7 +226,7 @@ export const MusicalPlayground: React.FC = () => {
                 Music Mode Companion (432Hz)
               </div>
               <div className="text-[10px] text-slate-400">
-                Ethereal harmonic pads, Ocarina lullaby tunes, or Bass Native American style flute.
+                Ethereal harmonic pads, Ocarina lullabies, Bass Native Flute, or Andean Huaca vessel flute.
               </div>
             </div>
           </div>
@@ -282,7 +282,7 @@ export const MusicalPlayground: React.FC = () => {
           <div
             role="radiogroup"
             aria-label="Music mode instrument voice"
-            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5"
+            className="grid grid-cols-2 sm:grid-cols-4 gap-1.5"
           >
             {([
               { id: 'wave_adaptive', name: 'Wave-Synced Auto', desc: 'Changes randomly w/ wave' },
@@ -291,6 +291,8 @@ export const MusicalPlayground: React.FC = () => {
               { id: 'pads_and_ocarina', name: 'Pads + Ocarina', desc: 'Lullaby over warm pads' },
               { id: 'native_bass_flute', name: 'Bass Native Flute', desc: 'Deep cedar wood flute' },
               { id: 'pads_and_bass_flute', name: 'Pads + Bass Flute', desc: 'Flute over ambient swells' },
+              { id: 'huaca', name: 'Huaca Flute', desc: 'Multi-chamber clay vessel' },
+              { id: 'pads_and_huaca', name: 'Pads + Huaca', desc: 'Huaca harmonies over pads' },
             ] as const).map((voice) => {
               const selected = musicalModeStyle === voice.id;
               return (

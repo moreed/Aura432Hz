@@ -1527,6 +1527,10 @@ const NatureMixerComponent: React.FC<NatureMixerProps> = ({
                       ? '— Bass Native American Style Flute'
                       : musicalModeStyle === 'pads_and_bass_flute'
                       ? '— Ethereal Pads & Bass Native Flute'
+                      : musicalModeStyle === 'huaca'
+                      ? '— Huaca Multi-Chamber Vessel Flute'
+                      : musicalModeStyle === 'pads_and_huaca'
+                      ? '— Ethereal Pads & Huaca Vessel Flute'
                       : '— Ethereal Harmonic Pads'}
                   </span>
                 </h4>
@@ -1545,11 +1549,13 @@ const NatureMixerComponent: React.FC<NatureMixerProps> = ({
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
                 {musicalModeStyle === 'wave_adaptive'
-                  ? `Synced to ${proceduralStatus.waveName}${proceduralStatus.beatHz > 0 ? ` (${proceduralStatus.beatHz}Hz)` : ''} — randomly weaves Ocarina lullabies, Bass Native Flute & pads as the wave changes.`
+                  ? `Synced to ${proceduralStatus.waveName}${proceduralStatus.beatHz > 0 ? ` (${proceduralStatus.beatHz}Hz)` : ''} — randomly weaves Ocarina lullabies, Bass Native Flute, Huaca & pads as the wave changes.`
                   : musicalModeStyle === 'ocarina_lullaby' || musicalModeStyle === 'pads_and_ocarina'
                   ? `Warm ceramic ocarina lullaby phrases synced to ${proceduralStatus.waveName} & your ${baseFreq}Hz carrier.`
                   : musicalModeStyle === 'native_bass_flute' || musicalModeStyle === 'pads_and_bass_flute'
                   ? `Deep cedarwood Bass Native American style flute melodies synced to ${proceduralStatus.waveName} in ${baseFreq}Hz.`
+                  : musicalModeStyle === 'huaca' || musicalModeStyle === 'pads_and_huaca'
+                  ? `Multi-chamber Andean terracotta Huaca harmonies synced to ${proceduralStatus.waveName} in ${baseFreq}Hz.`
                   : `Generates warm, evolving ambient chord swells synced to ${proceduralStatus.waveName} (${baseFreq}Hz).`}
               </p>
               {isMusicalMode && (
@@ -1616,7 +1622,7 @@ const NatureMixerComponent: React.FC<NatureMixerProps> = ({
           <div
             role="radiogroup"
             aria-label="Music mode acoustic voice"
-            className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-1.5 w-full xl:w-auto"
+            className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 w-full xl:w-auto"
           >
             {([
               { id: 'wave_adaptive', label: 'Wave-Synced Auto', sub: 'Randomly changes with played wave' },
@@ -1625,6 +1631,8 @@ const NatureMixerComponent: React.FC<NatureMixerProps> = ({
               { id: 'pads_and_ocarina', label: 'Pads + Ocarina', sub: 'Layered lullaby & chords' },
               { id: 'native_bass_flute', label: 'Bass Native Flute', sub: 'Deep cedar minor flute' },
               { id: 'pads_and_bass_flute', label: 'Pads + Bass Flute', sub: 'Flute over ambient swells' },
+              { id: 'huaca', label: 'Huaca Flute', sub: 'Dual-chamber Andean clay flute' },
+              { id: 'pads_and_huaca', label: 'Pads + Huaca', sub: 'Huaca harmonies over pads' },
             ] as const).map((voice) => {
               const selected = musicalModeStyle === voice.id;
               return (

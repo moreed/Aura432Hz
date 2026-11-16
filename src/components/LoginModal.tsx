@@ -554,7 +554,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                       id="member_email_input"
                       type="email"
                       required
-                      placeholder="e.g., moreed.raouf@gmail.com"
+                      placeholder="e.g., sarah.jenkins@example.com"
                       value={memberEmail}
                       onChange={(e) => setMemberEmail(e.target.value)}
                       className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-sky-400 font-mono"

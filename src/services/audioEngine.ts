@@ -27,14 +27,18 @@ export type MusicalModeStyle =
   | 'ocarina_lullaby'
   | 'pads_and_ocarina'
   | 'native_bass_flute'
-  | 'pads_and_bass_flute';
+  | 'pads_and_bass_flute'
+  | 'huaca'
+  | 'pads_and_huaca';
 
 export type ResolvedMusicalVoice =
   | 'ethereal_pads'
   | 'ocarina_lullaby'
   | 'pads_and_ocarina'
   | 'native_bass_flute'
-  | 'pads_and_bass_flute';
+  | 'pads_and_bass_flute'
+  | 'huaca'
+  | 'pads_and_huaca';
 
 export interface ProceduralMusicStatus {
   style: MusicalModeStyle;
@@ -240,6 +244,7 @@ export const DEFAULT_NATURE_SOUNDS: NatureSoundState[] = [
   { id: 'flute', name: 'Zen Flute', category: 'musical', icon: 'Music', volume: 0.35, enabled: false, color: 'text-emerald-300', description: 'Slow breathy bansuri flute tones drifting in 432Hz' },
   { id: 'ocarina', name: 'Ocarina Lullaby', category: 'musical', icon: 'Music', volume: 0.4, enabled: false, color: 'text-sky-300', description: 'Warm ceramic ocarina lullaby tunes drifting gently in 432Hz' },
   { id: 'native_bass_flute', name: 'Bass Native Flute', category: 'musical', icon: 'Wind', volume: 0.42, enabled: false, color: 'text-amber-300', description: 'Deep cedarwood Bass Native American style flute in 432Hz minor pentatonic' },
+  { id: 'huaca', name: 'Huaca Vessel Flute', category: 'musical', icon: 'Wind', volume: 0.4, enabled: false, color: 'text-orange-300', description: 'Multi-chamber Andean terracotta Huaca flute harmonies in 432Hz' },
   { id: 'cello', name: 'Cello String Drone', category: 'musical', icon: 'Layers', volume: 0.35, enabled: false, color: 'text-rose-400', description: 'Warm bowing cello sub-harmonics (108Hz / 216Hz)' },
   { id: 'harp', name: 'Celestial Harp', category: 'musical', icon: 'Sparkles', volume: 0.35, enabled: false, color: 'text-indigo-300', description: 'Shimmering 432Hz pentatonic harp string plucks' },
   { id: 'tanpura', name: 'Sacred Tanpura', category: 'sacred', icon: 'Radio', volume: 0.4, enabled: false, color: 'text-orange-400', description: 'Rich Indian meditative drone overtone wash in 432Hz' },
@@ -290,6 +295,7 @@ class AudioEngine {
 
   // Fade out for sleep timer
   private fadeInterval: number | null = null;
+  private preFadeMasterVol: number | null = null;
 
   // 3-Minute Fade Out on Pause State & Listeners
   private isFadingOut = false;
@@ -334,7 +340,9 @@ class AudioEngine {
         savedStyle === 'ocarina_lullaby' ||
         savedStyle === 'pads_and_ocarina' ||
         savedStyle === 'native_bass_flute' ||
-        savedStyle === 'pads_and_bass_flute'
+        savedStyle === 'pads_and_bass_flute' ||
+        savedStyle === 'huaca' ||
+        savedStyle === 'pads_and_huaca'
       ) {
         this.musicalModeStyle = savedStyle;
       }
@@ -559,6 +567,10 @@ class AudioEngine {
     return this.fadeRemainingSeconds;
   }
 
+  public getFadeDurationSeconds(): number {
+    return this.fadeDurationSeconds;
+  }
+
   public subscribeFadeStatus(
     cb: (status: { isFadingOut: boolean; remainingSeconds: number; durationSeconds: number }) => void
   ): () => void {
@@ -747,6 +759,7 @@ class AudioEngine {
       clearInterval(this.fadeInterval);
       this.fadeInterval = null;
     }
+    this.preFadeMasterVol = null;
   }
 
   public togglePlay(): boolean {
@@ -1935,6 +1948,8 @@ class AudioEngine {
       pads_and_ocarina: 'Pads + Ocarina Lullaby',
       native_bass_flute: 'Bass Native Flute',
       pads_and_bass_flute: 'Pads + Bass Native Flute',
+      huaca: 'Huaca Vessel Flute',
+      pads_and_huaca: 'Pads + Huaca Flute',
     };
     return {
       style: this.musicalModeStyle,
@@ -1997,11 +2012,13 @@ class AudioEngine {
             'ocarina_lullaby',
             'ocarina_lullaby',
             'pads_and_ocarina',
-            'pads_and_ocarina',
+            'huaca',
+            'pads_and_huaca',
             'native_bass_flute',
           ] as ResolvedMusicalVoice[],
           ocarinaScale: [1.0, 1.125, 1.25, 1.333, 1.5, 1.667],
           fluteScale: [1.0, 1.2, 1.333, 1.5, 1.8],
+          huacaScale: [1.0, 1.2, 1.333, 1.5, 1.667],
         };
       case 'theta_meditation':
         return {
@@ -2012,13 +2029,15 @@ class AudioEngine {
           filterCeiling: 1680,
           weightedVoices: [
             'native_bass_flute',
-            'native_bass_flute',
-            'pads_and_bass_flute',
+            'huaca',
+            'huaca',
+            'pads_and_huaca',
             'pads_and_bass_flute',
             'pads_and_ocarina',
           ] as ResolvedMusicalVoice[],
           ocarinaScale: [1.0, 1.2, 1.333, 1.5, 1.8, 2.0],
           fluteScale: [1.0, 1.2, 1.333, 1.5, 1.667, 1.8, 2.0],
+          huacaScale: [1.0, 1.125, 1.2, 1.333, 1.5, 1.8],
         };
       case 'alpha_flow':
         return {
@@ -2030,11 +2049,14 @@ class AudioEngine {
           weightedVoices: [
             'pads_and_ocarina',
             'pads_and_bass_flute',
+            'pads_and_huaca',
             'ocarina_lullaby',
             'native_bass_flute',
+            'huaca',
           ] as ResolvedMusicalVoice[],
           ocarinaScale: [1.0, 1.125, 1.25, 1.5, 1.667, 2.0],
           fluteScale: [1.0, 1.2, 1.333, 1.5, 1.8, 2.0],
+          huacaScale: [1.0, 1.125, 1.333, 1.5, 1.667, 2.0],
         };
       case 'pure_432':
         return {
@@ -2046,12 +2068,15 @@ class AudioEngine {
           weightedVoices: [
             'ocarina_lullaby',
             'native_bass_flute',
+            'huaca',
             'pads_and_ocarina',
             'pads_and_bass_flute',
+            'pads_and_huaca',
             'ethereal_pads',
           ] as ResolvedMusicalVoice[],
           ocarinaScale: [1.0, 1.125, 1.25, 1.333, 1.5, 1.667, 2.0],
           fluteScale: [1.0, 1.2, 1.333, 1.5, 1.8, 2.0],
+          huacaScale: [1.0, 1.125, 1.25, 1.333, 1.5, 1.667, 2.0],
         };
       case 'alpha_healing':
       default:
@@ -2064,12 +2089,15 @@ class AudioEngine {
           weightedVoices: [
             'pads_and_ocarina',
             'pads_and_bass_flute',
+            'pads_and_huaca',
             'ocarina_lullaby',
             'native_bass_flute',
+            'huaca',
             'ethereal_pads',
           ] as ResolvedMusicalVoice[],
           ocarinaScale: [1.0, 1.125, 1.25, 1.333, 1.5, 1.667],
           fluteScale: [1.0, 1.2, 1.333, 1.5, 1.8, 2.0],
+          huacaScale: [1.0, 1.125, 1.2, 1.333, 1.5, 1.667],
         };
     }
   }
@@ -2564,6 +2592,244 @@ class AudioEngine {
   }
 
   /**
+   * Huaca Multi-Chamber Ceramic Vessel Flute Synthesizer
+   * Models a dual-chambered Andean terracotta flute where an earthy clay drone
+   * chamber resonates in harmonic intervals beneath a breath-sculpted melody chamber.
+   */
+  private triggerHuacaChamberNote(
+    melodyFreq: number,
+    droneFreq: number | null,
+    durationSec: number,
+    targetNode: AudioNode,
+    volume: number = 0.25,
+    pan: number = 0
+  ) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    const safeMelody = Math.min(920, Math.max(140, melodyFreq));
+    const safeDrone = droneFreq ? Math.min(460, Math.max(96, droneFreq)) : null;
+
+    const createChamberVoice = (
+      freq: number,
+      voiceGainAmt: number,
+      voicePan: number,
+      isDrone: boolean
+    ) => {
+      if (!this.ctx) return;
+      const panner = this.ctx.createStereoPanner ? this.ctx.createStereoPanner() : null;
+      if (panner) panner.pan.setValueAtTime(Math.max(-0.85, Math.min(0.85, voicePan)), t);
+
+      const gain = this.ctx.createGain();
+      const attack = isDrone ? 0.34 : 0.16;
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.linearRampToValueAtTime(voiceGainAmt, t + attack);
+      gain.gain.setValueAtTime(voiceGainAmt * 0.9, t + Math.max(attack + 0.1, durationSec * 0.58));
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + durationSec);
+
+      // Terracotta earthen vessel resonance filter
+      const clayBand = this.ctx.createBiquadFilter();
+      clayBand.type = 'lowpass';
+      clayBand.frequency.setValueAtTime(Math.min(1320, freq * (isDrone ? 2.4 : 2.9)), t);
+      clayBand.Q.setValueAtTime(isDrone ? 1.5 : 1.2, t);
+
+      if (panner) {
+        clayBand.connect(gain);
+        gain.connect(panner);
+        panner.connect(targetNode);
+      } else {
+        clayBand.connect(gain);
+        gain.connect(targetNode);
+      }
+
+      const oscMain = this.ctx.createOscillator();
+      oscMain.type = 'sine';
+      if (!isDrone) {
+        // Gentle Andean clay pitch glide into stable resonance
+        oscMain.frequency.setValueAtTime(freq * 0.955, t);
+        oscMain.frequency.exponentialRampToValueAtTime(freq, t + 0.095);
+      } else {
+        oscMain.frequency.setValueAtTime(freq, t);
+      }
+
+      // Soft terracotta 2nd harmonic warmth
+      const oscWarm = this.ctx.createOscillator();
+      oscWarm.type = 'triangle';
+      oscWarm.frequency.setValueAtTime(freq * 2, t);
+      const warmGain = this.ctx.createGain();
+      warmGain.gain.setValueAtTime(isDrone ? 0.11 : 0.085, t);
+
+      // Slow organic vessel vibrato
+      const vib = this.ctx.createOscillator();
+      vib.type = 'sine';
+      vib.frequency.setValueAtTime(isDrone ? 2.9 : 3.9, t);
+      const vibDepth = this.ctx.createGain();
+      vibDepth.gain.setValueAtTime(0.01, t);
+      vibDepth.gain.linearRampToValueAtTime(freq * (isDrone ? 0.003 : 0.0065), t + 0.42);
+      vib.connect(vibDepth);
+      vibDepth.connect(oscMain.frequency);
+
+      // Soft clay fipple air whisper
+      const airBuf = this.createPinkNoiseBuffer(Math.floor(this.ctx.sampleRate * Math.min(3.5, durationSec + 0.05)));
+      const airSrc = this.ctx.createBufferSource();
+      airSrc.buffer = airBuf;
+      const airFilter = this.ctx.createBiquadFilter();
+      airFilter.type = 'bandpass';
+      airFilter.frequency.setValueAtTime(Math.min(1400, freq * 2.1), t);
+      airFilter.Q.setValueAtTime(2.0, t);
+      const airGain = this.ctx.createGain();
+      airGain.gain.setValueAtTime(0.0001, t);
+      airGain.gain.linearRampToValueAtTime(isDrone ? 0.04 : 0.065, t + 0.12);
+      airGain.gain.exponentialRampToValueAtTime(0.01, t + durationSec);
+
+      oscMain.connect(clayBand);
+      oscWarm.connect(warmGain);
+      warmGain.connect(clayBand);
+      airSrc.connect(airFilter);
+      airFilter.connect(airGain);
+      airGain.connect(clayBand);
+
+      oscMain.start(t);
+      oscWarm.start(t);
+      vib.start(t);
+      airSrc.start(t);
+
+      oscMain.stop(t + durationSec + 0.08);
+      oscWarm.stop(t + durationSec + 0.08);
+      vib.stop(t + durationSec + 0.08);
+      airSrc.stop(t + durationSec + 0.06);
+    };
+
+    createChamberVoice(safeMelody, volume * 0.72, pan, false);
+    if (safeDrone !== null) {
+      createChamberVoice(safeDrone, volume * 0.48, -pan * 0.75, true);
+    }
+  }
+
+  private scheduleHuacaPhrase(
+    targetNode: AudioNode,
+    gainScale: number = 0.25,
+    trackWithMelodySet: boolean = true,
+    isStillActive?: () => boolean
+  ) {
+    if (!this.ctx) return;
+
+    const profile = this.getWaveMusicProfile(this.brainwaveMode);
+    const tempoScale = profile.tempoScale;
+
+    // Warm terracotta Huaca register (190Hz - 360Hz root, e.g. 216Hz in 432Hz tuning)
+    let root = Number.isFinite(this.baseFreq) && this.baseFreq > 0 ? this.baseFreq : 432;
+    while (root > 360) root /= 2;
+    while (root < 180) root *= 2;
+    const huacaRoot = root > 320 ? root * 0.667 : root;
+
+    const CURATED_HUACA_PHRASES: Array<{
+      name: string;
+      notes: Array<{ ratio: number; droneRatio: number | null; dur: number; stepDelayMs: number }>;
+    }> = [
+      {
+        name: 'Andean Clay Sanctum',
+        notes: [
+          { ratio: 1.0, droneRatio: 0.75, dur: 2.1, stepDelayMs: 0 },
+          { ratio: 1.2, droneRatio: 1.0, dur: 1.6, stepDelayMs: 1850 },
+          { ratio: 1.5, droneRatio: 1.0, dur: 2.0, stepDelayMs: 3250 },
+          { ratio: 1.333, droneRatio: 1.0, dur: 1.6, stepDelayMs: 5050 },
+          { ratio: 1.0, droneRatio: 0.75, dur: 3.0, stepDelayMs: 6500 },
+        ],
+      },
+      {
+        name: 'Sacred Dual Chamber',
+        notes: [
+          { ratio: 1.5, droneRatio: 1.0, dur: 1.8, stepDelayMs: 0 },
+          { ratio: 1.333, droneRatio: 1.0, dur: 1.5, stepDelayMs: 1650 },
+          { ratio: 1.2, droneRatio: 0.75, dur: 1.8, stepDelayMs: 2950 },
+          { ratio: 1.5, droneRatio: 1.0, dur: 1.9, stepDelayMs: 4550 },
+          { ratio: 1.0, droneRatio: 0.75, dur: 3.1, stepDelayMs: 6300 },
+        ],
+      },
+      {
+        name: 'Terracotta Dawn',
+        notes: [
+          { ratio: 1.0, droneRatio: 1.0, dur: 1.8, stepDelayMs: 0 },
+          { ratio: 1.125, droneRatio: 0.75, dur: 1.5, stepDelayMs: 1600 },
+          { ratio: 1.333, droneRatio: 1.0, dur: 1.8, stepDelayMs: 2950 },
+          { ratio: 1.667, droneRatio: 1.0, dur: 2.0, stepDelayMs: 4550 },
+          { ratio: 1.5, droneRatio: 1.0, dur: 1.6, stepDelayMs: 6350 },
+          { ratio: 1.0, droneRatio: 0.75, dur: 2.9, stepDelayMs: 7800 },
+        ],
+      },
+      {
+        name: 'Mist Horizon Vessel',
+        notes: [
+          { ratio: 1.333, droneRatio: 1.0, dur: 1.9, stepDelayMs: 0 },
+          { ratio: 1.5, droneRatio: 1.0, dur: 1.7, stepDelayMs: 1750 },
+          { ratio: 1.2, droneRatio: 0.75, dur: 1.6, stepDelayMs: 3250 },
+          { ratio: 1.333, droneRatio: 1.0, dur: 1.7, stepDelayMs: 4700 },
+          { ratio: 1.0, droneRatio: 1.0, dur: 3.0, stepDelayMs: 6250 },
+        ],
+      },
+      {
+        name: 'Highland Clay Echo',
+        notes: [
+          { ratio: 1.2, droneRatio: 0.75, dur: 1.7, stepDelayMs: 0 },
+          { ratio: 1.5, droneRatio: 1.0, dur: 1.8, stepDelayMs: 1550 },
+          { ratio: 1.667, droneRatio: 1.0, dur: 1.6, stepDelayMs: 3200 },
+          { ratio: 1.5, droneRatio: 1.0, dur: 1.6, stepDelayMs: 4650 },
+          { ratio: 1.2, droneRatio: 0.75, dur: 1.5, stepDelayMs: 6100 },
+          { ratio: 1.0, droneRatio: 0.75, dur: 2.9, stepDelayMs: 7450 },
+        ],
+      },
+    ];
+
+    let chosenName = '';
+    let phraseNotes: Array<{ ratio: number; droneRatio: number | null; dur: number; stepDelayMs: number }> = [];
+    if (Math.random() < 0.55) {
+      const picked = CURATED_HUACA_PHRASES[Math.floor(Math.random() * CURATED_HUACA_PHRASES.length)];
+      chosenName = picked.name;
+      phraseNotes = picked.notes;
+    } else {
+      const scale = profile.huacaScale;
+      const noteCount = 5 + Math.floor(Math.random() * 2);
+      let scaleIdx = Math.random() < 0.5 ? 0 : Math.min(scale.length - 1, 2);
+      let elapsedMs = 0;
+      chosenName = 'Procedural Huaca Harmony';
+      for (let i = 0; i < noteCount; i++) {
+        const isFinal = i === noteCount - 1;
+        const ratio = isFinal ? scale[0] : scale[scaleIdx];
+        const droneRatio = ratio > 1.3 ? 1.0 : 0.75;
+        const baseDur = isFinal ? 2.9 : 1.5 + Math.random() * 0.55;
+        phraseNotes.push({ ratio, droneRatio, dur: baseDur, stepDelayMs: elapsedMs });
+        elapsedMs += Math.round(1400 + Math.random() * 420);
+        const step = Math.random() < 0.25 ? 0 : Math.random() < 0.5 ? 1 : -1;
+        scaleIdx = Math.max(0, Math.min(scale.length - 1, scaleIdx + step));
+      }
+    }
+
+    this.activeMotifName = chosenName;
+    this.melodyStep++;
+    this.notifyProceduralStatusListeners();
+
+    phraseNotes.forEach((n, idx) => {
+      const scaledDelay = Math.round(n.stepDelayMs * tempoScale);
+      const scaledDur = n.dur * tempoScale;
+      const tid = window.setTimeout(() => {
+        if (trackWithMelodySet) this.melodyTimeouts.delete(tid);
+        if (isStillActive && !isStillActive()) return;
+        const pan = Math.sin(idx * 0.85) * 0.22;
+        const noteVol = gainScale * (0.9 + Math.random() * 0.16);
+        this.triggerHuacaChamberNote(
+          huacaRoot * n.ratio,
+          n.droneRatio !== null ? huacaRoot * n.droneRatio : null,
+          scaledDur,
+          targetNode,
+          noteVol,
+          pan
+        );
+      }, scaledDelay);
+      if (trackWithMelodySet) this.melodyTimeouts.add(tid);
+    });
+  }
+
+  /**
    * Re-synchronizes ambient chords & procedural melody voices to the active Solfeggio frequency
    * and Brainwave mode — randomly picking wave-matched variations whenever the played wave changes.
    */
@@ -2611,7 +2877,8 @@ class AudioEngine {
       const useFullPad =
         v === 'ethereal_pads' ||
         v === 'pads_and_ocarina' ||
-        v === 'pads_and_bass_flute';
+        v === 'pads_and_bass_flute' ||
+        v === 'pads_and_huaca';
       // Randomly drift chord order slightly for organic procedural variation
       const chordIdx = (step + (Math.random() < 0.25 ? 1 : 0)) % chordList.length;
       const notes = chordList[chordIdx];
@@ -2626,7 +2893,7 @@ class AudioEngine {
 
     const runMelodyCycle = () => {
       if (!this.isChordsPlaying || !this.ctx || !this.chordsGain) return;
-      // In Wave-Synced Auto mode, randomly shift between Ocarina Lullaby, Bass Native Flute & pads on each cycle
+      // In Wave-Synced Auto mode, randomly shift between Ocarina Lullaby, Bass Native Flute, Huaca & pads on each cycle
       if (this.musicalModeStyle === 'wave_adaptive') {
         currentVoice = this.pickWaveSyncedVoice(true);
       } else {
@@ -2645,6 +2912,13 @@ class AudioEngine {
         this.scheduleBassNativeFlutePhrase(
           this.chordsGain,
           currentVoice === 'native_bass_flute' ? 0.34 : 0.26,
+          true,
+          () => this.isChordsPlaying
+        );
+      } else if (currentVoice === 'huaca' || currentVoice === 'pads_and_huaca') {
+        this.scheduleHuacaPhrase(
+          this.chordsGain,
+          currentVoice === 'huaca' ? 0.32 : 0.24,
           true,
           () => this.isChordsPlaying
         );
@@ -3606,6 +3880,26 @@ class AudioEngine {
         break;
       }
 
+      case 'huaca': {
+        // Multi-Chamber Andean Terracotta Huaca Vessel Flute in 432Hz
+        let active = true;
+        let huacaTimer: number | null = null;
+        const playLoop = () => {
+          if (!active) return;
+          this.scheduleHuacaPhrase(soundGain, 0.26, false, () => active);
+        };
+        huacaTimer = window.setInterval(playLoop, 11200);
+        const initTimeout = window.setTimeout(playLoop, 320);
+
+        cleanup = () => {
+          active = false;
+          if (huacaTimer) clearInterval(huacaTimer);
+          clearTimeout(initTimeout);
+          soundGain.disconnect();
+        };
+        break;
+      }
+
       case 'cello': {
         // Deep Bowing Cello Drone (108Hz / 216Hz)
         const c1 = this.ctx.createOscillator();
@@ -3789,9 +4083,16 @@ class AudioEngine {
       return;
     }
 
-    const startVol = this.masterVol;
+    const startVol = this.preFadeMasterVol ?? this.masterVol;
+    this.preFadeMasterVol = startVol;
+    const safeDuration = Math.max(1, durationSeconds);
     const startTime = Date.now();
-    const durationMs = durationSeconds * 1000;
+    const durationMs = safeDuration * 1000;
+
+    this.isFadingOut = true;
+    this.fadeDurationSeconds = safeDuration;
+    this.fadeRemainingSeconds = Math.max(0, Math.ceil(safeDuration));
+    this.notifyFadeListeners();
 
     if (this.fadeInterval) clearInterval(this.fadeInterval);
 
@@ -3799,17 +4100,30 @@ class AudioEngine {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(1, elapsed / durationMs);
 
-      // Smooth cosine fade
-      const currentVol = startVol * Math.cos((progress * Math.PI) / 2);
-      this.setMasterVolume(currentVol);
+      // Smooth cosine fade directly on masterGain without overwriting user masterVol
+      const currentVol = Math.max(0.0001, startVol * Math.cos((progress * Math.PI) / 2));
+      if (this.masterGain && this.ctx) {
+        this.masterGain.gain.setTargetAtTime(currentVol, this.ctx.currentTime, 0.05);
+      }
+
+      const remSec = Math.max(0, Math.ceil((durationMs - elapsed) / 1000));
+      if (remSec !== this.fadeRemainingSeconds) {
+        this.fadeRemainingSeconds = remSec;
+        this.notifyFadeListeners();
+      }
 
       if (progress >= 1) {
         if (this.fadeInterval) {
           clearInterval(this.fadeInterval);
           this.fadeInterval = null;
         }
+        const restoreVol = this.preFadeMasterVol ?? startVol;
+        this.preFadeMasterVol = null;
+        this.isFadingOut = false;
+        this.fadeRemainingSeconds = 0;
         this.stop();
-        this.setMasterVolume(startVol); // reset for next session
+        this.setMasterVolume(restoreVol); // reset for next session
+        this.notifyFadeListeners();
         onComplete();
       }
     }, 100);
@@ -3820,6 +4134,13 @@ class AudioEngine {
       clearInterval(this.fadeInterval);
       this.fadeInterval = null;
     }
+    if (this.preFadeMasterVol !== null) {
+      this.masterVol = this.preFadeMasterVol;
+      this.preFadeMasterVol = null;
+    }
+    this.isFadingOut = false;
+    this.fadeRemainingSeconds = 0;
+    this.notifyFadeListeners();
     this.setMasterVolume(this.masterVol);
   }
 
@@ -3929,7 +4250,7 @@ class AudioEngine {
         soundGain.gain.value = volume * 0.42;
         soundGain.connect(master);
 
-        if (id === 'ocarina' || id === 'native_bass_flute') {
+        if (id === 'ocarina' || id === 'native_bass_flute' || id === 'huaca') {
           let root = Number.isFinite(targetFreq) && targetFreq > 0 ? targetFreq : 432;
           if (id === 'ocarina') {
             while (root > 440) root /= 2;
@@ -3954,6 +4275,41 @@ class AudioEngine {
               env.connect(soundGain);
               osc.start(startT);
               osc.stop(startT + noteDur + 0.02);
+            }
+          } else if (id === 'huaca') {
+            while (root > 360) root /= 2;
+            while (root < 180) root *= 2;
+            const huacaRoot = root > 320 ? root * 0.667 : root;
+            const ratios = [1.0, 1.2, 1.5, 1.333, 1.0];
+            const stepDur = 1.85;
+            const totalNotes = Math.min(200, Math.ceil(safeDuration / stepDur));
+            for (let n = 0; n < totalNotes; n++) {
+              const startT = n * stepDur;
+              if (startT >= safeDuration) break;
+              const noteDur = Math.min(stepDur * 0.92, safeDuration - startT);
+              if (noteDur <= 0.1) break;
+              const melodyFreq = huacaRoot * ratios[n % ratios.length];
+              const droneFreq = huacaRoot * (ratios[n % ratios.length] > 1.3 ? 1.0 : 0.75);
+              const oscM = offlineCtx.createOscillator();
+              oscM.type = 'sine';
+              oscM.frequency.value = melodyFreq;
+              const oscD = offlineCtx.createOscillator();
+              oscD.type = 'sine';
+              oscD.frequency.value = droneFreq;
+              const gD = offlineCtx.createGain();
+              gD.gain.value = 0.55;
+              const env = offlineCtx.createGain();
+              env.gain.setValueAtTime(0.0001, startT);
+              env.gain.linearRampToValueAtTime(0.26, startT + 0.24);
+              env.gain.exponentialRampToValueAtTime(0.0001, startT + noteDur);
+              oscM.connect(env);
+              oscD.connect(gD);
+              gD.connect(env);
+              env.connect(soundGain);
+              oscM.start(startT);
+              oscD.start(startT);
+              oscM.stop(startT + noteDur + 0.03);
+              oscD.stop(startT + noteDur + 0.03);
             }
           } else {
             while (root > 220) root /= 2;

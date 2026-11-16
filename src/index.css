@@ -1126,6 +1126,79 @@ html:not(.theme-light) .text-slate-300 {
   transform: translateZ(0);
 }
 
+/* Subtle CSS-based Harmonic Breath Expansion & Contraction for Mindful Listening Intentions */
+@keyframes mindfulIntentionBreath {
+  0%, 100% {
+    transform: translateZ(0) scale(0.992);
+    opacity: 0.93;
+  }
+  45%, 55% {
+    transform: translateZ(0) scale(1.014);
+    opacity: 1;
+  }
+}
+
+@keyframes mindfulIntentionBreathActive {
+  0%, 100% {
+    transform: translateZ(0) scale(0.994);
+    opacity: 0.96;
+  }
+  45%, 55% {
+    transform: translateZ(0) scale(1.026);
+    opacity: 1;
+  }
+}
+
+@keyframes mindfulIntentionAura {
+  0%, 100% {
+    opacity: 0.12;
+    transform: translateZ(0) scale(0.96);
+  }
+  45%, 55% {
+    opacity: 0.36;
+    transform: translateZ(0) scale(1.04);
+  }
+}
+
+.animate-intention-breath {
+  animation: mindfulIntentionBreath var(--intention-breath-duration, 5.5s) cubic-bezier(0.37, 0, 0.63, 1) var(--intention-breath-delay, 0s) infinite;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.animate-intention-breath-active {
+  animation: mindfulIntentionBreathActive var(--intention-breath-duration, 5.5s) cubic-bezier(0.37, 0, 0.63, 1) 0s infinite;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.animate-intention-aura {
+  animation: mindfulIntentionAura var(--intention-breath-duration, 5.5s) cubic-bezier(0.37, 0, 0.63, 1) 0s infinite;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.animate-intention-breath:active,
+.animate-intention-breath-active:active {
+  animation: none;
+  transform: translateZ(0) scale(0.975);
+}
+
+.breath-pace-delta_sleep { --intention-breath-duration: 8s; }
+.breath-pace-theta_meditation { --intention-breath-duration: 6s; }
+.breath-pace-alpha_flow { --intention-breath-duration: 4.8s; }
+.breath-pace-alpha_healing { --intention-breath-duration: 4s; }
+.breath-pace-pure_432 { --intention-breath-duration: 5.5s; }
+
+.breath-stagger-0 { --intention-breath-delay: 0s; }
+.breath-stagger-1 { --intention-breath-delay: 0.45s; }
+.breath-stagger-2 { --intention-breath-delay: 0.9s; }
+.breath-stagger-3 { --intention-breath-delay: 1.35s; }
+.breath-stagger-4 { --intention-breath-delay: 1.8s; }
+
 /* GPU layer promotion for Tailwind continuous animations to avoid non-composited animations */
 .animate-pulse {
   transform: translateZ(0);
@@ -1144,6 +1217,9 @@ html:not(.theme-light) .text-slate-300 {
   .animate-soundscape-icon,
   .animate-soundscape-armed,
   .animate-sanctuary-pulse,
+  .animate-intention-breath,
+  .animate-intention-breath-active,
+  .animate-intention-aura,
   .animate-fade-in,
   .animate-pulse,
   .animate-ping,

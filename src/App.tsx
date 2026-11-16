@@ -241,11 +241,13 @@ export default function App() {
   // 3-Minute Fade Out on Pause State
   const [isFadingOut, setIsFadingOut] = useState<boolean>(() => audioEngine.getIsFadingOut());
   const [fadeRemainingSeconds, setFadeRemainingSeconds] = useState<number>(() => audioEngine.getFadeRemainingSeconds());
+  const [fadeDurationSeconds, setFadeDurationSeconds] = useState<number>(() => audioEngine.getFadeDurationSeconds());
 
   useEffect(() => {
     const unsubFade = audioEngine.subscribeFadeStatus((status) => {
       setIsFadingOut(status.isFadingOut);
       setFadeRemainingSeconds(status.remainingSeconds);
+      setFadeDurationSeconds(status.durationSeconds);
     });
     const unsubPlaying = audioEngine.subscribePlayingStatus((playing) => {
       setIsPlaying(playing);
@@ -532,6 +534,7 @@ export default function App() {
   // Sleep Timer State
   const [isTimerModalOpen, setIsTimerModalOpen] = useState<boolean>(false);
   const [timerSecondsRemaining, setTimerSecondsRemaining] = useState<number | null>(null);
+  const [timerTotalSeconds, setTimerTotalSeconds] = useState<number | null>(null);
   const [fadeDurationMinutes, setFadeDurationMinutes] = useState<number>(3);
   const timerIntervalRef = useRef<number | null>(null);
 
@@ -942,6 +945,7 @@ export default function App() {
 
     const totalSeconds = minutes * 60;
     setTimerSecondsRemaining(totalSeconds);
+    setTimerTotalSeconds(totalSeconds);
     setFadeDurationMinutes(fadeOutMins);
 
     // Auto start playing if not playing
@@ -966,6 +970,7 @@ export default function App() {
         audioEngine.startFadeOut(fadeOutDuration, () => {
           setIsPlaying(false);
           setTimerSecondsRemaining(null);
+          setTimerTotalSeconds(null);
           if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
           analytics.track('play_completed', { freq: baseFreq });
           setWasTimerCompleted(true);
@@ -976,6 +981,7 @@ export default function App() {
       if (remaining <= 0) {
         if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
         setTimerSecondsRemaining(null);
+        setTimerTotalSeconds(null);
         setIsPlaying(false);
         audioEngine.stop();
         analytics.track('play_completed', { freq: baseFreq });
@@ -992,6 +998,7 @@ export default function App() {
     }
     audioEngine.cancelFadeOut();
     setTimerSecondsRemaining(null);
+    setTimerTotalSeconds(null);
   };
 
   const formatTimerDisplay = (seconds: number) => {
@@ -1850,6 +1857,12 @@ export default function App() {
                     isMusicalMode={isMusicalMode}
                     onOpenAmbientMode={handleOpenAmbientMode}
                     onTogglePlay={handleTogglePlay}
+                    timerSecondsRemaining={timerSecondsRemaining}
+                    timerTotalSeconds={timerTotalSeconds}
+                    isFadingOut={isFadingOut}
+                    fadeRemainingSeconds={fadeRemainingSeconds}
+                    fadeTotalSeconds={fadeDurationSeconds}
+                    onOpenTimerModal={() => setIsTimerModalOpen(true)}
                   />
 
                   {/* Primary Controls Row: Ordered Musical Mode, Timer, then Begin 432Hz Sanctuary */}
@@ -2058,8 +2071,8 @@ export default function App() {
                     <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
                       Mindful Listening Intentions:
                     </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {MINDFUL_INTENTIONS.map((item) => {
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 p-0.5">
+                      {MINDFUL_INTENTIONS.map((item, idx) => {
                         const isSelected = baseFreq === item.freq && brainwaveMode === item.mode;
                         return (
                           <button
@@ -2069,17 +2082,23 @@ export default function App() {
                               setBaseFreq(item.freq);
                               setBrainwaveMode(item.mode);
                             }}
-                            className={`p-2.5 rounded-2xl text-left border transition-all text-xs flex flex-col justify-between cursor-pointer ${
+                            className={`relative overflow-hidden p-2.5 rounded-2xl text-left border transition-colors text-xs flex flex-col justify-between cursor-pointer breath-pace-${item.mode} breath-stagger-${idx % 5} ${
                               isSelected
-                                ? 'bg-sky-500/20 border-sky-400 text-sky-100 shadow-md shadow-sky-500/10 font-medium'
-                                : 'bg-slate-900/60 border-slate-800/80 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                                ? 'animate-intention-breath-active bg-sky-500/20 border-sky-400 text-sky-100 shadow-md shadow-sky-500/10 font-medium'
+                                : 'animate-intention-breath bg-slate-900/60 border-slate-800/80 text-slate-400 hover:text-slate-200 hover:border-slate-700'
                             }`}
                           >
-                            <div className="flex items-center gap-1.5 font-semibold text-slate-200">
+                            {isSelected && (
+                              <span
+                                aria-hidden="true"
+                                className="animate-intention-aura pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-sky-400/20 via-aurora-teal/15 to-cosmic-lavender/20"
+                              />
+                            )}
+                            <div className="relative z-10 flex items-center gap-1.5 font-semibold text-slate-200">
                               <span>{item.icon}</span>
                               <span>{item.label}</span>
                             </div>
-                            <div className="text-[10px] text-slate-400 mt-1 line-clamp-1">
+                            <div className="relative z-10 text-[10px] text-slate-400 mt-1 line-clamp-1">
                               {item.desc}
                             </div>
                           </button>
