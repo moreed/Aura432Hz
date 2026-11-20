@@ -19,10 +19,12 @@ import {
 import { audioEngine } from '../services/audioEngine';
 import { breathSyncEngine, type BreathSyncState } from '../services/breathSyncEngine';
 import {
+  renderBreathSyncHalo,
   renderCosmicDepthBackdrop,
   renderCosmicForegroundDepth,
   renderStarryBuddha,
 } from '../services/cosmicVisualizerRenderer';
+import { SacredEyeVisualizer } from './SacredEyeVisualizer';
 
 interface AudioVisualizerProps {
   isPlaying: boolean;
@@ -45,13 +47,12 @@ export type VisualizerMode =
   | 'sacred_lotus'
   | 'starry_buddha'
   | 'dreamy_nebula'
-  | 'celestial_sri_yantra'
   | 'mandala'
   | 'flower_of_life'
   | 'aurora'
   | 'cosmic_galaxy'
   | 'ripples'
-  | 'pranic_orb';
+  | 'sacred_eye';
 
 export type VisualComfortPreset = 'zen' | 'harmony' | 'glow';
 export type MotionFlowSpeed = 0.75 | 1.0 | 1.3;
@@ -61,13 +62,12 @@ export const VISUALIZER_MODES: { id: VisualizerMode; label: string; desc: string
   { id: 'sacred_lotus', label: 'Sacred Lotus', desc: 'Bioluminescent 432Hz Emblem' },
   { id: 'starry_buddha', label: 'Starry Buddha', desc: 'Breath-Synced Starlight Outline' },
   { id: 'dreamy_nebula', label: 'Dreamy Stardust', desc: 'Celestial Stardust Cloud' },
-  { id: 'celestial_sri_yantra', label: 'Sri Yantra', desc: 'Sacred Golden Triangles' },
   { id: 'mandala', label: 'Mandala', desc: 'Harmonic Lotus Geometry' },
   { id: 'flower_of_life', label: 'Flower of Life', desc: 'Ancient Golden Matrix' },
   { id: 'aurora', label: 'Aurora', desc: 'Harmonic Light Ribbons' },
   { id: 'cosmic_galaxy', label: 'Galaxy', desc: 'Spiral Stardust Vortex' },
   { id: 'ripples', label: 'Ripples', desc: 'Cymatic Acoustic Waves' },
-  { id: 'pranic_orb', label: 'Pranic Orb', desc: 'Biofield Pulse Sphere' },
+  { id: 'sacred_eye', label: 'Sacred Eye', desc: 'All-Seeing Geometric Illusion' },
 ];
 
 export const COMFORT_PRESETS: { id: VisualComfortPreset; label: string; desc: string; icon: string }[] = [
@@ -515,7 +515,8 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
 
       const cfg = renderConfigRef.current;
       const breathVisual = breathSyncEngine.getVisualState(timeNow, cfg.flowSpeed);
-      const isBreathAnimated = cfg.mode === 'starry_buddha' || breathVisual.isSynced;
+      const isCrispCosmicMode = cfg.mode === 'starry_buddha' || cfg.mode === 'sacred_eye';
+      const isBreathAnimated = isCrispCosmicMode || breathVisual.isSynced;
 
       // Conserve CPU & battery: when paused and not running breath-synced visuals or ripples, throttle idle frames
       if (!cfg.isPlaying && !isBreathAnimated && ripplesRef.current.length === 0) {
@@ -543,7 +544,7 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
       // 1. Soft Optical Motion Persistence Wash directly on OffscreenCanvas
       const isLight = cfg.isLight;
       const washAlpha = cfg.comfortPreset === 'zen' ? 0.24 : cfg.comfortPreset === 'glow' ? 0.16 : 0.20;
-      if (needsClearRef.current || cfg.mode === 'starry_buddha') {
+      if (needsClearRef.current || isCrispCosmicMode) {
         offscreenCtx.clearRect(0, 0, width, height);
         offscreenCtx.fillStyle = isLight ? '#f8fafc' : '#020617';
         offscreenCtx.fillRect(0, 0, width, height);
@@ -627,14 +628,14 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
       smoothTrebleRef.current = smoothStep(smoothTrebleRef.current, rawTreble);
       smoothEnergyRef.current = smoothStep(smoothEnergyRef.current, rawTotalEnergy);
 
-      // 4. Biological Cardiovascular 5.5-Second Coherent Breathing Wave (0.1 Hz)
-      const breathTime = timeNow * 0.00114 * cfg.flowSpeed;
-      const breathWave = (Math.sin(breathTime) + 1) * 0.5; // 0 to 1
+      // 4. Unified Breath Synchronization Wave (Live Breathwork Sync across ALL 8 visualizers + slow 5.5s fallback)
+      const breathWave = breathVisual.breathEased;
 
-      // 5. Dynamic Pulse (Blended Audio + Meditative Breath)
-      const targetPulse = (smoothSubBassRef.current * 0.42) + (smoothBassRef.current * 0.32) + (breathWave * 0.26);
-      smoothPulseRef.current += (targetPulse - smoothPulseRef.current) * (0.04 * dt);
-      const dynamicPulse = 0.94 + (smoothPulseRef.current * 0.32);
+      // 5. Dynamic Pulse (Blended Audio + Live Synchronized Breath)
+      const breathWeight = breathVisual.isSynced ? 0.36 : 0.26;
+      const targetPulse = (smoothSubBassRef.current * 0.38) + (smoothBassRef.current * 0.26) + (breathWave * breathWeight);
+      smoothPulseRef.current += (targetPulse - smoothPulseRef.current) * (0.055 * dt);
+      const dynamicPulse = 0.92 + (smoothPulseRef.current * 0.34);
 
       // 6. Fluid Celestial Rotation (Velvety smooth, frame-time normalized)
       const rotSpeed = (cfg.comfortPreset === 'zen' ? 0.0009 : cfg.comfortPreset === 'glow' ? 0.0016 : 0.0012) * dt;
@@ -649,10 +650,10 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
       const treble = smoothTrebleRef.current;
       const pulse = smoothPulseRef.current;
 
-      // 7. Deep Cosmic Parallax Starfield & Volumetric Nebula Backdrop (Elevates depth across ALL visualizers)
+      // 7. Deep Cosmic Parallax Starfield & Volumetric Nebula Backdrop (Elevates depth across ALL 9 visualizers)
       const timeSec = timeNow * 0.001;
       const cosmicIntensity = cfg.comfortPreset === 'zen' ? 0.68 : cfg.comfortPreset === 'glow' ? 1.2 : 0.96;
-      const activeBreathEased = breathVisual.isSynced || cfg.mode === 'starry_buddha' ? breathVisual.breathEased : breathWave;
+      const activeBreathEased = breathWave;
 
       renderCosmicDepthBackdrop(offscreenCtx, {
         width,
@@ -662,14 +663,14 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
         energy,
         bass,
         isLight,
-        intensity: cfg.mode === 'starry_buddha' ? cosmicIntensity * 1.08 : cosmicIntensity * 0.84,
+        intensity: isCrispCosmicMode ? cosmicIntensity * 1.08 : cosmicIntensity * 0.84,
         parallaxX: px.x,
         parallaxY: px.y,
-        opaqueBase: cfg.mode === 'starry_buddha',
+        opaqueBase: isCrispCosmicMode,
       });
 
       // Soft Ambient Radial Biofield Glow (Blended cleanly over cosmic backdrop)
-      if (cfg.mode !== 'starry_buddha') {
+      if (!isCrispCosmicMode) {
         const auraRadius = Math.min(cx, cy) * (cfg.comfortPreset === 'glow' ? 1.3 : 1.15);
         const bgAura = offscreenCtx.createRadialGradient(cx, cy, 8, cx, cy, auraRadius);
         const auraOpacity = cfg.comfortPreset === 'zen' ? 0.08 : cfg.comfortPreset === 'glow' ? 0.16 : 0.12;
@@ -706,8 +707,22 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
         );
       }
 
-      // 8. Render Selected Visualizer Mode directly to OffscreenCanvas
+      // 8. Render Selected Visualizer Mode directly to OffscreenCanvas (All 9 visualizers synchronized with Breathwork)
       const curMode = cfg.mode;
+      const centeredBreathScale =
+        isCrispCosmicMode || curMode === 'aurora'
+          ? 1.0
+          : breathVisual.isSynced
+          ? 0.9 + breathWave * 0.17
+          : 0.96 + breathWave * 0.07;
+
+      if (centeredBreathScale !== 1.0) {
+        offscreenCtx.save();
+        offscreenCtx.translate(cx, cy);
+        offscreenCtx.scale(centeredBreathScale, centeredBreathScale);
+        offscreenCtx.translate(-cx, -cy);
+      }
+
       if (curMode === 'sacred_lotus') {
         renderComfortSacredLotus(offscreenCtx, cx, cy, energy, bass, mids, treble, pulse, dynamicPulse, phaseRef.current, breathWave, cfg.comfortPreset, cfg.baseFreq, isLight);
       } else if (curMode === 'starry_buddha') {
@@ -731,8 +746,6 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
         });
       } else if (curMode === 'dreamy_nebula') {
         renderComfortDreamyNebula(offscreenCtx, cx, cy, energy, bass, mids, treble, pulse, dynamicPulse, phaseRef.current, breathWave, cfg.comfortPreset, isLight);
-      } else if (curMode === 'celestial_sri_yantra') {
-        renderComfortCelestialSriYantra(offscreenCtx, cx, cy, energy, bass, mids, pulse, dynamicPulse, rotationRef.current, phaseRef.current, breathWave, cfg.comfortPreset, isLight);
       } else if (curMode === 'mandala') {
         renderComfortMandala(offscreenCtx, cx, cy, energy, bass, pulse, dynamicPulse, rotationRef.current, phaseRef.current, breathWave, cfg.comfortPreset, isLight);
       } else if (curMode === 'flower_of_life') {
@@ -740,11 +753,28 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
       } else if (curMode === 'aurora') {
         renderComfortPrismaticAurora(offscreenCtx, width, height, smoothedFft, energy, treble, pulse, dynamicPulse, phaseRef.current, breathWave, cfg.comfortPreset, isLight);
       } else if (curMode === 'cosmic_galaxy') {
-        renderComfortGalaxy(offscreenCtx, cx, cy, energy, bass, pulse, dynamicPulse, rotationRef.current, phaseRef.current, cfg.comfortPreset, isLight);
+        renderComfortGalaxy(offscreenCtx, cx, cy, energy, bass, pulse, dynamicPulse, rotationRef.current, phaseRef.current, breathWave, cfg.comfortPreset, isLight);
       } else if (curMode === 'ripples') {
         renderComfortRipples(offscreenCtx, cx, cy, energy, bass, pulse, dynamicPulse, phaseRef.current, breathWave, cfg.comfortPreset, isLight);
-      } else if (curMode === 'pranic_orb') {
-        renderComfortPranicOrb(offscreenCtx, cx, cy, energy, bass, mids, treble, pulse, dynamicPulse, phaseRef.current, breathWave, cfg.comfortPreset, isLight);
+      }
+
+      if (centeredBreathScale !== 1.0) {
+        offscreenCtx.restore();
+      }
+
+      // 8.25 Luminous Breath Coherence Halo Ring when Breathwork Sync is active on any non-Buddha/non-Iris visualizer
+      if (breathVisual.isSynced && !isCrispCosmicMode) {
+        renderBreathSyncHalo(offscreenCtx, {
+          cx,
+          cy,
+          radius: Math.min(cx, cy) * 0.9,
+          timeSec,
+          breathEased: breathWave,
+          phaseType: breathVisual.phaseType,
+          holdStillness: breathVisual.holdStillness,
+          isLight,
+          intensity: cosmicIntensity * 0.92,
+        });
       }
 
       // 8.5 Foreground Depth Bokeh Stardust & Soft Atmospheric Vignette
@@ -756,7 +786,7 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
         energy,
         bass,
         isLight,
-        intensity: curMode === 'starry_buddha' ? cosmicIntensity : cosmicIntensity * 0.72,
+        intensity: isCrispCosmicMode ? cosmicIntensity : cosmicIntensity * 0.72,
         parallaxX: px.x,
         parallaxY: px.y,
       });
@@ -1000,233 +1030,6 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
     ctx.restore();
   };
 
-  // =========================================================================
-  // DREAMY: ETHEREAL DREAMSCAPE (Luminous Pastel Dream Clouds & Floating Starlight)
-  // =========================================================================
-  const renderComfortEtherealDreamscape = (
-    ctx: AnyCanvasContext,
-    cx: number,
-    cy: number,
-    energy: number,
-    bassEnergy: number,
-    midsEnergy: number,
-    trebleEnergy: number,
-    pulse: number,
-    dynamicPulse: number,
-    phase: number,
-    breathWave: number,
-    comfort: VisualComfortPreset,
-    isLight: boolean
-  ) => {
-    ctx.save();
-    const maxR = Math.min(cx, cy) * 0.9;
-    const baseBreath = 1 + breathWave * 0.15 + dynamicPulse * 0.12;
-
-    // 1. Multi-Chromatic Soft Dream Auric Clouds (4 drifting ethereal lobes)
-    const lobes = [
-      { angle: phase * 0.25, dist: maxR * 0.35, r: maxR * 0.55, c1: isLight ? 'rgba(168, 85, 247, 0.35)' : 'rgba(168, 85, 247, 0.45)', c2: 'rgba(168, 85, 247, 0)' },
-      { angle: phase * -0.2 + 1.8, dist: maxR * 0.42, r: maxR * 0.6, c1: isLight ? 'rgba(56, 189, 248, 0.35)' : 'rgba(56, 189, 248, 0.4)', c2: 'rgba(56, 189, 248, 0)' },
-      { angle: phase * 0.15 + 3.4, dist: maxR * 0.3, r: maxR * 0.5, c1: isLight ? 'rgba(244, 114, 182, 0.3)' : 'rgba(244, 114, 182, 0.38)', c2: 'rgba(244, 114, 182, 0)' },
-      { angle: phase * -0.18 + 5.1, dist: maxR * 0.38, r: maxR * 0.58, c1: isLight ? 'rgba(251, 191, 36, 0.25)' : 'rgba(251, 191, 36, 0.32)', c2: 'rgba(251, 191, 36, 0)' },
-    ];
-
-    lobes.forEach((l) => {
-      const lx = cx + Math.cos(l.angle) * l.dist;
-      const ly = cy + Math.sin(l.angle) * l.dist;
-      const g = ctx.createRadialGradient(lx, ly, 0, lx, ly, l.r * baseBreath);
-      g.addColorStop(0, l.c1);
-      g.addColorStop(1, l.c2);
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.arc(lx, ly, l.r * baseBreath, 0, Math.PI * 2);
-      ctx.fill();
-    });
-
-    // 2. Concentric Ethereal Wave Rings with Harmonic Cymatic Ripple
-    const ringCount = 7;
-    for (let i = 0; i < ringCount; i++) {
-      const ringProgress = ((phase * 0.4 + i / ringCount) % 1);
-      const ringR = maxR * (0.15 + ringProgress * 0.75) * baseBreath;
-      const alpha = (1 - ringProgress) * (0.35 + bassEnergy * 0.3);
-
-      ctx.beginPath();
-      const points = 64;
-      for (let p = 0; p <= points; p++) {
-        const theta = (p / points) * Math.PI * 2;
-        const ripple = Math.sin(theta * 6 + phase * 2 + i) * (4 + trebleEnergy * 8);
-        const r = ringR + ripple;
-        const px = cx + Math.cos(theta) * r;
-        const py = cy + Math.sin(theta) * r;
-        if (p === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      }
-      ctx.closePath();
-
-      const strokeCol = i % 2 === 0
-        ? `rgba(192, 132, 252, ${alpha})`
-        : `rgba(56, 189, 248, ${alpha})`;
-      ctx.strokeStyle = strokeCol;
-      ctx.lineWidth = 1.5 + (1 - ringProgress) * 2;
-      ctx.stroke();
-    }
-
-    // 3. Floating Lucid Dream Star Dust (48 twinkling specks)
-    const starCount = 48;
-    for (let s = 0; s < starCount; s++) {
-      const starPhase = phase * 0.6 + s * 1.618;
-      const radius = (maxR * 0.2) + ((s * 37) % Math.floor(maxR * 0.68));
-      const angle = (s * 2.399) + phase * (0.05 + (s % 5) * 0.02);
-      const sx = cx + Math.cos(angle) * radius;
-      const sy = cy + Math.sin(angle) * radius;
-      const twinkle = Math.sin(starPhase) * 0.5 + 0.5;
-      const sRadius = (1.5 + (s % 3) * 1.2) * (0.6 + twinkle * 0.6 + trebleEnergy * 0.4);
-
-      const starGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, sRadius * 2);
-      starGrad.addColorStop(0, `rgba(255, 255, 255, ${0.4 + twinkle * 0.6})`);
-      starGrad.addColorStop(0.5, s % 2 === 0 ? `rgba(244, 114, 182, ${0.3 + twinkle * 0.4})` : `rgba(56, 189, 248, ${0.3 + twinkle * 0.4})`);
-      starGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-
-      ctx.fillStyle = starGrad;
-      ctx.beginPath();
-      ctx.arc(sx, sy, sRadius * 2, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // 4. Center Glowing Opal Core
-    const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxR * 0.28 * baseBreath);
-    coreGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-    coreGrad.addColorStop(0.3, isLight ? 'rgba(168, 85, 247, 0.7)' : 'rgba(192, 132, 252, 0.8)');
-    coreGrad.addColorStop(0.7, 'rgba(56, 189, 248, 0.4)');
-    coreGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
-    ctx.fillStyle = coreGrad;
-    ctx.beginPath();
-    ctx.arc(cx, cy, maxR * 0.28 * baseBreath, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.restore();
-  };
-
-  // =========================================================================
-  // DREAMY: CELESTIAL SRI YANTRA (Sacred Golden Triangles & Celestial Aura Matrix)
-  // =========================================================================
-  const renderComfortCelestialSriYantra = (
-    ctx: AnyCanvasContext,
-    cx: number,
-    cy: number,
-    energy: number,
-    bassEnergy: number,
-    midsEnergy: number,
-    pulse: number,
-    dynamicPulse: number,
-    rotation: number,
-    phase: number,
-    breathWave: number,
-    comfort: VisualComfortPreset,
-    isLight: boolean
-  ) => {
-    ctx.save();
-    const maxR = Math.min(cx, cy) * 0.78 * (1 + breathWave * 0.1 + dynamicPulse * 0.08);
-
-    // 1. Golden Aura Glow Backdrop
-    const auraG = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxR * 1.25);
-    auraG.addColorStop(0, isLight ? 'rgba(251, 191, 36, 0.35)' : 'rgba(251, 191, 36, 0.45)');
-    auraG.addColorStop(0.4, isLight ? 'rgba(245, 158, 11, 0.2)' : 'rgba(217, 119, 6, 0.25)');
-    auraG.addColorStop(0.8, 'rgba(234, 88, 12, 0.08)');
-    auraG.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    ctx.fillStyle = auraG;
-    ctx.beginPath();
-    ctx.arc(cx, cy, maxR * 1.25, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 2. Outer Rotating Lotus Petals (16 Sacred Petals)
-    const petals = 16;
-    for (let p = 0; p < petals; p++) {
-      const angle = (p / petals) * Math.PI * 2 + rotation * 0.3;
-      const pr = maxR * (0.88 + Math.sin(phase * 1.5 + p) * 0.03);
-      const px = cx + Math.cos(angle) * pr;
-      const py = cy + Math.sin(angle) * pr;
-
-      ctx.beginPath();
-      ctx.arc(px, py, maxR * 0.14, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(251, 191, 36, ${0.25 + bassEnergy * 0.25})`;
-      ctx.lineWidth = 1.2;
-      ctx.stroke();
-    }
-
-    // 3. 9 Interlocking Sacred Triangles (4 Shiva Upward, 5 Shakti Downward)
-    const triangles = [
-      { up: true, scale: 0.82, yOff: -0.05 },
-      { up: false, scale: 0.78, yOff: 0.06 },
-      { up: true, scale: 0.68, yOff: -0.08 },
-      { up: false, scale: 0.64, yOff: 0.07 },
-      { up: true, scale: 0.54, yOff: -0.04 },
-      { up: false, scale: 0.50, yOff: 0.05 },
-      { up: true, scale: 0.40, yOff: -0.02 },
-      { up: false, scale: 0.36, yOff: 0.04 },
-      { up: false, scale: 0.26, yOff: 0.02 },
-    ];
-
-    triangles.forEach((tri, idx) => {
-      const s = maxR * tri.scale * (1 + Math.sin(phase * 2 + idx) * 0.02);
-      const dy = s * tri.yOff;
-      const h = s * (Math.sqrt(3) / 2);
-
-      let x1 = cx, y1 = cy + dy;
-      let x2 = cx, y2 = cy + dy;
-      let x3 = cx, y3 = cy + dy;
-
-      if (tri.up) {
-        x1 = cx;
-        y1 = cy + dy - (2 / 3) * h;
-        x2 = cx - s / 2;
-        y2 = cy + dy + (1 / 3) * h;
-        x3 = cx + s / 2;
-        y3 = cy + dy + (1 / 3) * h;
-      } else {
-        x1 = cx;
-        y1 = cy + dy + (2 / 3) * h;
-        x2 = cx - s / 2;
-        y2 = cy + dy - (1 / 3) * h;
-        x3 = cx + s / 2;
-        y3 = cy + dy - (1 / 3) * h;
-      }
-
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.lineTo(x3, y3);
-      ctx.closePath();
-
-      const alpha = 0.35 + (idx % 2 === 0 ? 0.25 : 0.15) + midsEnergy * 0.3;
-      ctx.strokeStyle = idx % 2 === 0
-        ? `rgba(253, 224, 71, ${alpha})`
-        : `rgba(251, 146, 60, ${alpha})`;
-      ctx.lineWidth = 1.6;
-      ctx.stroke();
-
-      // Vertex sparkle dots
-      [ [x1, y1], [x2, y2], [x3, y3] ].forEach(([vx, vy]) => {
-        ctx.fillStyle = `rgba(255, 255, 255, ${0.4 + alpha * 0.5})`;
-        ctx.beginPath();
-        ctx.arc(vx, vy, 2, 0, Math.PI * 2);
-        ctx.fill();
-      });
-    });
-
-    // 4. Central Sacred Bindu Point (Golden Sun of Consciousness)
-    const binduR = 7 + dynamicPulse * 5 + bassEnergy * 6;
-    const binduG = ctx.createRadialGradient(cx, cy, 0, cx, cy, binduR * 2.5);
-    binduG.addColorStop(0, 'rgba(255, 255, 255, 1)');
-    binduG.addColorStop(0.3, 'rgba(253, 224, 71, 0.9)');
-    binduG.addColorStop(0.7, 'rgba(234, 88, 12, 0.5)');
-    binduG.addColorStop(1, 'rgba(234, 88, 12, 0)');
-    ctx.fillStyle = binduG;
-    ctx.beginPath();
-    ctx.arc(cx, cy, binduR * 2.5, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.restore();
-  };
 
   // =========================================================================
   // DREAMY: PRISMATIC AURORA (Liquid Dream Ribbons & Crystalline Light Dispersion)
@@ -1420,8 +1223,8 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
     ctx.stroke();
     ctx.restore();
 
-    // 4. Center Bioluminescent Haze Bloom (Expands dynamically with Tone & Bass)
-    const bloomR = innerR * (0.62 + tonePulse * 0.45);
+    // 4. Center Bioluminescent Haze Bloom (Expands dynamically with Tone, Bass & Breath Sync)
+    const bloomR = innerR * (0.58 + tonePulse * 0.4 + breathWave * 0.18);
     const bloomGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, bloomR);
     if (isLightMode) {
       bloomGrad.addColorStop(0, `rgba(2, 132, 199, ${0.45 + tonePulse * 0.3})`);
@@ -1441,7 +1244,7 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
 
     // 5. THE SACRED CYMATIC WIREFRAME LOTUS FLOWER (Centered & Fills the Circle)
     // In logo coordinates, width is 104 (x: 48..152, half=52) and vertical center is 84 (y: 48..120).
-    const pulseScale = 1.0 + (tonePulse * 0.18) + (Math.sin(phase * 1.8) * 0.035);
+    const pulseScale = 0.96 + (tonePulse * 0.15) + (breathWave * 0.09) + (Math.sin(phase * 1.8) * 0.025);
     const lotusScale = ((innerR * 0.95) / 52) * pulseScale;
 
     // Convert logo coordinates directly to centered canvas coordinates
@@ -1933,96 +1736,6 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
     ctx.shadowBlur = 0;
   };
 
-  // =========================================================================
-  // 3. REFINED NORTHERN HARMONIC AURORA (Multi-Harmonic Flowing Silk)
-  // =========================================================================
-  const renderComfortAurora = (
-    ctx: AnyCanvasContext,
-    width: number,
-    height: number,
-    smoothedFft: Float32Array,
-    energy: number,
-    pulse: number,
-    phase: number,
-    breathWave: number,
-    preset: VisualComfortPreset,
-    isLightMode: boolean = false
-  ) => {
-    const ribbons = 3;
-    const points = 32;
-    const step = width / (points - 1);
-    const baseHeight = height * 0.58;
-
-    for (let r = 0; r < ribbons; r++) {
-      ctx.beginPath();
-      const rPhase = phase * 0.75 + r * 1.35;
-      const amp = (24 + r * 14 + energy * 28 + pulse * 16) * (0.96 + breathWave * 0.08);
-
-      ctx.moveTo(0, height);
-      ctx.lineTo(0, baseHeight);
-
-      let prevX = 0;
-      let prevY = baseHeight;
-
-      for (let i = 0; i < points; i++) {
-        const x = i * step;
-        const freqIdx = Math.min(63, Math.floor((i / points) * 32));
-        const freqVal = smoothedFft[freqIdx] || 0.1;
-        // Dual harmonic wave creates true organic silk drape
-        const wave = Math.sin((i * 0.22) + rPhase) * amp + Math.sin((i * 0.44) - rPhase * 0.7) * (amp * 0.35);
-        const y = baseHeight + wave - (freqVal * 22);
-
-        if (i === 0) {
-          ctx.lineTo(x, y);
-          prevX = x;
-          prevY = y;
-        } else {
-          const cpX = (prevX + x) / 2;
-          const cpY = (prevY + y) / 2;
-          ctx.quadraticCurveTo(prevX, prevY, cpX, cpY);
-          prevX = x;
-          prevY = y;
-        }
-      }
-
-      ctx.lineTo(width, height);
-      ctx.closePath();
-
-      const grad = ctx.createLinearGradient(0, baseHeight - amp * 1.3, 0, height);
-      if (isLightMode) {
-        if (r === 0) {
-          grad.addColorStop(0, `rgba(2, 132, 199, ${0.55 + pulse * 0.2})`);
-          grad.addColorStop(0.65, 'rgba(14, 165, 233, 0.12)');
-          grad.addColorStop(1, 'rgba(248, 250, 252, 0)');
-        } else if (r === 1) {
-          grad.addColorStop(0, `rgba(109, 40, 217, ${0.48 + pulse * 0.18})`);
-          grad.addColorStop(0.65, 'rgba(129, 140, 248, 0.10)');
-          grad.addColorStop(1, 'rgba(248, 250, 252, 0)');
-        } else {
-          grad.addColorStop(0, `rgba(190, 24, 93, ${0.42 + pulse * 0.16})`);
-          grad.addColorStop(0.65, 'rgba(217, 70, 239, 0.08)');
-          grad.addColorStop(1, 'rgba(248, 250, 252, 0)');
-        }
-      } else {
-        if (r === 0) {
-          grad.addColorStop(0, `rgba(56, 189, 248, ${0.42 + pulse * 0.18})`);
-          grad.addColorStop(0.65, 'rgba(14, 165, 233, 0.07)');
-          grad.addColorStop(1, 'rgba(2, 6, 23, 0)');
-        } else if (r === 1) {
-          grad.addColorStop(0, `rgba(167, 139, 250, ${0.35 + pulse * 0.16})`);
-          grad.addColorStop(0.65, 'rgba(129, 140, 248, 0.05)');
-          grad.addColorStop(1, 'rgba(2, 6, 23, 0)');
-        } else {
-          grad.addColorStop(0, `rgba(244, 114, 182, ${0.3 + pulse * 0.15})`);
-          grad.addColorStop(0.65, 'rgba(217, 70, 239, 0.04)');
-          grad.addColorStop(1, 'rgba(2, 6, 23, 0)');
-        }
-      }
-
-      ctx.fillStyle = grad;
-      ctx.fill();
-    }
-  };
 
   // =========================================================================
   // 4. REFINED SACRED FLOWER OF LIFE (Glowing Nexus Points & Breathing Matrix)
@@ -2112,13 +1825,14 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
     dynamicPulse: number,
     rotation: number,
     phase: number,
+    breathWave: number,
     preset: VisualComfortPreset,
     isLightMode: boolean = false
   ) => {
-    const maxR = Math.min(cx, cy) * 0.88;
+    const maxR = Math.min(cx, cy) * (0.84 + breathWave * 0.09);
 
     // Glowing diffuse galactic core
-    const coreR = Math.max(8, (26 + bassEnergy * 16 + pulse * 12));
+    const coreR = Math.max(8, (24 + bassEnergy * 16 + pulse * 12 + breathWave * 8));
     const coreGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, coreR);
     if (isLightMode) {
       coreGrad.addColorStop(0, 'rgba(2, 132, 199, 0.85)');
@@ -2176,147 +1890,6 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
     ctx.restore();
   };
 
-  // =========================================================================
-  // 6. REFINED CYMATIC LIQUID WAVES (Layered Harmonics & Smooth Satin Ribbons)
-  // =========================================================================
-  const renderComfortWaves = (
-    ctx: AnyCanvasContext,
-    width: number,
-    height: number,
-    smoothedFft: Float32Array,
-    waveArray: Uint8Array,
-    energy: number,
-    pulse: number,
-    phase: number,
-    preset: VisualComfortPreset,
-    isLightMode: boolean = false
-  ) => {
-    const centerY = height / 2;
-    const waveCount = 3;
-
-    for (let w = 0; w < waveCount; w++) {
-      ctx.beginPath();
-      const waveFreq = (w + 1) * 0.0055;
-      const amp = 18 + w * 12 + energy * 24 + pulse * 14;
-      const wPhase = phase * (0.75 + w * 0.18);
-
-      let prevX = 0;
-      let prevY = centerY + Math.sin(wPhase) * amp;
-      ctx.moveTo(prevX, prevY);
-
-      for (let x = 8; x <= width; x += 8) {
-        const audioIdx = Math.min(63, Math.floor((x / width) * 28));
-        const audioVal = smoothedFft[audioIdx] || 0.1;
-        const targetY = centerY + Math.sin(x * waveFreq + wPhase) * amp * (0.85 + audioVal * 0.35);
-        const midX = (prevX + x) / 2;
-        const midY = (prevY + targetY) / 2;
-        ctx.quadraticCurveTo(prevX, prevY, midX, midY);
-        prevX = x;
-        prevY = targetY;
-      }
-
-      if (isLightMode) {
-        ctx.strokeStyle = w === 0
-          ? `rgba(2, 132, 199, ${0.85 + pulse * 0.15})`
-          : w === 1
-          ? `rgba(109, 40, 217, ${0.78 + pulse * 0.15})`
-          : `rgba(190, 24, 93, ${0.72 + pulse * 0.15})`;
-        ctx.lineWidth = 1.9 + pulse * 0.6;
-      } else {
-        ctx.strokeStyle = w === 0
-          ? `rgba(56, 189, 248, ${0.7 + pulse * 0.18})`
-          : w === 1
-          ? `rgba(167, 139, 250, ${0.6 + pulse * 0.18})`
-          : `rgba(244, 114, 182, ${0.5 + pulse * 0.18})`;
-        ctx.lineWidth = 1.6 + pulse * 0.6;
-      }
-      ctx.stroke();
-    }
-  };
-
-  // =========================================================================
-  // 7. REFINED PRANIC BIOFIELD ORB (Living Corona & Radiant Halo)
-  // =========================================================================
-  const renderComfortPranicOrb = (
-    ctx: AnyCanvasContext,
-    cx: number,
-    cy: number,
-    energy: number,
-    bassEnergy: number,
-    mids: number,
-    treble: number,
-    pulse: number,
-    dynamicPulse: number,
-    phase: number,
-    breathWave: number,
-    preset: VisualComfortPreset,
-    isLightMode: boolean = false
-  ) => {
-    const baseR = (48 + Math.sin(phase * 0.65) * 10 + bassEnergy * 16 + breathWave * 12) * dynamicPulse;
-
-    // Glowing Ethereal Halo
-    const haloGrad = ctx.createRadialGradient(cx, cy, baseR * 0.35, cx, cy, baseR * 1.8);
-    if (isLightMode) {
-      haloGrad.addColorStop(0, `rgba(2, 132, 199, ${0.45 + pulse * 0.18})`);
-      haloGrad.addColorStop(0.5, `rgba(99, 102, 241, ${0.25 + energy * 0.15})`);
-      haloGrad.addColorStop(1, 'transparent');
-    } else {
-      haloGrad.addColorStop(0, `rgba(56, 189, 248, ${0.36 + pulse * 0.16})`);
-      haloGrad.addColorStop(0.5, `rgba(129, 140, 248, ${0.18 + energy * 0.12})`);
-      haloGrad.addColorStop(1, 'transparent');
-    }
-
-    ctx.fillStyle = haloGrad;
-    ctx.beginPath();
-    ctx.arc(cx, cy, baseR * 1.8, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Subtle Biofield Corona Rays
-    const rays = 20;
-    for (let r = 0; r < rays; r++) {
-      const angle = (r * Math.PI * 2) / rays + phase * 0.22;
-      const rayLen = 8 + (r % 3) * 5 + treble * 10 + pulse * 8;
-      const x1 = cx + Math.cos(angle) * (baseR * 0.98);
-      const y1 = cy + Math.sin(angle) * (baseR * 0.98);
-      const x2 = cx + Math.cos(angle) * (baseR * 0.98 + rayLen);
-      const y2 = cy + Math.sin(angle) * (baseR * 0.98 + rayLen);
-
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.strokeStyle = isLightMode
-        ? `rgba(2, 132, 199, ${0.45 + pulse * 0.2})`
-        : `rgba(186, 230, 253, ${0.3 + pulse * 0.18})`;
-      ctx.lineWidth = isLightMode ? 1.4 : 1.1;
-      ctx.stroke();
-    }
-
-    // Inner Living Biological Prana Core
-    const orbGrad = ctx.createRadialGradient(
-      cx - baseR * 0.22,
-      cy - baseR * 0.22,
-      2,
-      cx,
-      cy,
-      baseR
-    );
-    if (isLightMode) {
-      orbGrad.addColorStop(0, '#ffffff');
-      orbGrad.addColorStop(0.3, `rgba(14, 165, 233, ${0.95 + pulse * 0.05})`);
-      orbGrad.addColorStop(0.7, `rgba(79, 70, 229, ${0.85 + pulse * 0.1})`);
-      orbGrad.addColorStop(1, 'rgba(67, 56, 202, 0.45)');
-    } else {
-      orbGrad.addColorStop(0, '#ffffff');
-      orbGrad.addColorStop(0.3, `rgba(56, 189, 248, ${0.9 + pulse * 0.1})`);
-      orbGrad.addColorStop(0.7, `rgba(129, 140, 248, ${0.75 + pulse * 0.15})`);
-      orbGrad.addColorStop(1, 'rgba(15, 23, 42, 0.3)');
-    }
-
-    ctx.fillStyle = orbGrad;
-    ctx.beginPath();
-    ctx.arc(cx, cy, baseR, 0, Math.PI * 2);
-    ctx.fill();
-  };
 
   // =========================================================================
   // MUSICAL MODE: SUBTLE PASTEL INDIGO ETHEREAL HARMONIC PAD GLOW EFFECT
@@ -2592,6 +2165,24 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
         }}
       />
 
+      {/* 9th Visualizer: Sacred Eye Multi-Layered CSS 3D Geometric Illusion */}
+      {mode === 'sacred_eye' && (
+        <div
+          className="absolute inset-0 z-10 pointer-events-none transition-transform duration-150 ease-out"
+          style={{
+            transform: dragOffset !== 0 ? `translateX(${dragOffset}px)` : undefined,
+          }}
+        >
+          <SacredEyeVisualizer
+            isPlaying={isPlaying}
+            isLight={effectiveIsLight}
+            flowSpeed={flowSpeed}
+            comfortPreset={comfortPreset}
+            size="card"
+          />
+        </div>
+      )}
+
       {/* Subtle Concentric Circular Progress Ring for Sleep Timer & Fade-Out Sequence */}
       {timerProgressInfo && (() => {
         const radius = 112;
@@ -2805,8 +2396,8 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
         </div>
       )}
 
-      {/* Live Breath Sync Indicator (shown when Breathwork is active or when viewing Starry Buddha) */}
-      {(breathSyncState.isActive || mode === 'starry_buddha') && (() => {
+      {/* Live Breath Sync Control (Available across ALL 8 visualizers) */}
+      {(() => {
         const activePhase = breathSyncState.pattern.phases[breathSyncState.phaseIndex] || breathSyncState.pattern.phases[0];
         const remaining = Math.max(0, activePhase.duration - breathSyncState.phaseElapsed).toFixed(1);
         const topClass = isPlaying && isMusicalModeActive ? 'top-[62px]' : 'top-10';
@@ -2837,11 +2428,15 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
             onPointerDown={(e) => e.stopPropagation()}
             title={
               breathSyncState.isActive
-                ? `Breathwork Sync active (${breathSyncState.pattern.name}). Click to pause breath timer.`
-                : 'Starry Buddha is breathing on a slow 5.5s rhythm. Click to start synced Breathwork.'
+                ? `Breathwork Sync active (${breathSyncState.pattern.name}). Click to pause breath sync.`
+                : 'Visualizer is gently breathing on a slow 5.5s rhythm. Click to sync live with Breathwork.'
             }
             className={`absolute ${topClass} left-2.5 z-20 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl backdrop-blur-md border text-[11px] font-medium transition-colors cursor-pointer whitespace-nowrap ${
-              effectiveIsLight
+              breathSyncState.isActive
+                ? effectiveIsLight
+                  ? 'bg-sky-50/95 hover:bg-white border-sky-300 text-slate-800 shadow-sm'
+                  : 'bg-slate-950/85 hover:bg-slate-900 border-aurora-teal/50 text-slate-100 shadow-sm'
+                : effectiveIsLight
                 ? 'bg-white/85 hover:bg-white border-slate-200 text-slate-700'
                 : 'bg-slate-950/75 hover:bg-slate-900/90 border-slate-700/70 text-slate-200'
             }`}
@@ -2857,9 +2452,9 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
               </>
             ) : (
               <>
-                <span className={`font-semibold ${phaseAccent}`}>Slow Breath</span>
-                <span aria-hidden="true" className="opacity-45">·</span>
-                <span className="text-[10px] opacity-80">Tap to Sync</span>
+                <span className={`font-semibold ${phaseAccent}`}>Sync Breath</span>
+                <span aria-hidden="true" className="opacity-45 hidden sm:inline">·</span>
+                <span className="text-[10px] opacity-80 hidden sm:inline">Off</span>
               </>
             )}
           </button>

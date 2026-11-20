@@ -1359,6 +1359,678 @@ select:focus-visible {
   outline-offset: 2px !important;
 }
 
+/* ========================================================================= */
+/* SACRED EYE VISUALIZER — MULTI-LAYERED 3D CSS GEOMETRIC DEPTH ILLUSION     */
+/* Counter-rotating sacred geometry, peripheral-drift iris & infinite tunnel  */
+/* ========================================================================= */
+
+@keyframes sacredEyeSpinCW {
+  from {
+    transform: translate(-50%, -50%) translateZ(var(--se-z, 0px)) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) translateZ(var(--se-z, 0px)) rotate(360deg);
+  }
+}
+
+@keyframes sacredEyeSpinCCW {
+  from {
+    transform: translate(-50%, -50%) translateZ(var(--se-z, 0px)) rotate(360deg);
+  }
+  to {
+    transform: translate(-50%, -50%) translateZ(var(--se-z, 0px)) rotate(0deg);
+  }
+}
+
+@keyframes sacredEyeSpinDiamondCW {
+  from {
+    transform: translate(-50%, -50%) translateZ(var(--se-z, 0px)) rotate(45deg);
+  }
+  to {
+    transform: translate(-50%, -50%) translateZ(var(--se-z, 0px)) rotate(405deg);
+  }
+}
+
+@keyframes sacredEyeSpinDiamondCCW {
+  from {
+    transform: translate(-50%, -50%) translateZ(var(--se-z, 0px)) rotate(405deg);
+  }
+  to {
+    transform: translate(-50%, -50%) translateZ(var(--se-z, 0px)) rotate(45deg);
+  }
+}
+
+@keyframes sacredEyeTunnelPortal {
+  0% {
+    transform: translate(-50%, -50%) translateZ(26px) scale(1.18) rotate(0deg);
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.72;
+  }
+  78% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: translate(-50%, -50%) translateZ(-44px) scale(0.18) rotate(135deg);
+    opacity: 0;
+  }
+}
+
+@keyframes sacredEyeFloatDrift {
+  0%, 100% {
+    transform: rotateX(calc(var(--se-tilt-y, 0deg) + 4deg)) rotateY(calc(var(--se-tilt-x, 0deg) - 4deg)) scale(var(--se-breath-scale, 1));
+  }
+  50% {
+    transform: rotateX(calc(var(--se-tilt-y, 0deg) - 4deg)) rotateY(calc(var(--se-tilt-x, 0deg) + 4deg)) scale(var(--se-breath-scale, 1));
+  }
+}
+
+@keyframes sacredEyeShimmerPulse {
+  0%, 100% {
+    opacity: 0.52;
+  }
+  50% {
+    opacity: 0.96;
+  }
+}
+
+.sacred-eye-stage {
+  --se-primary: #48E1D0;
+  --se-primary-rgb: 72, 225, 208;
+  --se-secondary: #A99AFB;
+  --se-secondary-rgb: 169, 154, 251;
+  --se-gold: #FBBF24;
+  --se-gold-rgb: 251, 191, 36;
+  --se-sky: #38BDF8;
+  --se-sky-rgb: 56, 189, 248;
+  --se-abyss: #030714;
+  --se-abyss-mid: #0A1530;
+  --se-highlight-rgb: 255, 255, 255;
+  --se-breath: 0.45;
+  --se-hold: 0;
+  --se-energy: 0.15;
+  --se-breath-scale: 1;
+  --se-tilt-x: 0deg;
+  --se-tilt-y: 0deg;
+  --se-speed: 1;
+  --se-glow-mult: 1;
+  --se-size: clamp(190px, 56vmin, 260px);
+
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 960px;
+  perspective-origin: 50% 50%;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  contain: layout style;
+}
+
+.sacred-eye-stage.sacred-eye-ambient {
+  --se-size: clamp(270px, 58vmin, 540px);
+}
+
+.sacred-eye-stage.sacred-eye-card {
+  --se-size: clamp(188px, 68%, 248px);
+}
+
+.sacred-eye-stage.sacred-eye-speed-slow {
+  --se-speed: 1.42;
+}
+.sacred-eye-stage.sacred-eye-speed-normal {
+  --se-speed: 1;
+}
+.sacred-eye-stage.sacred-eye-speed-fast {
+  --se-speed: 0.72;
+}
+
+.sacred-eye-stage.sacred-eye-comfort-zen {
+  --se-glow-mult: 0.78;
+}
+.sacred-eye-stage.sacred-eye-comfort-harmony {
+  --se-glow-mult: 1;
+}
+.sacred-eye-stage.sacred-eye-comfort-glow {
+  --se-glow-mult: 1.24;
+}
+
+.sacred-eye-stage.sacred-eye-light {
+  --se-primary: #0284C7;
+  --se-primary-rgb: 2, 132, 199;
+  --se-secondary: #4F46E5;
+  --se-secondary-rgb: 79, 70, 229;
+  --se-gold: #D97706;
+  --se-gold-rgb: 217, 119, 6;
+  --se-sky: #0EA5E9;
+  --se-sky-rgb: 14, 165, 233;
+  --se-abyss: #0B1430;
+  --se-abyss-mid: #162452;
+  --se-highlight-rgb: 248, 250, 252;
+}
+
+/* Ambient Mode Color Palettes */
+.sacred-eye-stage.sacred-eye-palette-gold {
+  --se-primary: #FBBF24;
+  --se-primary-rgb: 251, 191, 36;
+  --se-secondary: #FB923C;
+  --se-secondary-rgb: 251, 146, 60;
+  --se-gold: #FEF08A;
+  --se-gold-rgb: 254, 240, 138;
+  --se-sky: #F59E0B;
+  --se-sky-rgb: 245, 158, 11;
+}
+.sacred-eye-stage.sacred-eye-palette-emerald {
+  --se-primary: #34D399;
+  --se-primary-rgb: 52, 211, 153;
+  --se-secondary: #06B6D4;
+  --se-secondary-rgb: 6, 182, 212;
+  --se-gold: #FDE047;
+  --se-gold-rgb: 253, 224, 71;
+  --se-sky: #10B981;
+  --se-sky-rgb: 16, 185, 129;
+}
+.sacred-eye-stage.sacred-eye-palette-violet {
+  --se-primary: #C084FC;
+  --se-primary-rgb: 192, 132, 252;
+  --se-secondary: #F472B6;
+  --se-secondary-rgb: 244, 114, 182;
+  --se-gold: #FBBF24;
+  --se-gold-rgb: 251, 191, 36;
+  --se-sky: #A855F7;
+  --se-sky-rgb: 168, 85, 247;
+}
+.sacred-eye-stage.sacred-eye-palette-obsidian {
+  --se-primary: #E2E8F0;
+  --se-primary-rgb: 226, 232, 240;
+  --se-secondary: #94A3B8;
+  --se-secondary-rgb: 148, 163, 184;
+  --se-gold: #FDE047;
+  --se-gold-rgb: 253, 224, 71;
+  --se-sky: #CBD5E1;
+  --se-sky-rgb: 203, 213, 225;
+}
+
+.sacred-eye-scene {
+  position: relative;
+  width: var(--se-size);
+  height: var(--se-size);
+  transform-style: preserve-3d;
+  will-change: transform;
+  animation: sacredEyeFloatDrift calc(16s * var(--se-speed)) ease-in-out infinite;
+}
+
+.sacred-eye-paused .sacred-eye-layer,
+.sacred-eye-paused .sacred-eye-tunnel-ring {
+  animation-duration: calc(var(--se-base-dur, 30s) * var(--se-speed) * 1.45);
+}
+
+.sacred-eye-layer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+
+/* 1. Celestial Radial Glow & Hold Bloom Aura */
+.sacred-eye-aura {
+  --se-z: -115px;
+  width: 148%;
+  height: 148%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) translateZ(var(--se-z))
+    scale(calc(0.92 + var(--se-breath) * 0.16 + var(--se-energy) * 0.08));
+  background: radial-gradient(
+    circle,
+    rgba(var(--se-primary-rgb), calc(0.26 * var(--se-glow-mult))) 0%,
+    rgba(var(--se-secondary-rgb), calc(0.18 * var(--se-glow-mult))) 36%,
+    rgba(var(--se-gold-rgb), calc((0.06 + var(--se-hold) * 0.18) * var(--se-glow-mult))) 58%,
+    transparent 74%
+  );
+  transition: opacity 0.35s ease;
+}
+
+/* 2. Counter-Rotating Celestial Sunburst Rays */
+.sacred-eye-rays-outer {
+  --se-z: -95px;
+  --se-base-dur: 54s;
+  width: 138%;
+  height: 138%;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(var(--se-primary-rgb), 0.22) 0deg 2deg,
+    transparent 2deg 13deg,
+    rgba(var(--se-gold-rgb), 0.16) 13deg 14.5deg,
+    transparent 14.5deg 30deg
+  );
+  -webkit-mask-image: radial-gradient(circle, transparent 24%, #000 44%, rgba(0, 0, 0, 0.55) 66%, transparent 74%);
+  mask-image: radial-gradient(circle, transparent 24%, #000 44%, rgba(0, 0, 0, 0.55) 66%, transparent 74%);
+  animation: sacredEyeSpinCW calc(var(--se-base-dur) * var(--se-speed)) linear infinite;
+}
+
+.sacred-eye-rays-inner {
+  --se-z: -78px;
+  --se-base-dur: 38s;
+  width: 122%;
+  height: 122%;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    from 7.5deg,
+    rgba(var(--se-secondary-rgb), 0.24) 0deg 1.6deg,
+    transparent 1.6deg 15deg
+  );
+  -webkit-mask-image: radial-gradient(circle, transparent 28%, #000 50%, transparent 73%);
+  mask-image: radial-gradient(circle, transparent 28%, #000 50%, transparent 73%);
+  animation: sacredEyeSpinCCW calc(var(--se-base-dur) * var(--se-speed)) linear infinite;
+}
+
+/* 3. Outer Astrolabe Calibration Ring */
+.sacred-eye-astrolabe {
+  --se-z: -62px;
+  --se-base-dur: 64s;
+  width: 108%;
+  height: 108%;
+  border-radius: 50%;
+  border: 1px solid rgba(var(--se-primary-rgb), 0.34);
+  box-shadow:
+    0 0 22px rgba(var(--se-primary-rgb), 0.18),
+    inset 0 0 18px rgba(var(--se-secondary-rgb), 0.14);
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(var(--se-gold-rgb), 0.55) 0deg 0.85deg,
+    transparent 0.85deg 10deg
+  );
+  -webkit-mask-image: radial-gradient(circle, transparent 66.5%, #000 67.5%, #000 71%, transparent 71.5%);
+  mask-image: radial-gradient(circle, transparent 66.5%, #000 67.5%, #000 71%, transparent 71.5%);
+  animation: sacredEyeSpinCW calc(var(--se-base-dur) * var(--se-speed)) linear infinite;
+}
+
+.sacred-eye-astrolabe-rim {
+  --se-z: -56px;
+  --se-base-dur: 48s;
+  width: 102%;
+  height: 102%;
+  border-radius: 50%;
+  border: 1px dashed rgba(var(--se-secondary-rgb), 0.42);
+  animation: sacredEyeSpinCCW calc(var(--se-base-dur) * var(--se-speed)) linear infinite;
+}
+
+/* 4. Counter-Rotating Sacred Geometry Star (Interlocking Hexagram Triangles) */
+.sacred-eye-tri-cw,
+.sacred-eye-tri-ccw {
+  width: 96%;
+  height: 96%;
+  clip-path: polygon(50% 3%, 95% 81%, 5% 81%);
+  background: linear-gradient(
+    180deg,
+    rgba(var(--se-gold-rgb), 0.52) 0%,
+    rgba(var(--se-primary-rgb), 0.28) 55%,
+    rgba(var(--se-secondary-rgb), 0.44) 100%
+  );
+}
+
+.sacred-eye-tri-cw::after,
+.sacred-eye-tri-ccw::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  clip-path: polygon(50% 4.6%, 93.2% 79.8%, 6.8% 79.8%);
+  background: radial-gradient(circle, rgba(var(--se-primary-rgb), 0.06), rgba(3, 7, 20, 0.72));
+}
+
+.sacred-eye-light .sacred-eye-tri-cw::after,
+.sacred-eye-light .sacred-eye-tri-ccw::after {
+  background: radial-gradient(circle, rgba(var(--se-primary-rgb), 0.05), rgba(248, 250, 252, 0.78));
+}
+
+.sacred-eye-tri-cw {
+  --se-z: -42px;
+  --se-base-dur: 44s;
+  opacity: 0.78;
+  filter: drop-shadow(0 0 10px rgba(var(--se-gold-rgb), 0.35));
+  animation: sacredEyeSpinCW calc(var(--se-base-dur) * var(--se-speed)) linear infinite;
+}
+
+.sacred-eye-tri-ccw {
+  --se-z: -30px;
+  --se-base-dur: 44s;
+  opacity: 0.72;
+  filter: drop-shadow(0 0 10px rgba(var(--se-primary-rgb), 0.35));
+  animation: sacredEyeSpinCCW calc(var(--se-base-dur) * var(--se-speed)) linear infinite;
+}
+
+/* 5. Interlocking Octagram Sacred Squares */
+.sacred-eye-octa-a {
+  --se-z: -18px;
+  --se-base-dur: 34s;
+  width: 66%;
+  height: 66%;
+  border: 1px solid rgba(var(--se-primary-rgb), 0.46);
+  box-shadow:
+    0 0 14px rgba(var(--se-primary-rgb), 0.22),
+    inset 0 0 14px rgba(var(--se-secondary-rgb), 0.16);
+  animation: sacredEyeSpinCW calc(var(--se-base-dur) * var(--se-speed)) linear infinite;
+}
+
+.sacred-eye-octa-b {
+  --se-z: -10px;
+  --se-base-dur: 34s;
+  width: 66%;
+  height: 66%;
+  border: 1px solid rgba(var(--se-gold-rgb), 0.44);
+  box-shadow:
+    0 0 14px rgba(var(--se-gold-rgb), 0.2),
+    inset 0 0 12px rgba(var(--se-primary-rgb), 0.14);
+  animation: sacredEyeSpinDiamondCCW calc(var(--se-base-dur) * var(--se-speed)) linear infinite;
+}
+
+/* 6. Vesica Piscis Almond Eye Aperture (Breathing Eyelids) */
+.sacred-eye-aperture-wrap {
+  --se-z: 6px;
+  width: 84%;
+  height: 84%;
+  transform: translate(-50%, -50%) translateZ(var(--se-z))
+    scaleY(calc(0.84 + var(--se-breath) * 0.22 + var(--se-energy) * 0.05));
+  transform-style: preserve-3d;
+}
+
+.sacred-eye-almond-halo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 78%;
+  height: 78%;
+  border-radius: 78% 0 78% 0;
+  transform: translate(-50%, -50%) rotate(45deg);
+  border: 1.5px solid rgba(var(--se-gold-rgb), calc(0.45 + var(--se-hold) * 0.45));
+  box-shadow:
+    0 0 calc(20px + var(--se-breath) * 16px) rgba(var(--se-primary-rgb), 0.45),
+    0 0 calc(34px + var(--se-hold) * 24px) rgba(var(--se-gold-rgb), calc(0.22 + var(--se-hold) * 0.35)),
+    inset 0 0 24px rgba(var(--se-primary-rgb), 0.35);
+}
+
+.sacred-eye-almond-shell {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 73%;
+  height: 73%;
+  border-radius: 78% 0 78% 0;
+  transform: translate(-50%, -50%) rotate(45deg);
+  overflow: hidden;
+  border: 1.5px solid rgba(var(--se-primary-rgb), 0.82);
+  background: radial-gradient(
+    circle at 50% 50%,
+    var(--se-abyss-mid) 0%,
+    var(--se-abyss) 68%,
+    rgba(2, 6, 20, 0.98) 100%
+  );
+  box-shadow:
+    inset 0 0 28px rgba(var(--se-secondary-rgb), 0.38),
+    inset 0 0 10px rgba(var(--se-highlight-rgb), 0.28);
+}
+
+/* Counter-rotate interior back to 0deg so the iris and tunnel stay perfectly aligned */
+.sacred-eye-chamber {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 142%;
+  height: 142%;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  transform-style: preserve-3d;
+}
+
+/* Sclera Nebula Veins inside the eye corners */
+.sacred-eye-sclera-sheen {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 22% 50%, rgba(var(--se-primary-rgb), 0.28) 0%, transparent 36%),
+    radial-gradient(circle at 78% 50%, rgba(var(--se-secondary-rgb), 0.28) 0%, transparent 36%),
+    radial-gradient(circle at 50% 50%, rgba(var(--se-sky-rgb), 0.18) 0%, transparent 58%);
+}
+
+/* 7. Peripheral-Drift Multi-Ring Optical Illusion Iris */
+.sacred-eye-iris-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* Ring 1: Outer Limbal Optical Drift Ring (24 alternating Kitaoka contrast facets) */
+.sacred-eye-iris-1 {
+  --se-z: 10px;
+  --se-base-dur: 22s;
+  width: 58%;
+  height: 58%;
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(var(--se-primary-rgb), 0.92) 0deg 3.5deg,
+    rgba(var(--se-highlight-rgb), 0.9) 3.5deg 5.5deg,
+    rgba(var(--se-secondary-rgb), 0.72) 5.5deg 11deg,
+    var(--se-abyss) 11deg 15deg
+  );
+  -webkit-mask-image: radial-gradient(circle, transparent 54%, #000 57%, #000 70%, transparent 72%);
+  mask-image: radial-gradient(circle, transparent 54%, #000 57%, #000 70%, transparent 72%);
+  filter: drop-shadow(0 0 8px rgba(var(--se-primary-rgb), 0.55));
+  animation: sacredEyeSpinCW calc(var(--se-base-dur) * var(--se-speed)) linear infinite;
+}
+
+/* Ring 2: Counter-Rotating Golden Striae Drift Ring */
+.sacred-eye-iris-2 {
+  --se-z: 18px;
+  --se-base-dur: 17s;
+  width: 48%;
+  height: 48%;
+  background: repeating-conic-gradient(
+    from 6deg,
+    rgba(var(--se-gold-rgb), 0.95) 0deg 2.8deg,
+    rgba(var(--se-primary-rgb), 0.75) 2.8deg 8deg,
+    rgba(4, 10, 28, 0.95) 8deg 12deg,
+    rgba(var(--se-secondary-rgb), 0.85) 12deg 15deg
+  );
+  -webkit-mask-image: radial-gradient(circle, transparent 48%, #000 51%, #000 68%, transparent 71%);
+  mask-image: radial-gradient(circle, transparent 48%, #000 51%, #000 68%, transparent 71%);
+  animation: sacredEyeSpinCCW calc(var(--se-base-dur) * var(--se-speed)) linear infinite;
+}
+
+/* Ring 3: High-Frequency Optical Flicker-Free Ciliary Lattice */
+.sacred-eye-iris-3 {
+  --se-z: 26px;
+  --se-base-dur: 27s;
+  width: 39%;
+  height: 39%;
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(var(--se-sky-rgb), 0.92) 0deg 2deg,
+    rgba(var(--se-highlight-rgb), 0.92) 2deg 3.2deg,
+    rgba(var(--se-abyss), 0.9) 3.2deg 6.5deg,
+    rgba(var(--se-secondary-rgb), 0.85) 6.5deg 10deg
+  );
+  -webkit-mask-image: radial-gradient(circle, transparent 44%, #000 47%, #000 68%, transparent 71%);
+  mask-image: radial-gradient(circle, transparent 44%, #000 47%, #000 68%, transparent 71%);
+  animation: sacredEyeSpinCW calc(var(--se-base-dur) * var(--se-speed)) linear infinite;
+}
+
+/* Ring 4: Golden Collarette Geometric Crown */
+.sacred-eye-iris-4 {
+  --se-z: 34px;
+  --se-base-dur: 13s;
+  width: 30%;
+  height: 30%;
+  border: 1.5px solid rgba(var(--se-gold-rgb), 0.85);
+  box-shadow:
+    0 0 12px rgba(var(--se-gold-rgb), 0.6),
+    inset 0 0 10px rgba(var(--se-primary-rgb), 0.5);
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(var(--se-gold-rgb), 0.85) 0deg 4deg,
+    transparent 4deg 20deg
+  );
+  -webkit-mask-image: radial-gradient(circle, transparent 45%, #000 49%, #000 72%, transparent 75%);
+  mask-image: radial-gradient(circle, transparent 45%, #000 49%, #000 72%, transparent 75%);
+  animation: sacredEyeSpinCCW calc(var(--se-base-dur) * var(--se-speed)) linear infinite;
+}
+
+/* 8. Infinite Receding Geometric Depth Tunnel inside the Iris */
+.sacred-eye-tunnel-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 52%;
+  height: 52%;
+  --se-base-dur: 6.5s;
+  border: 1.25px solid rgba(var(--se-primary-rgb), 0.72);
+  border-radius: 26% 74% 26% 74% / 74% 26% 74% 26%;
+  box-shadow: 0 0 10px rgba(var(--se-secondary-rgb), 0.45);
+  will-change: transform, opacity;
+  animation: sacredEyeTunnelPortal calc(var(--se-base-dur) * var(--se-speed)) linear infinite;
+}
+
+.sacred-eye-tunnel-1 {
+  animation-delay: 0s;
+  border-color: rgba(var(--se-primary-rgb), 0.78);
+}
+.sacred-eye-tunnel-2 {
+  animation-delay: calc(-1.3s * var(--se-speed));
+  border-color: rgba(var(--se-gold-rgb), 0.74);
+}
+.sacred-eye-tunnel-3 {
+  animation-delay: calc(-2.6s * var(--se-speed));
+  border-color: rgba(var(--se-secondary-rgb), 0.78);
+}
+.sacred-eye-tunnel-4 {
+  animation-delay: calc(-3.9s * var(--se-speed));
+  border-color: rgba(var(--se-sky-rgb), 0.76);
+}
+.sacred-eye-tunnel-5 {
+  animation-delay: calc(-5.2s * var(--se-speed));
+  border-color: rgba(var(--se-primary-rgb), 0.78);
+}
+
+/* 9. Dilating Cosmic Abyss Pupil + Recursive Inner All-Seeing Eye */
+.sacred-eye-pupil {
+  --se-z: 48px;
+  width: 24%;
+  height: 24%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) translateZ(var(--se-z))
+    scale(calc(0.86 + var(--se-breath) * 0.24 + var(--se-energy) * 0.08));
+  background: radial-gradient(
+    circle at 50% 50%,
+    #01030A 0%,
+    #020617 58%,
+    rgba(var(--se-secondary-rgb), 0.32) 86%,
+    rgba(var(--se-primary-rgb), 0.72) 100%
+  );
+  border: 1px solid rgba(var(--se-gold-rgb), 0.72);
+  box-shadow:
+    0 0 18px rgba(var(--se-primary-rgb), 0.55),
+    inset 0 0 14px rgba(0, 0, 0, 0.95);
+  transform-style: preserve-3d;
+}
+
+.sacred-eye-inner-diamond {
+  --se-z: 10px;
+  --se-base-dur: 14s;
+  width: 58%;
+  height: 58%;
+  border: 1px solid rgba(var(--se-gold-rgb), 0.82);
+  box-shadow: 0 0 8px rgba(var(--se-gold-rgb), 0.65);
+  animation: sacredEyeSpinDiamondCW calc(var(--se-base-dur) * var(--se-speed)) linear infinite;
+}
+
+.sacred-eye-inner-vesica {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44%;
+  height: 44%;
+  border-radius: 78% 0 78% 0;
+  transform: translate(-50%, -50%) translateZ(14px) rotate(45deg);
+  border: 1px solid rgba(var(--se-primary-rgb), 0.92);
+  background: radial-gradient(
+    circle,
+    rgba(var(--se-highlight-rgb), 0.95) 0%,
+    rgba(var(--se-primary-rgb), 0.7) 32%,
+    rgba(3, 7, 20, 0.92) 75%
+  );
+  box-shadow: 0 0 12px rgba(var(--se-primary-rgb), 0.85);
+}
+
+/* 10. Glassy Corneal Specular Catchlight Highlights (Anchors 3D Illusion) */
+.sacred-eye-catchlight-primary {
+  position: absolute;
+  top: 29%;
+  left: 33%;
+  width: 11%;
+  height: 6.5%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) translateZ(64px) rotate(-26deg);
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 255, 255, 0.96) 0%,
+    rgba(var(--se-primary-rgb), 0.45) 62%,
+    transparent 100%
+  );
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.72);
+  animation: sacredEyeShimmerPulse calc(5.5s * var(--se-speed)) ease-in-out infinite;
+}
+
+.sacred-eye-catchlight-secondary {
+  position: absolute;
+  top: 66%;
+  left: 65%;
+  width: 4.5%;
+  height: 4.5%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) translateZ(62px);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.88) 0%, rgba(var(--se-gold-rgb), 0.45) 65%, transparent 100%);
+}
+
+/* 11. Cardinal Sacred Star Beacons along the Eye's Horizontal & Vertical Axes */
+.sacred-eye-axis-beam {
+  --se-z: 18px;
+  width: 118%;
+  height: 1px;
+  transform: translate(-50%, -50%) translateZ(var(--se-z));
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(var(--se-primary-rgb), 0.55) 14%,
+    transparent 34%,
+    transparent 66%,
+    rgba(var(--se-primary-rgb), 0.55) 86%,
+    transparent 100%
+  );
+}
+
+.sacred-eye-axis-beam-v {
+  --se-z: 18px;
+  width: 1px;
+  height: 112%;
+  transform: translate(-50%, -50%) translateZ(var(--se-z));
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(var(--se-gold-rgb), 0.58) 12%,
+    transparent 30%,
+    transparent 70%,
+    rgba(var(--se-gold-rgb), 0.58) 88%,
+    transparent 100%
+  );
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1368,5 +2040,9 @@ select:focus-visible {
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
+  .sacred-eye-scene {
+    transform: scale(1) !important;
+  }
 }
+
 

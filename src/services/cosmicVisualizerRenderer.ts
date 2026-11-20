@@ -1031,3 +1031,98 @@ export function renderStarryBuddha(
     });
   }
 }
+
+export interface BreathSyncHaloOptions {
+  cx: number;
+  cy: number;
+  radius: number;
+  timeSec: number;
+  breathEased: number;
+  phaseType: BreathPhaseType;
+  holdStillness: number;
+  isLight: boolean;
+  intensity?: number;
+  palette?: CosmicPaletteConfig;
+}
+
+/**
+ * Renders a delicate, luminous breath-coherence halo and orbiting starlight nodes
+ * for all visualizers whenever live Breathwork Sync is active.
+ */
+export function renderBreathSyncHalo(
+  ctx: CosmicCanvasContext,
+  opts: BreathSyncHaloOptions
+): void {
+  const {
+    cx,
+    cy,
+    radius,
+    timeSec,
+    breathEased,
+    phaseType,
+    holdStillness,
+    isLight,
+    intensity = 1.0,
+  } = opts;
+  const palette = opts.palette || (isLight ? DEFAULT_LIGHT_COSMIC_PALETTE : DEFAULT_DARK_COSMIC_PALETTE);
+  const activeRgb: [number, number, number] =
+    phaseType === 'hold'
+      ? palette.goldRgb
+      : phaseType === 'exhale'
+      ? palette.secondaryRgb
+      : palette.primaryRgb;
+
+  const haloR = radius * (0.74 + breathEased * 0.24);
+  const innerR = haloR * 0.88;
+
+  ctx.save();
+  ctx.globalCompositeOperation = isLight ? 'source-over' : 'screen';
+
+  // Soft expanding outer aura band
+  const bandGrad = ctx.createRadialGradient(cx, cy, haloR * 0.82, cx, cy, haloR * 1.16);
+  bandGrad.addColorStop(0, rgba(activeRgb, 0));
+  bandGrad.addColorStop(0.55, rgba(activeRgb, (0.14 + breathEased * 0.1 + holdStillness * 0.08) * intensity));
+  bandGrad.addColorStop(1, rgba(activeRgb, 0));
+  ctx.fillStyle = bandGrad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, haloR * 1.16, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Crisp luminous outer breath guide ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, haloR, 0, Math.PI * 2);
+  ctx.strokeStyle = rgba(activeRgb, (0.34 + breathEased * 0.28 + holdStillness * 0.18) * intensity);
+  ctx.lineWidth = 1.5 + breathEased * 0.8;
+  ctx.stroke();
+
+  // Delicate dashed harmonic inner coherence ring
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(timeSec * 0.09);
+  ctx.setLineDash([4, 9]);
+  ctx.beginPath();
+  ctx.arc(0, 0, innerR, 0, Math.PI * 2);
+  ctx.strokeStyle = rgba(palette.goldRgb, (0.16 + holdStillness * 0.28 + breathEased * 0.12) * intensity);
+  ctx.lineWidth = 1.0;
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 4 cardinal breath starlight beads riding the coherence ring
+  for (let i = 0; i < 4; i++) {
+    const a = (i * Math.PI) / 2 + timeSec * 0.14;
+    const bx = Math.cos(a) * haloR;
+    const by = Math.sin(a) * haloR;
+    const beadR = 2.0 + breathEased * 1.4 + holdStillness * 1.0;
+    drawFourPointStar(
+      ctx,
+      bx,
+      by,
+      beadR * 2.4,
+      rgba(isLight ? activeRgb : [255, 255, 255], (0.55 + breathEased * 0.35) * intensity)
+    );
+  }
+  ctx.restore();
+
+  ctx.restore();
+}
+

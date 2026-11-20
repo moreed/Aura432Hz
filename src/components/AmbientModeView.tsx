@@ -35,11 +35,13 @@ import {
 } from '../services/audioEngine';
 import { breathSyncEngine, type BreathSyncState } from '../services/breathSyncEngine';
 import {
+  renderBreathSyncHalo,
   renderCosmicDepthBackdrop,
   renderCosmicForegroundDepth,
   renderStarryBuddha,
   type CosmicPaletteConfig,
 } from '../services/cosmicVisualizerRenderer';
+import { SacredEyeVisualizer } from './SacredEyeVisualizer';
 
 export type AmbientColorPalette = 'celestial' | 'gold' | 'emerald' | 'violet' | 'obsidian';
 
@@ -48,12 +50,11 @@ export type AmbientVisualizerType =
   | 'starry_buddha'
   | 'dreamy_nebula'
   | 'mandala'
-  | 'ripples'
-  | 'aurora'
   | 'flower_of_life'
+  | 'aurora'
   | 'cosmic_galaxy'
-  | 'cymatic_waves'
-  | 'pranic_orb';
+  | 'ripples'
+  | 'sacred_eye';
 
 interface AmbientModeViewProps {
   isOpen: boolean;
@@ -133,12 +134,11 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
     { id: 'starry_buddha', name: 'Starry Buddha' },
     { id: 'dreamy_nebula', name: 'Dreamy Stardust' },
     { id: 'mandala', name: 'Mandala' },
-    { id: 'ripples', name: 'Ripples' },
-    { id: 'aurora', name: 'Aurora' },
     { id: 'flower_of_life', name: 'Flower of Life' },
+    { id: 'aurora', name: 'Aurora' },
     { id: 'cosmic_galaxy', name: 'Galaxy' },
-    { id: 'cymatic_waves', name: 'Harmonic Waves' },
-    { id: 'pranic_orb', name: 'Pranic Orb' },
+    { id: 'ripples', name: 'Ripples' },
+    { id: 'sacred_eye', name: 'Sacred Eye' },
   ]).current;
 
   const switchToNextVisualizer = useCallback((direction: 'next' | 'prev' = 'next') => {
@@ -428,8 +428,10 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
       const dt = Math.min((timeNow - lastTime) / 16.67, 2.5);
       lastTimeRef.current = timeNow;
 
-      // 1. Silky Optical Persistence Wash (clean full frame for Starry Buddha cosmic crispness)
-      if (needsClearRef.current || visualizerType === 'starry_buddha') {
+      const isCrispCosmicMode = visualizerType === 'starry_buddha' || visualizerType === 'sacred_eye';
+
+      // 1. Silky Optical Persistence Wash (clean full frame for Starry Buddha & Sacred Eye cosmic crispness)
+      if (needsClearRef.current || isCrispCosmicMode) {
         ctx.clearRect(0, 0, width, height);
         ctx.fillStyle = '#020617';
         ctx.fillRect(0, 0, width, height);
@@ -486,14 +488,15 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
       smoothBassRef.current = smoothStep(smoothBassRef.current, rawBass);
       smoothEnergyRef.current = smoothStep(smoothEnergyRef.current, rawEnergy);
 
-      // 4. Biological Cardiovascular 5.5-Second Coherent Breathing Wave
-      const breathTime = timeNow * 0.00114;
-      const breathWave = (Math.sin(breathTime) + 1) * 0.5; // 0 to 1
+      // 4. Unified Breath Synchronization Wave across ALL 8 Ambient visualizers
+      const breathVisual = breathSyncEngine.getVisualState(timeNow, 1.0);
+      const breathWave = breathVisual.breathEased;
 
-      // 5. Dynamic Pulse
-      const targetPulse = (smoothBassRef.current * 0.42) + (breathWave * 0.32);
-      smoothPulseRef.current += (targetPulse - smoothPulseRef.current) * (0.04 * dt);
-      const dynamicPulse = 0.94 + (smoothPulseRef.current * 0.32);
+      // 5. Dynamic Pulse (Audio + Live Breath Sync)
+      const breathWeight = breathVisual.isSynced ? 0.38 : 0.30;
+      const targetPulse = (smoothBassRef.current * 0.38) + (breathWave * breathWeight);
+      smoothPulseRef.current += (targetPulse - smoothPulseRef.current) * (0.055 * dt);
+      const dynamicPulse = 0.92 + (smoothPulseRef.current * 0.34);
 
       // 6. Smooth phase & celestial rotation
       const beatSpeed = (currentBrainwave.beatHz > 0 ? currentBrainwave.beatHz * 0.006 : 0.009) * dt;
@@ -506,11 +509,7 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
       const bassEnergy = smoothBassRef.current;
       const pulse = smoothPulseRef.current;
       const timeSec = timeNow * 0.001;
-      const breathVisual = breathSyncEngine.getVisualState(timeNow, 1.0);
-      const activeBreathEased =
-        breathVisual.isSynced || visualizerType === 'starry_buddha'
-          ? breathVisual.breathEased
-          : breathWave;
+      const activeBreathEased = breathWave;
 
       // 7. Deep cosmic parallax starfield & volumetric nebula backdrop
       renderCosmicDepthBackdrop(ctx, {
@@ -521,12 +520,12 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
         energy,
         bass: bassEnergy,
         isLight: false,
-        intensity: visualizerType === 'starry_buddha' ? 1.1 : 0.86,
+        intensity: isCrispCosmicMode ? 1.1 : 0.86,
         palette: cosmicPalette,
-        opaqueBase: visualizerType === 'starry_buddha',
+        opaqueBase: isCrispCosmicMode,
       });
 
-      if (visualizerType !== 'starry_buddha') {
+      if (!isCrispCosmicMode) {
         const bgGrad = ctx.createRadialGradient(cx, cy, 20, cx, cy, Math.max(width, height) * 0.85);
         bgGrad.addColorStop(0, theme.bgGlow);
         bgGrad.addColorStop(0.5, 'rgba(15, 23, 42, 0.26)');
@@ -535,7 +534,21 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
         ctx.fillRect(0, 0, width, height);
       }
 
-      // 8. Render Selected Visualizer Mode
+      // 8. Render Selected Visualizer Mode (All 9 visualizers synchronized with Breathwork)
+      const centeredBreathScale =
+        isCrispCosmicMode || visualizerType === 'aurora'
+          ? 1.0
+          : breathVisual.isSynced
+          ? 0.9 + breathWave * 0.17
+          : 0.96 + breathWave * 0.07;
+
+      if (centeredBreathScale !== 1.0) {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.scale(centeredBreathScale, centeredBreathScale);
+        ctx.translate(-cx, -cy);
+      }
+
       switch (visualizerType) {
         case 'sacred_lotus':
           renderSacredLotus(ctx, cx, cy, energy, bassEnergy, pulse, dynamicPulse, phaseRef.current, breathWave, theme, baseFreq);
@@ -567,24 +580,38 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
         case 'mandala':
           renderMandala(ctx, cx, cy, energy, bassEnergy, pulse, dynamicPulse, rotationRef.current, phaseRef.current, breathWave, theme);
           break;
-        case 'ripples':
-          renderRipples(ctx, cx, cy, energy, pulse, dynamicPulse, phaseRef.current, theme);
+        case 'flower_of_life':
+          renderFlowerOfLife(ctx, cx, cy, energy, pulse, dynamicPulse, rotationRef.current, phaseRef.current, breathWave, theme);
           break;
         case 'aurora':
           renderAurora(ctx, width, height, smoothedFft, energy, pulse, phaseRef.current, breathWave, theme);
           break;
-        case 'flower_of_life':
-          renderFlowerOfLife(ctx, cx, cy, energy, pulse, dynamicPulse, rotationRef.current, phaseRef.current, breathWave, theme);
-          break;
         case 'cosmic_galaxy':
-          renderCosmicGalaxy(ctx, cx, cy, energy, bassEnergy, pulse, dynamicPulse, rotationRef.current, phaseRef.current, theme);
+          renderCosmicGalaxy(ctx, cx, cy, energy, bassEnergy, pulse, dynamicPulse, rotationRef.current, phaseRef.current, breathWave, theme);
           break;
-        case 'cymatic_waves':
-          renderCymaticWaves(ctx, width, height, smoothedFft, energy, pulse, phaseRef.current, theme);
+        case 'ripples':
+          renderRipples(ctx, cx, cy, energy, pulse, dynamicPulse, phaseRef.current, breathWave, theme);
           break;
-        case 'pranic_orb':
-          renderPranicOrb(ctx, cx, cy, energy, bassEnergy, pulse, dynamicPulse, phaseRef.current, breathWave, theme);
-          break;
+      }
+
+      if (centeredBreathScale !== 1.0) {
+        ctx.restore();
+      }
+
+      // 8.25 Luminous Breath Coherence Halo Ring when Breathwork Sync is active on any non-Buddha/non-Iris visualizer
+      if (breathVisual.isSynced && !isCrispCosmicMode) {
+        renderBreathSyncHalo(ctx, {
+          cx,
+          cy,
+          radius: Math.min(cx, cy) * 0.86,
+          timeSec,
+          breathEased: breathWave,
+          phaseType: breathVisual.phaseType,
+          holdStillness: breathVisual.holdStillness,
+          isLight: false,
+          intensity: 0.94,
+          palette: cosmicPalette,
+        });
       }
 
       // 8.5 Near-plane depth bokeh stardust & soft cinematic vignette
@@ -596,7 +623,7 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
         energy,
         bass: bassEnergy,
         isLight: false,
-        intensity: visualizerType === 'starry_buddha' ? 1.0 : 0.72,
+        intensity: isCrispCosmicMode ? 1.0 : 0.72,
         palette: cosmicPalette,
       });
 
@@ -811,8 +838,8 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
     ctx.stroke();
     ctx.restore();
 
-    // 4. Center Bioluminescent Haze Bloom (Expands dynamically with Tone & Bass)
-    const bloomR = innerR * (0.64 + tonePulse * 0.45);
+    // 4. Center Bioluminescent Haze Bloom (Expands dynamically with Tone, Bass & Breath Sync)
+    const bloomR = innerR * (0.60 + tonePulse * 0.4 + breathWave * 0.18);
     const bloomGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, bloomR);
     bloomGrad.addColorStop(0, `rgba(34, 211, 238, ${0.48 + tonePulse * 0.35})`);
     bloomGrad.addColorStop(0.45, `rgba(129, 140, 248, ${0.25 + tonePulse * 0.2})`);
@@ -825,7 +852,7 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
 
     // 5. THE SACRED CYMATIC WIREFRAME LOTUS FLOWER (Centered & Fills the Circle)
     // In logo coordinates, width is 104 (x: 48..152, half=52) and vertical center is 84 (y: 48..120).
-    const pulseScale = 1.0 + (tonePulse * 0.18) + (Math.sin(phase * 1.8) * 0.035);
+    const pulseScale = 0.96 + (tonePulse * 0.15) + (breathWave * 0.09) + (Math.sin(phase * 1.8) * 0.025);
     const lotusScale = ((innerR * 0.95) / 52) * pulseScale;
 
     const toCanvas = (lx: number, ly: number): [number, number] => {
@@ -1179,9 +1206,10 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
     pulse: number,
     dynamicPulse: number,
     phase: number,
+    breathWave: number,
     theme: any
   ) => {
-    const maxR = Math.min(cx, cy) * 0.88;
+    const maxR = Math.min(cx, cy) * (0.84 + breathWave * 0.1);
     const rings = 9;
 
     for (let i = 0; i < rings; i++) {
@@ -1351,9 +1379,10 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
     dynamicPulse: number,
     rotation: number,
     phase: number,
+    breathWave: number,
     theme: any
   ) => {
-    const maxR = Math.min(cx, cy) * 0.88;
+    const maxR = Math.min(cx, cy) * (0.84 + breathWave * 0.1);
     const totalStars = 140;
     const arms = 3;
 
@@ -1387,97 +1416,6 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
     ctx.globalAlpha = 1.0;
   };
 
-  // 6. Cymatic Harmonic Sine Oscilloscope Waves (Silky Bezier Ribbons)
-  const renderCymaticWaves = (
-    ctx: CanvasRenderingContext2D,
-    width: number,
-    height: number,
-    smoothedFft: Float32Array,
-    energy: number,
-    pulse: number,
-    phase: number,
-    theme: any
-  ) => {
-    const centerY = height / 2;
-    const waveCount = 3;
-
-    for (let w = 0; w < waveCount; w++) {
-      ctx.beginPath();
-      const waveFreq = (w + 1) * 0.004;
-      const amp = 30 + w * 18 + energy * 40 + pulse * 20;
-      const wPhase = phase * (0.8 + w * 0.18);
-
-      let prevX = 0;
-      let prevY = centerY + Math.sin(wPhase) * amp;
-      ctx.moveTo(prevX, prevY);
-
-      for (let x = 8; x <= width; x += 8) {
-        const audioIdx = Math.min(63, Math.floor((x / width) * 28));
-        const audioVal = smoothedFft[audioIdx] || 0.1;
-        const targetY = centerY + Math.sin(x * waveFreq + wPhase) * amp * (0.85 + audioVal * 0.35);
-        const midX = (prevX + x) / 2;
-        const midY = (prevY + targetY) / 2;
-        ctx.quadraticCurveTo(prevX, prevY, midX, midY);
-        prevX = x;
-        prevY = targetY;
-      }
-
-      ctx.strokeStyle = w === 0 ? theme.primary : w === 1 ? theme.secondary : theme.tertiary;
-      ctx.lineWidth = 2.0 + pulse * 0.8;
-      ctx.globalAlpha = 0.55 + pulse * 0.2;
-      ctx.shadowColor = theme.primary;
-      ctx.shadowBlur = 10;
-      ctx.stroke();
-    }
-    ctx.shadowBlur = 0;
-    ctx.globalAlpha = 1.0;
-  };
-
-  // 7. Pranic Breathing Orb
-  const renderPranicOrb = (
-    ctx: CanvasRenderingContext2D,
-    cx: number,
-    cy: number,
-    energy: number,
-    bassEnergy: number,
-    pulse: number,
-    dynamicPulse: number,
-    phase: number,
-    breathWave: number,
-    theme: any
-  ) => {
-    const baseR = (100 + Math.sin(phase * 0.6) * 30 + bassEnergy * 40 + breathWave * 20) * dynamicPulse;
-
-    // Outer luminous halo
-    const haloGrad = ctx.createRadialGradient(cx, cy, baseR * 0.25, cx, cy, baseR * 2.0);
-    haloGrad.addColorStop(0, theme.primary);
-    haloGrad.addColorStop(0.45, theme.secondary);
-    haloGrad.addColorStop(1, 'transparent');
-
-    ctx.fillStyle = haloGrad;
-    ctx.globalAlpha = 0.35 + pulse * 0.2;
-    ctx.beginPath();
-    ctx.arc(cx, cy, baseR * 2.0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Core pulsing orb
-    const coreGrad = ctx.createRadialGradient(cx, cy, 4, cx, cy, baseR);
-    coreGrad.addColorStop(0, '#ffffff');
-    coreGrad.addColorStop(0.3, theme.primary);
-    coreGrad.addColorStop(0.75, theme.secondary);
-    coreGrad.addColorStop(1, 'rgba(15, 23, 42, 0.2)');
-
-    ctx.fillStyle = coreGrad;
-    ctx.globalAlpha = 0.85;
-    ctx.beginPath();
-    ctx.arc(cx, cy, baseR, 0, Math.PI * 2);
-    ctx.shadowColor = theme.primary;
-    ctx.shadowBlur = 14 + pulse * 8;
-    ctx.fill();
-    ctx.shadowBlur = 0;
-
-    ctx.globalAlpha = 1.0;
-  };
 
   // Render Interactive Click Ripples
   const renderInteractiveRipples = (ctx: CanvasRenderingContext2D, theme: any, dt: number) => {
@@ -1528,6 +1466,13 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
           ref={canvasRef}
           className="w-full h-full block pointer-events-none"
         />
+        {visualizerType === 'sacred_eye' && (
+          <SacredEyeVisualizer
+            isPlaying={isPlaying}
+            palette={colorPalette}
+            size="ambient"
+          />
+        )}
       </div>
 
       {/* Floating Swipe Direction Feedback Indicator */}
@@ -1573,8 +1518,8 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
         <ChevronRight className="w-5 h-5" />
       </button>
 
-      {/* Floating Center Frequency Overlay Indicator (elevated subtly when Starry Buddha is centered) */}
-      {visualizerType !== 'starry_buddha' ? (
+      {/* Floating Center Frequency Overlay Indicator (elevated subtly when Starry Buddha or Sacred Eye is centered) */}
+      {visualizerType !== 'starry_buddha' && visualizerType !== 'sacred_eye' ? (
         <div
           className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10 text-center"
         >
@@ -1594,9 +1539,26 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
               {currentBrainwave.name}
             </span>
           </div>
-          <div className="text-[11px] text-slate-400 mt-2 opacity-60">
-            Swipe left/right to switch pattern • Tap for acoustic ripple
-          </div>
+          {breathSyncState.isActive ? (
+            <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/65 border border-aurora-teal/35 text-xs text-aurora-teal font-medium">
+              <Wind className="w-3.5 h-3.5" />
+              <span>
+                {(breathSyncState.pattern.phases[breathSyncState.phaseIndex] || breathSyncState.pattern.phases[0]).name}
+              </span>
+              <span className="opacity-45">·</span>
+              <span className="font-mono tabular-nums">
+                {Math.max(
+                  0,
+                  (breathSyncState.pattern.phases[breathSyncState.phaseIndex] || breathSyncState.pattern.phases[0]).duration -
+                    breathSyncState.phaseElapsed
+                ).toFixed(1)}s
+              </span>
+            </div>
+          ) : (
+            <div className="text-[11px] text-slate-400 mt-2 opacity-60">
+              Swipe left/right to switch pattern • Tap for acoustic ripple
+            </div>
+          )}
         </div>
       ) : (
         <div className="absolute top-16 left-1/2 -translate-x-1/2 pointer-events-none z-10 text-center px-4">
@@ -1639,7 +1601,7 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
             </span>
           </div>
 
-          {(breathSyncState.isActive || visualizerType === 'starry_buddha') && (() => {
+          {(() => {
             const activePhase = breathSyncState.pattern.phases[breathSyncState.phaseIndex] || breathSyncState.pattern.phases[0];
             const rem = Math.max(0, activePhase.duration - breathSyncState.phaseElapsed).toFixed(1);
             return (
@@ -1652,9 +1614,13 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
                 title={
                   breathSyncState.isActive
                     ? `Breathwork Sync active (${breathSyncState.pattern.name}). Click to pause.`
-                    : 'Start live Breathwork Sync with Starry Buddha'
+                    : 'Start live Breathwork Sync across all visualizers'
                 }
-                className="h-9 px-2.5 sm:px-3 rounded-xl bg-slate-900/80 hover:bg-slate-800 backdrop-blur-xl border border-slate-800 text-slate-200 transition-colors shadow-lg inline-flex items-center gap-1.5 text-xs whitespace-nowrap cursor-pointer"
+                className={`h-9 px-2.5 sm:px-3 rounded-xl backdrop-blur-xl border transition-colors shadow-lg inline-flex items-center gap-1.5 text-xs whitespace-nowrap cursor-pointer ${
+                  breathSyncState.isActive
+                    ? 'bg-aurora-teal/15 hover:bg-aurora-teal/25 border-aurora-teal/50 text-white'
+                    : 'bg-slate-900/80 hover:bg-slate-800 border-slate-800 text-slate-200'
+                }`}
               >
                 <Wind className="w-3.5 h-3.5 text-aurora-teal shrink-0" />
                 {breathSyncState.isActive ? (
