@@ -736,10 +736,11 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
             {/* Zen Mode Toggle */}
             <button
               type="button"
-              onClick={() => setIsZenMode(!isZenMode)}
+              onClick={() => setIsZenMode((prev) => !prev)}
+              aria-pressed={isZenMode}
               className={`text-xs inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 min-h-[36px] rounded-xl border transition-all cursor-pointer whitespace-nowrap ${
                 isZenMode
-                  ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300'
+                  ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300 shadow-sm shadow-emerald-500/20'
                   : 'bg-slate-800/90 border-slate-700 text-slate-400 hover:text-slate-200'
               }`}
               title={isZenMode ? 'Switch to Standard View' : 'Switch to Distraction-Free Zen View'}
@@ -791,8 +792,9 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
           </div>
         </div>
 
-      {/* Pattern Selection Cards - Minimized Grid */}
-      <div className={`grid grid-cols-2 lg:grid-cols-4 gap-2 ${isZenMode ? 'hidden sm:grid' : ''}`}>
+      {/* Pattern Selection Cards - Hidden in Distraction-Free Zen View */}
+      {!isZenMode && (
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
         {BREATH_PATTERNS.map((p) => {
           const isSelected = selectedPattern === p.id;
           const pool = SUITABLE_PRESETS_BY_PATTERN[p.id];
@@ -852,6 +854,7 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
           );
         })}
       </div>
+      )}
 
       {/* COMPACT RECOMMENDED PRESET BAR */}
       {!isZenMode && (

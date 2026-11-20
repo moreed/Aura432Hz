@@ -73,7 +73,7 @@ import {
 } from './services/storage';
 import { getRecommendedProductForPreset } from './services/presetProductRecommendations';
 import { useSiteContent } from './services/siteContent';
-import { AudioVisualizer } from './components/AudioVisualizer';
+import { AudioVisualizer, type VisualizerMode } from './components/AudioVisualizer';
 import { LoudnessMeterHUD } from './components/LoudnessMeterHUD';
 import { FlatLogo } from './components/FlatLogo';
 import { SacredSocialLinks } from './components/SacredSocialIcons';
@@ -544,8 +544,9 @@ export default function App() {
   // Social Share Modal State
   const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
 
-  // Ambient Sanctuary Fullscreen Mode State
+  // Ambient Sanctuary Fullscreen Mode & Synced Visualizer State
   const [isAmbientMode, setIsAmbientMode] = useState<boolean>(false);
+  const [visualizerMode, setVisualizerMode] = useState<VisualizerMode>('sacred_lotus');
 
   // Persistent Bottom Audio Player Bar visibility:
   // - In all other tabs & pages (mixer, breath, musical, gear, blog, community, contact, admin): ALWAYS visible
@@ -1254,14 +1255,19 @@ export default function App() {
             {/* Ambient Zen Mode Toggle */}
             <button
               type="button"
-              onClick={() => setIsAmbientMode(true)}
-              className="w-9 h-9 sm:w-9.5 sm:h-9.5 lg:w-auto lg:h-9 lg:px-3 lg:py-0 p-0 inline-flex items-center justify-center gap-1.5 rounded-xl text-xs font-semibold bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/40 text-amber-200 transition-all shadow-sm active:scale-95 group shrink-0 cursor-pointer whitespace-nowrap"
-              title="Launch Distraction-Free Fullscreen Ambient Sanctuary (Esc to exit)"
-              aria-label="Launch Distraction-Free Fullscreen Ambient Sanctuary"
+              onClick={() => setIsAmbientMode((prev) => !prev)}
+              aria-pressed={isAmbientMode}
+              className={`w-9 h-9 sm:w-9.5 sm:h-9.5 lg:w-auto lg:h-9 lg:px-3 lg:py-0 p-0 inline-flex items-center justify-center gap-1.5 rounded-xl text-xs font-semibold border transition-all shadow-sm active:scale-95 group shrink-0 cursor-pointer whitespace-nowrap ${
+                theme === 'light'
+                  ? 'bg-amber-100/90 hover:bg-amber-200/80 border-amber-400/70 text-amber-900'
+                  : 'bg-amber-500/15 hover:bg-amber-500/25 border-amber-400/40 text-amber-200'
+              }`}
+              title={isAmbientMode ? 'Exit Ambient Sanctuary (Esc)' : 'Launch Distraction-Free Fullscreen Ambient Sanctuary (Esc to exit)'}
+              aria-label={isAmbientMode ? 'Exit Ambient Sanctuary' : 'Launch Distraction-Free Fullscreen Ambient Sanctuary'}
             >
-              <Sparkles className="w-4 h-4 text-amber-400 group-hover:scale-120 group-hover:rotate-12 transition-transform duration-200 shrink-0" />
+              <Sparkles className={`w-4 h-4 group-hover:scale-120 group-hover:rotate-12 transition-transform duration-200 shrink-0 ${theme === 'light' ? 'text-amber-600' : 'text-amber-400'}`} />
               <span className="hidden lg:inline">Zen Mode</span>
-              <Maximize2 className="w-3.5 h-3.5 text-amber-300/80 hidden xl:inline" />
+              <Maximize2 className={`w-3.5 h-3.5 hidden xl:inline ${theme === 'light' ? 'text-amber-700/80' : 'text-amber-300/80'}`} />
             </button>
 
             {/* Sleep Timer Pill */}
@@ -1863,6 +1869,8 @@ export default function App() {
                     fadeRemainingSeconds={fadeRemainingSeconds}
                     fadeTotalSeconds={fadeDurationSeconds}
                     onOpenTimerModal={() => setIsTimerModalOpen(true)}
+                    visualizerMode={visualizerMode}
+                    onVisualizerModeChange={setVisualizerMode}
                   />
 
                   {/* Primary Controls Row: Ordered Musical Mode, Timer, then Begin 432Hz Sanctuary */}
@@ -2941,6 +2949,8 @@ export default function App() {
           onOpenTimerModal={() => setIsTimerModalOpen(true)}
           isVolumeNormalized={isVolumeNormalized}
           onToggleVolumeNormalized={() => setIsVolumeNormalized(!isVolumeNormalized)}
+          visualizerMode={visualizerMode}
+          onVisualizerModeChange={setVisualizerMode}
         />
       </React.Suspense>
 

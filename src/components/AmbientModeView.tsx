@@ -73,6 +73,8 @@ interface AmbientModeViewProps {
   onOpenTimerModal: () => void;
   isVolumeNormalized?: boolean;
   onToggleVolumeNormalized?: () => void;
+  visualizerMode?: AmbientVisualizerType;
+  onVisualizerModeChange?: (mode: AmbientVisualizerType) => void;
 }
 
 export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
@@ -92,6 +94,8 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
   onOpenTimerModal,
   isVolumeNormalized = true,
   onToggleVolumeNormalized,
+  visualizerMode,
+  onVisualizerModeChange,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animFrameRef = useRef<number | null>(null);
@@ -105,7 +109,25 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
   const ripplesRef = useRef<{ x: number; y: number; radius: number; alpha: number }[]>([]);
 
   // UI state
-  const [visualizerType, setVisualizerType] = useState<AmbientVisualizerType>('sacred_lotus');
+  const [internalVisualizerType, setInternalVisualizerType] = useState<AmbientVisualizerType>(
+    visualizerMode ?? 'sacred_lotus'
+  );
+  const visualizerType = visualizerMode ?? internalVisualizerType;
+  const visualizerTypeRef = useRef<AmbientVisualizerType>(visualizerType);
+  visualizerTypeRef.current = visualizerType;
+  const onVisualizerModeChangeRef = useRef(onVisualizerModeChange);
+  onVisualizerModeChangeRef.current = onVisualizerModeChange;
+
+  const setVisualizerType = useCallback(
+    (next: AmbientVisualizerType | ((prev: AmbientVisualizerType) => AmbientVisualizerType)) => {
+      needsClearRef.current = true;
+      const resolved = typeof next === 'function' ? next(visualizerTypeRef.current) : next;
+      visualizerTypeRef.current = resolved;
+      setInternalVisualizerType(resolved);
+      onVisualizerModeChangeRef.current?.(resolved);
+    },
+    []
+  );
   const [colorPalette, setColorPalette] = useState<AmbientColorPalette>('celestial');
   const [controlsVisible, setControlsVisible] = useState<boolean>(true);
   const [isBrowserFullscreen, setIsBrowserFullscreen] = useState<boolean>(false);
@@ -115,6 +137,11 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
     breathSyncEngine.getState()
   );
   const hideTimerRef = useRef<number | null>(null);
+  const showPaletteMenuRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    showPaletteMenuRef.current = showPaletteMenu;
+  }, [showPaletteMenu]);
 
   useEffect(() => {
     return breathSyncEngine.subscribe((next) => {
@@ -163,7 +190,7 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
 
       return nextMode.id;
     });
-  }, [AMBIENT_VISUALIZER_MODES]);
+  }, [AMBIENT_VISUALIZER_MODES, setVisualizerType]);
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0 && e.pointerType === 'mouse') return;
@@ -320,18 +347,55 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
 
   const currentTheme = palettes[colorPalette];
 
-  // Auto-hide controls upon mouse/touch inactivity
+  // Auto-hide controls upon mouse/touch inactivity (kept visible while menus are open)
   const resetHideTimer = useCallback(() => {
     setControlsVisible(true);
     if (hideTimerRef.current) {
       window.clearTimeout(hideTimerRef.current);
+      hideTimerRef.current = null;
     }
     hideTimerRef.current = window.setTimeout(() => {
+      if (showPaletteMenuRef.current) return;
       setControlsVisible(false);
       setShowPaletteMenu(false);
       setShowSoundMixer(false);
-    }, 4500);
+    }, 6000);
   }, []);
+
+  // Reset visibility, clear stale timers, and lock background scroll whenever Zen Mode opens/closes
+  useEffect(() => {
+    if (!isOpen) {
+      if (hideTimerRef.current) {
+        window.clearTimeout(hideTimerRef.current);
+        hideTimerRef.current = null;
+      }
+      if (swipeFeedbackTimerRef.current) {
+        window.clearTimeout(swipeFeedbackTimerRef.current);
+        swipeFeedbackTimerRef.current = null;
+      }
+      return;
+    }
+
+    needsClearRef.current = true;
+    setShowPaletteMenu(false);
+    setShowSoundMixer(false);
+    resetHideTimer();
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      if (hideTimerRef.current) {
+        window.clearTimeout(hideTimerRef.current);
+        hideTimerRef.current = null;
+      }
+      if (swipeFeedbackTimerRef.current) {
+        window.clearTimeout(swipeFeedbackTimerRef.current);
+        swipeFeedbackTimerRef.current = null;
+      }
+    };
+  }, [isOpen, resetHideTimer]);
 
   // Keyboard shortcut listener
   useEffect(() => {
@@ -1449,7 +1513,7 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
     <div
       onMouseMove={resetHideTimer}
       onTouchStart={resetHideTimer}
-      className={`fixed inset-0 z-50 bg-slate-950 flex flex-col justify-between overflow-hidden transition-all select-none ${
+      className={`ambient-zen-sanctuary fixed inset-0 z-[70] bg-slate-950 flex flex-col justify-between overflow-hidden transition-all select-none ${
         !controlsVisible ? 'cursor-none' : ''
       }`}
     >
@@ -1490,8 +1554,11 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
       {/* Floating Left/Right Ambient Mode Navigation Chevrons */}
       <button
         type="button"
+        onPointerDown={(e) => e.stopPropagation()}
+        onPointerUp={(e) => e.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation();
+          resetHideTimer();
           switchToNextVisualizer('prev');
         }}
         className={`absolute left-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 text-slate-300 hover:text-sky-300 backdrop-blur-xl shadow-2xl flex items-center justify-center transition-all cursor-pointer active:scale-95 ${
@@ -1505,8 +1572,11 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
 
       <button
         type="button"
+        onPointerDown={(e) => e.stopPropagation()}
+        onPointerUp={(e) => e.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation();
+          resetHideTimer();
           switchToNextVisualizer('next');
         }}
         className={`absolute right-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 text-slate-300 hover:text-sky-300 backdrop-blur-xl shadow-2xl flex items-center justify-center transition-all cursor-pointer active:scale-95 ${
@@ -1584,6 +1654,9 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
 
       {/* TOP FLOATING HUD BAR */}
       <div
+        onPointerDown={(e) => e.stopPropagation()}
+        onPointerUp={(e) => e.stopPropagation()}
+        onClick={() => resetHideTimer()}
         className={`relative z-20 w-full max-w-6xl mx-auto p-4 flex items-center justify-between gap-3 transition-all duration-500 ${
           controlsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'
         }`}
@@ -1742,6 +1815,9 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
 
       {/* BOTTOM FLOATING CONTROL DOCK */}
       <div
+        onPointerDown={(e) => e.stopPropagation()}
+        onPointerUp={(e) => e.stopPropagation()}
+        onClick={() => resetHideTimer()}
         className={`relative z-20 w-full max-w-4xl mx-auto p-4 flex flex-col items-center gap-3 transition-all duration-500 ${
           controlsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6 pointer-events-none'
         }`}
@@ -1752,7 +1828,12 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
             <button
               key={mode.id}
               type="button"
-              onClick={() => setVisualizerType(mode.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                resetHideTimer();
+                setVisualizerType(mode.id);
+              }}
+              aria-pressed={visualizerType === mode.id}
               className={`min-h-[32px] px-3 py-1 rounded-xl border text-xs font-medium whitespace-nowrap inline-flex items-center justify-center transition-all cursor-pointer ${
                 visualizerType === mode.id
                   ? 'bg-gradient-to-r from-aurora-teal/25 to-cosmic-lavender/25 text-white border-aurora-teal/50 shadow-sm'

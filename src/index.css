@@ -2031,6 +2031,30 @@ select:focus-visible {
   );
 }
 
+/* Preserve dark cosmic atmosphere & contrast inside Fullscreen Ambient Zen Mode even when launched from Light Mode */
+.theme-light .ambient-zen-sanctuary {
+  background-color: #020617 !important;
+  color: #f8fafc !important;
+}
+
+.theme-light .ambient-zen-sanctuary [class*="bg-slate-900"],
+.theme-light .ambient-zen-sanctuary [class*="bg-slate-950"] {
+  background-color: rgba(15, 23, 42, 0.86) !important;
+  color: #e2e8f0 !important;
+  border-color: rgba(51, 65, 85, 0.72) !important;
+}
+
+.theme-light .ambient-zen-sanctuary button[class*="bg-slate-900"]:hover,
+.theme-light .ambient-zen-sanctuary button[class*="bg-slate-950"]:hover {
+  background-color: rgba(30, 41, 59, 0.94) !important;
+  color: #ffffff !important;
+}
+
+.theme-light .ambient-zen-sanctuary button[class*="bg-slate-900"] span,
+.theme-light .ambient-zen-sanctuary button[class*="bg-slate-950"] span {
+  color: inherit !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -2044,5 +2068,6 @@ select:focus-visible {
     transform: scale(1) !important;
   }
 }
+
 
 

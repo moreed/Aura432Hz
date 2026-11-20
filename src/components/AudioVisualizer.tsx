@@ -41,6 +41,8 @@ interface AudioVisualizerProps {
   fadeRemainingSeconds?: number;
   fadeTotalSeconds?: number;
   onOpenTimerModal?: () => void;
+  visualizerMode?: VisualizerMode;
+  onVisualizerModeChange?: (mode: VisualizerMode) => void;
 }
 
 export type VisualizerMode =
@@ -105,9 +107,26 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
   fadeRemainingSeconds = 0,
   fadeTotalSeconds = 0,
   onOpenTimerModal,
+  visualizerMode,
+  onVisualizerModeChange,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [mode, setMode] = useState<VisualizerMode>('sacred_lotus');
+  const [internalMode, setInternalMode] = useState<VisualizerMode>(visualizerMode ?? 'sacred_lotus');
+  const mode = visualizerMode ?? internalMode;
+  const modeRef = useRef<VisualizerMode>(mode);
+  modeRef.current = mode;
+  const onVisualizerModeChangeRef = useRef(onVisualizerModeChange);
+  onVisualizerModeChangeRef.current = onVisualizerModeChange;
+
+  const setMode = useCallback(
+    (next: VisualizerMode | ((prev: VisualizerMode) => VisualizerMode)) => {
+      const resolved = typeof next === 'function' ? next(modeRef.current) : next;
+      modeRef.current = resolved;
+      setInternalMode(resolved);
+      onVisualizerModeChangeRef.current?.(resolved);
+    },
+    []
+  );
   const [comfortPreset, setComfortPreset] = useState<VisualComfortPreset>('harmony');
   const [flowSpeed, setFlowSpeed] = useState<MotionFlowSpeed>(1.0);
   const [showModePicker, setShowModePicker] = useState<boolean>(false);
@@ -2462,11 +2481,18 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
       })()}
 
       {/* Top Right: Visualizer Animation Settings & Fullscreen Zen Mode (Standard UX Hierarchy) */}
-      <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-20">
+      <div
+        className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-20"
+        onPointerDown={(e) => e.stopPropagation()}
+        onPointerUp={(e) => e.stopPropagation()}
+      >
         {/* Visualizer Comfort & Animation Settings */}
         <button
           type="button"
-          onClick={() => setShowComfortMenu(!showComfortMenu)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowComfortMenu(!showComfortMenu);
+          }}
           className={`px-2.5 sm:px-3 py-1.5 min-h-[38px] rounded-full border backdrop-blur-md shadow-lg transition-all flex items-center gap-1.5 text-[11px] cursor-pointer ${
             showComfortMenu
               ? 'bg-sky-500/20 text-sky-300 border-sky-400/60 ring-1 ring-sky-400/40'
@@ -2487,7 +2513,12 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
         {onOpenAmbientMode && (
           <button
             type="button"
-            onClick={onOpenAmbientMode}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowComfortMenu(false);
+              setShowModePicker(false);
+              onOpenAmbientMode();
+            }}
             className={`px-2.5 sm:px-3 py-1.5 min-h-[38px] rounded-full border backdrop-blur-md shadow-lg transition-all flex items-center gap-1.5 text-[11px] cursor-pointer group ${
               effectiveIsLight
                 ? 'bg-white/90 hover:bg-slate-100 text-slate-700 hover:text-amber-700 border-slate-200'
@@ -2591,7 +2622,10 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
       )}
 
       {/* Visualizer Mode Switcher (Symmetrical, Accessible, Integrated Dots, Zero cut-off) */}
-      <div className={`absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center justify-between gap-1.5 backdrop-blur-xl px-2.5 py-1 rounded-2xl border shadow-2xl text-[11px] max-w-[94%] ${
+      <div
+        onPointerDown={(e) => e.stopPropagation()}
+        onPointerUp={(e) => e.stopPropagation()}
+        className={`absolute bottom-2.5 left-1/2 -translate-x-1/2 z-20 flex items-center justify-between gap-1.5 backdrop-blur-xl px-2.5 py-1 rounded-2xl border shadow-2xl text-[11px] max-w-[94%] ${
         effectiveIsLight ? 'bg-white/95 border-slate-200 text-slate-800' : 'bg-slate-950/90 border-slate-700/80 text-sky-200'
       }`}>
         <button
@@ -2736,7 +2770,8 @@ function areVisualizerPropsEqual(
     prevProps.timerTotalSeconds === nextProps.timerTotalSeconds &&
     prevProps.isFadingOut === nextProps.isFadingOut &&
     prevProps.fadeRemainingSeconds === nextProps.fadeRemainingSeconds &&
-    prevProps.fadeTotalSeconds === nextProps.fadeTotalSeconds
+    prevProps.fadeTotalSeconds === nextProps.fadeTotalSeconds &&
+    prevProps.visualizerMode === nextProps.visualizerMode
   );
 }
 
