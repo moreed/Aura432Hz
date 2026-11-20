@@ -33,11 +33,19 @@ import {
   BRAINWAVE_MODES,
   SOLFEGGIO_FREQUENCIES,
 } from '../services/audioEngine';
+import { breathSyncEngine, type BreathSyncState } from '../services/breathSyncEngine';
+import {
+  renderCosmicDepthBackdrop,
+  renderCosmicForegroundDepth,
+  renderStarryBuddha,
+  type CosmicPaletteConfig,
+} from '../services/cosmicVisualizerRenderer';
 
 export type AmbientColorPalette = 'celestial' | 'gold' | 'emerald' | 'violet' | 'obsidian';
 
 export type AmbientVisualizerType =
   | 'sacred_lotus'
+  | 'starry_buddha'
   | 'dreamy_nebula'
   | 'mandala'
   | 'ripples'
@@ -102,7 +110,16 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
   const [isBrowserFullscreen, setIsBrowserFullscreen] = useState<boolean>(false);
   const [showPaletteMenu, setShowPaletteMenu] = useState<boolean>(false);
   const [showSoundMixer, setShowSoundMixer] = useState<boolean>(false);
+  const [breathSyncState, setBreathSyncState] = useState<BreathSyncState>(() =>
+    breathSyncEngine.getState()
+  );
   const hideTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return breathSyncEngine.subscribe((next) => {
+      setBreathSyncState(next);
+    });
+  }, []);
 
   // Swipe State for Ambient Zen Mode (Desktop, Mobile, Tablet)
   const [swipeFeedback, setSwipeFeedback] = useState<{ direction: 'left' | 'right'; name: string } | null>(null);
@@ -113,6 +130,7 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
 
   const AMBIENT_VISUALIZER_MODES = useRef<{ id: AmbientVisualizerType; name: string }[]>([
     { id: 'sacred_lotus', name: 'Sacred Lotus' },
+    { id: 'starry_buddha', name: 'Starry Buddha' },
     { id: 'dreamy_nebula', name: 'Dreamy Stardust' },
     { id: 'mandala', name: 'Mandala' },
     { id: 'ripples', name: 'Ripples' },
@@ -267,6 +285,39 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
     },
   };
 
+  const cosmicPalettes: Record<AmbientColorPalette, CosmicPaletteConfig> = {
+    celestial: {
+      primaryRgb: [72, 225, 208],
+      secondaryRgb: [169, 154, 251],
+      goldRgb: [251, 191, 36],
+      nebulaRgb: [56, 189, 248],
+    },
+    gold: {
+      primaryRgb: [251, 191, 36],
+      secondaryRgb: [251, 146, 60],
+      goldRgb: [254, 240, 138],
+      nebulaRgb: [245, 158, 11],
+    },
+    emerald: {
+      primaryRgb: [52, 211, 153],
+      secondaryRgb: [6, 182, 212],
+      goldRgb: [253, 224, 71],
+      nebulaRgb: [16, 185, 129],
+    },
+    violet: {
+      primaryRgb: [192, 132, 252],
+      secondaryRgb: [244, 114, 182],
+      goldRgb: [251, 191, 36],
+      nebulaRgb: [168, 85, 247],
+    },
+    obsidian: {
+      primaryRgb: [226, 232, 240],
+      secondaryRgb: [148, 163, 184],
+      goldRgb: [253, 224, 71],
+      nebulaRgb: [100, 116, 139],
+    },
+  };
+
   const currentTheme = palettes[colorPalette];
 
   // Auto-hide controls upon mouse/touch inactivity
@@ -377,8 +428,8 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
       const dt = Math.min((timeNow - lastTime) / 16.67, 2.5);
       lastTimeRef.current = timeNow;
 
-      // 1. Silky Optical Persistence Wash (eliminates harsh flicker and stepping)
-      if (needsClearRef.current) {
+      // 1. Silky Optical Persistence Wash (clean full frame for Starry Buddha cosmic crispness)
+      if (needsClearRef.current || visualizerType === 'starry_buddha') {
         ctx.clearRect(0, 0, width, height);
         ctx.fillStyle = '#020617';
         ctx.fillRect(0, 0, width, height);
@@ -450,22 +501,65 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
       rotationRef.current += 0.0011 * dt;
 
       const theme = palettes[colorPalette];
+      const cosmicPalette = cosmicPalettes[colorPalette];
       const energy = smoothEnergyRef.current;
       const bassEnergy = smoothBassRef.current;
       const pulse = smoothPulseRef.current;
+      const timeSec = timeNow * 0.001;
+      const breathVisual = breathSyncEngine.getVisualState(timeNow, 1.0);
+      const activeBreathEased =
+        breathVisual.isSynced || visualizerType === 'starry_buddha'
+          ? breathVisual.breathEased
+          : breathWave;
 
-      // 7. Deep celestial ambient background radial glow
-      const bgGrad = ctx.createRadialGradient(cx, cy, 20, cx, cy, Math.max(width, height) * 0.85);
-      bgGrad.addColorStop(0, theme.bgGlow);
-      bgGrad.addColorStop(0.5, 'rgba(15, 23, 42, 0.35)');
-      bgGrad.addColorStop(1, 'rgba(2, 6, 23, 0.98)');
-      ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, width, height);
+      // 7. Deep cosmic parallax starfield & volumetric nebula backdrop
+      renderCosmicDepthBackdrop(ctx, {
+        width,
+        height,
+        timeSec,
+        breathEased: activeBreathEased,
+        energy,
+        bass: bassEnergy,
+        isLight: false,
+        intensity: visualizerType === 'starry_buddha' ? 1.1 : 0.86,
+        palette: cosmicPalette,
+        opaqueBase: visualizerType === 'starry_buddha',
+      });
+
+      if (visualizerType !== 'starry_buddha') {
+        const bgGrad = ctx.createRadialGradient(cx, cy, 20, cx, cy, Math.max(width, height) * 0.85);
+        bgGrad.addColorStop(0, theme.bgGlow);
+        bgGrad.addColorStop(0.5, 'rgba(15, 23, 42, 0.26)');
+        bgGrad.addColorStop(1, 'rgba(2, 6, 23, 0.65)');
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, width, height);
+      }
 
       // 8. Render Selected Visualizer Mode
       switch (visualizerType) {
         case 'sacred_lotus':
           renderSacredLotus(ctx, cx, cy, energy, bassEnergy, pulse, dynamicPulse, phaseRef.current, breathWave, theme, baseFreq);
+          break;
+        case 'starry_buddha':
+          renderStarryBuddha(ctx, {
+            width,
+            height,
+            cx,
+            cy: cy - Math.min(width, height) * 0.02,
+            timeSec,
+            breathEased: breathVisual.breathEased,
+            phaseType: breathVisual.phaseType,
+            holdStillness: breathVisual.holdStillness,
+            energy,
+            bass: bassEnergy,
+            mids: energy * 0.85,
+            treble: energy * 0.65,
+            isLight: false,
+            intensity: 1.12,
+            scaleFactor: 0.9,
+            palette: cosmicPalette,
+            includeBackdrop: false,
+          });
           break;
         case 'dreamy_nebula':
           renderDreamyNebula(ctx, cx, cy, energy, bassEnergy, pulse, dynamicPulse, phaseRef.current, breathWave, theme);
@@ -492,6 +586,19 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
           renderPranicOrb(ctx, cx, cy, energy, bassEnergy, pulse, dynamicPulse, phaseRef.current, breathWave, theme);
           break;
       }
+
+      // 8.5 Near-plane depth bokeh stardust & soft cinematic vignette
+      renderCosmicForegroundDepth(ctx, {
+        width,
+        height,
+        timeSec,
+        breathEased: activeBreathEased,
+        energy,
+        bass: bassEnergy,
+        isLight: false,
+        intensity: visualizerType === 'starry_buddha' ? 1.0 : 0.72,
+        palette: cosmicPalette,
+      });
 
       // Render Interactive Click Ripples
       renderInteractiveRipples(ctx, theme, dt);
@@ -1466,30 +1573,52 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
         <ChevronRight className="w-5 h-5" />
       </button>
 
-      {/* Floating Center Frequency Overlay Indicator */}
-      <div
-        className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10 text-center"
-      >
-        <span
-          className="text-6xl md:text-8xl font-extralight tracking-widest drop-shadow-2xl transition-all"
-          style={{ color: currentTheme.primary }}
+      {/* Floating Center Frequency Overlay Indicator (elevated subtly when Starry Buddha is centered) */}
+      {visualizerType !== 'starry_buddha' ? (
+        <div
+          className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10 text-center"
         >
-          {baseFreq}
-          <span className="text-2xl md:text-3xl font-light ml-1 opacity-80">Hz</span>
-        </span>
-        <div className="mt-2 flex items-center gap-2">
-          <span className="text-xs md:text-sm uppercase tracking-widest text-slate-300 font-semibold drop-shadow-md">
-            {solfeggioShortName}
+          <span
+            className="text-6xl md:text-8xl font-extralight tracking-widest drop-shadow-2xl transition-all"
+            style={{ color: currentTheme.primary }}
+          >
+            {baseFreq}
+            <span className="text-2xl md:text-3xl font-light ml-1 opacity-80">Hz</span>
           </span>
-          <span className="text-slate-500">•</span>
-          <span className="text-xs md:text-sm text-slate-400 font-medium drop-shadow-md">
-            {currentBrainwave.name}
-          </span>
+          <div className="mt-2 flex items-center gap-2">
+            <span className="text-xs md:text-sm uppercase tracking-widest text-slate-300 font-semibold drop-shadow-md">
+              {solfeggioShortName}
+            </span>
+            <span className="text-slate-500">•</span>
+            <span className="text-xs md:text-sm text-slate-400 font-medium drop-shadow-md">
+              {currentBrainwave.name}
+            </span>
+          </div>
+          <div className="text-[11px] text-slate-400 mt-2 opacity-60">
+            Swipe left/right to switch pattern • Tap for acoustic ripple
+          </div>
         </div>
-        <div className="text-[11px] text-slate-400 mt-2 opacity-60">
-          Swipe left/right to switch pattern • Tap for acoustic ripple
+      ) : (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 pointer-events-none z-10 text-center px-4">
+          <div className="inline-flex items-center gap-2 text-xs text-slate-300/90 drop-shadow-md">
+            <span className="font-mono tabular-nums font-semibold" style={{ color: currentTheme.primary }}>
+              {baseFreq}Hz
+            </span>
+            <span className="opacity-45">·</span>
+            <span>{solfeggioShortName}</span>
+            <span className="opacity-45">·</span>
+            <span className="text-slate-300">
+              {breathSyncState.isActive
+                ? `${(breathSyncState.pattern.phases[breathSyncState.phaseIndex] || breathSyncState.pattern.phases[0]).name} (${Math.max(
+                    0,
+                    (breathSyncState.pattern.phases[breathSyncState.phaseIndex] || breathSyncState.pattern.phases[0]).duration -
+                      breathSyncState.phaseElapsed
+                  ).toFixed(1)}s)`
+                : 'Slow 5.5s Breath'}
+            </span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* TOP FLOATING HUD BAR */}
       <div
@@ -1497,16 +1626,49 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
           controlsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'
         }`}
       >
-        {/* App Title Badge */}
-        <div className="flex items-center gap-2 bg-slate-900/80 backdrop-blur-xl border border-slate-800/80 px-2.5 sm:px-3.5 py-1.5 rounded-2xl shadow-xl min-w-0">
-          <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full animate-ping shrink-0" style={{ backgroundColor: currentTheme.primary }} />
-          <span className="text-[11px] sm:text-xs font-semibold text-slate-200 truncate">
-            <span className="hidden sm:inline">Aura 432Hz Ambient Sanctuary</span>
-            <span className="sm:hidden">Aura 432Hz</span>
-          </span>
-          <span className={`text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full font-bold uppercase shrink-0 ${currentTheme.badgeBg}`}>
-            Zen
-          </span>
+        {/* App Title Badge + Live Breath Sync Quick Toggle */}
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-2 bg-slate-900/80 backdrop-blur-xl border border-slate-800/80 px-2.5 sm:px-3.5 py-1.5 rounded-2xl shadow-xl min-w-0">
+            <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full animate-ping shrink-0" style={{ backgroundColor: currentTheme.primary }} />
+            <span className="text-[11px] sm:text-xs font-semibold text-slate-200 truncate">
+              <span className="hidden sm:inline">Aura 432Hz Ambient Sanctuary</span>
+              <span className="sm:hidden">Aura 432Hz</span>
+            </span>
+            <span className={`text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full font-bold uppercase shrink-0 ${currentTheme.badgeBg}`}>
+              Zen
+            </span>
+          </div>
+
+          {(breathSyncState.isActive || visualizerType === 'starry_buddha') && (() => {
+            const activePhase = breathSyncState.pattern.phases[breathSyncState.phaseIndex] || breathSyncState.pattern.phases[0];
+            const rem = Math.max(0, activePhase.duration - breathSyncState.phaseElapsed).toFixed(1);
+            return (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  breathSyncEngine.toggleActive();
+                }}
+                title={
+                  breathSyncState.isActive
+                    ? `Breathwork Sync active (${breathSyncState.pattern.name}). Click to pause.`
+                    : 'Start live Breathwork Sync with Starry Buddha'
+                }
+                className="h-9 px-2.5 sm:px-3 rounded-xl bg-slate-900/80 hover:bg-slate-800 backdrop-blur-xl border border-slate-800 text-slate-200 transition-colors shadow-lg inline-flex items-center gap-1.5 text-xs whitespace-nowrap cursor-pointer"
+              >
+                <Wind className="w-3.5 h-3.5 text-aurora-teal shrink-0" />
+                {breathSyncState.isActive ? (
+                  <>
+                    <span className="font-semibold text-aurora-teal">{activePhase.name}</span>
+                    <span aria-hidden="true" className="opacity-45">·</span>
+                    <span className="font-mono tabular-nums">{rem}s</span>
+                  </>
+                ) : (
+                  <span>Sync Breath</span>
+                )}
+              </button>
+            );
+          })()}
         </div>
 
         {/* Top Tools */}

@@ -1,18 +1,25 @@
-import React, { useId } from 'react';
+import React, { useId, useEffect, useRef } from 'react';
 import {
   Play,
   Pause,
   CircleDot,
   Flower2,
   Waves,
+  Sparkles,
   Volume2,
   VolumeX,
   Heart,
   Bell,
 } from 'lucide-react';
-import type { SanctuaryBowlTone } from '../services/audioEngine';
+import { audioEngine, type SanctuaryBowlTone } from '../services/audioEngine';
+import { breathSyncEngine } from '../services/breathSyncEngine';
+import {
+  renderCosmicDepthBackdrop,
+  renderCosmicForegroundDepth,
+  renderStarryBuddha,
+} from '../services/cosmicVisualizerRenderer';
 
-export type BreathAnimationStyle = 'orb' | 'lotus' | 'wave';
+export type BreathAnimationStyle = 'orb' | 'lotus' | 'wave' | 'starry_buddha';
 
 export interface BreathPhaseItem {
   name: string;
@@ -27,6 +34,7 @@ export interface BreathVisualizerCanvasProps {
   isZenMode: boolean;
   isCoherenceSync: boolean;
   audioCueEnabled: boolean;
+  isPlayingAudio?: boolean;
   patternName: string;
   patternDesc: string;
   phases: BreathPhaseItem[];
@@ -52,6 +60,7 @@ const ANIMATION_OPTIONS: Array<{
   { id: 'orb', label: 'Luminous Orb', subtitle: 'Expanding radial sphere', icon: CircleDot },
   { id: 'lotus', label: 'Sacred Lotus', subtitle: 'Blooming geometric petals', icon: Flower2 },
   { id: 'wave', label: 'Harmonic Wave', subtitle: 'Rising & settling tide', icon: Waves },
+  { id: 'starry_buddha', label: 'Starry Buddha', subtitle: 'Cosmic starlight outline', icon: Sparkles },
 ];
 
 const SANCTUARY_BOWL_TONES: Array<{
@@ -70,6 +79,7 @@ export const BreathVisualizerCanvas: React.FC<BreathVisualizerCanvasProps> = ({
   isZenMode,
   isCoherenceSync,
   audioCueEnabled,
+  isPlayingAudio = false,
   patternName,
   patternDesc,
   phases,
@@ -86,6 +96,8 @@ export const BreathVisualizerCanvas: React.FC<BreathVisualizerCanvasProps> = ({
   orbRippleRef,
 }) => {
   const uid = useId().replace(/:/g, '');
+  const stageCosmosCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const buddhaCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const currentPhase = phases[phaseIndex] || phases[0];
   const phaseProgress = Math.min(1, Math.max(0, phaseElapsed / Math.max(0.1, currentPhase.duration)));
   const secondsRemaining = Math.max(0, currentPhase.duration - phaseElapsed).toFixed(1);
@@ -104,6 +116,192 @@ export const BreathVisualizerCanvas: React.FC<BreathVisualizerCanvasProps> = ({
   } else if (currentPhase.type === 'exhale') {
     breathEased = 0.5 + 0.5 * Math.cos(Math.PI * phaseProgress);
   }
+
+  // Keep live audio flag in ref for 60fps Starry Buddha & Cosmic Stage rendering
+  const livePropsRef = useRef({ isPlayingAudio, animationStyle });
+  livePropsRef.current = { isPlayingAudio, animationStyle };
+
+  // Deep Cosmic Parallax Backdrop Canvas behind the entire Breathwork Stage
+  useEffect(() => {
+    const canvas = stageCosmosCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let rafId: number | null = null;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let width = 640;
+    let height = 460;
+
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        width = rect.width;
+        height = rect.height;
+        canvas.width = Math.round(width * dpr);
+        canvas.height = Math.round(height * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+    };
+    resize();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(resize) : null;
+    if (ro) ro.observe(canvas);
+
+    const freqData = new Uint8Array(64);
+    let smoothBass = 0.08;
+    let smoothEnergy = 0.1;
+
+    const tick = (now: number) => {
+      const isLight = typeof document !== 'undefined' && document.documentElement.classList.contains('theme-light');
+      const visual = breathSyncEngine.getVisualState(now, 1.0);
+      let rawBass = 0.06;
+      let rawEnergy = 0.08;
+
+      if (livePropsRef.current.isPlayingAudio) {
+        const analyser = audioEngine.getAnalyser();
+        if (analyser) {
+          analyser.getByteFrequencyData(freqData);
+          let b = 0;
+          let e = 0;
+          for (let i = 0; i < 32; i++) {
+            const v = freqData[i] / 255;
+            e += v;
+            if (i < 8) b += v;
+          }
+          rawBass = b / 8;
+          rawEnergy = e / 32;
+        }
+      }
+      smoothBass += (rawBass - smoothBass) * 0.06;
+      smoothEnergy += (rawEnergy - smoothEnergy) * 0.06;
+
+      ctx.clearRect(0, 0, width, height);
+      renderCosmicDepthBackdrop(ctx, {
+        width,
+        height,
+        timeSec: now * 0.001,
+        breathEased: visual.breathEased,
+        energy: smoothEnergy,
+        bass: smoothBass,
+        isLight,
+        intensity: livePropsRef.current.animationStyle === 'starry_buddha' ? 0.92 : 0.62,
+        opaqueBase: false,
+      });
+
+      rafId = requestAnimationFrame(tick);
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      if (ro) ro.disconnect();
+    };
+  }, []);
+
+  // Dedicated High-DPI Starry Buddha Breath Canvas when 'starry_buddha' style is selected
+  useEffect(() => {
+    if (animationStyle !== 'starry_buddha') return;
+    const canvas = buddhaCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let rafId: number | null = null;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let width = 260;
+    let height = 260;
+
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        width = rect.width;
+        height = rect.height;
+        canvas.width = Math.round(width * dpr);
+        canvas.height = Math.round(height * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+    };
+    resize();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(resize) : null;
+    if (ro) ro.observe(canvas);
+
+    const freqData = new Uint8Array(64);
+    let smoothEnergy = 0.1;
+    let smoothBass = 0.08;
+    let smoothMids = 0.08;
+    let smoothTreble = 0.06;
+
+    const tick = (now: number) => {
+      const isLight = typeof document !== 'undefined' && document.documentElement.classList.contains('theme-light');
+      const visual = breathSyncEngine.getVisualState(now, 1.0);
+
+      let rawEnergy = 0.1;
+      let rawBass = 0.08;
+      let rawMids = 0.07;
+      let rawTreble = 0.05;
+      if (livePropsRef.current.isPlayingAudio) {
+        const analyser = audioEngine.getAnalyser();
+        if (analyser) {
+          analyser.getByteFrequencyData(freqData);
+          let b = 0;
+          let m = 0;
+          let t = 0;
+          for (let i = 0; i < 48; i++) {
+            const v = freqData[i] / 255;
+            if (i < 8) b += v;
+            else if (i < 24) m += v;
+            else t += v;
+          }
+          rawBass = b / 8;
+          rawMids = m / 16;
+          rawTreble = t / 24;
+          rawEnergy = rawBass * 0.45 + rawMids * 0.35 + rawTreble * 0.2;
+        }
+      }
+      smoothEnergy += (rawEnergy - smoothEnergy) * 0.07;
+      smoothBass += (rawBass - smoothBass) * 0.07;
+      smoothMids += (rawMids - smoothMids) * 0.07;
+      smoothTreble += (rawTreble - smoothTreble) * 0.07;
+
+      ctx.clearRect(0, 0, width, height);
+      renderStarryBuddha(ctx, {
+        width,
+        height,
+        cx: width * 0.5,
+        cy: height * 0.47,
+        timeSec: now * 0.001,
+        breathEased: visual.breathEased,
+        phaseType: visual.phaseType,
+        holdStillness: visual.holdStillness,
+        energy: smoothEnergy,
+        bass: smoothBass,
+        mids: smoothMids,
+        treble: smoothTreble,
+        isLight,
+        intensity: 1.08,
+        scaleFactor: 0.98,
+        includeBackdrop: false,
+      });
+      renderCosmicForegroundDepth(ctx, {
+        width,
+        height,
+        timeSec: now * 0.001,
+        breathEased: visual.breathEased,
+        energy: smoothEnergy,
+        bass: smoothBass,
+        isLight,
+        intensity: 0.55,
+      });
+
+      rafId = requestAnimationFrame(tick);
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      if (ro) ro.disconnect();
+    };
+  }, [animationStyle]);
 
   // Phase color palette (Aurora Teal for Inhale, Warm Sanctuary Gold for Hold, Cosmic Lavender for Exhale)
   const phasePalette =
@@ -159,6 +357,13 @@ export const BreathVisualizerCanvas: React.FC<BreathVisualizerCanvasProps> = ({
         isZenMode ? 'p-4 sm:p-7' : 'p-4 sm:p-6'
       }`}
     >
+      {/* Deep Cosmic Parallax Starfield Backdrop for the entire Breathwork Stage */}
+      <canvas
+        ref={stageCosmosCanvasRef}
+        aria-hidden="true"
+        className="absolute inset-0 w-full h-full pointer-events-none opacity-85"
+      />
+
       {/* Subtle Atmospheric Radial Field synced to active breath phase */}
       <div
         aria-hidden="true"
@@ -169,7 +374,7 @@ export const BreathVisualizerCanvas: React.FC<BreathVisualizerCanvasProps> = ({
         }}
       />
 
-      {/* Top Visualizer Bar: Session Context + 3-Option Animation Mode Switcher */}
+      {/* Top Visualizer Bar: Session Context + 4-Option Animation Mode Switcher */}
       <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-4 border-b border-slate-800/80">
         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs">
           <span className="font-semibold text-slate-100">{patternName}</span>
@@ -185,7 +390,7 @@ export const BreathVisualizerCanvas: React.FC<BreathVisualizerCanvasProps> = ({
           </span>
         </div>
 
-        {/* 3 Inhale & Exhale Animation Options */}
+        {/* 4 Inhale & Exhale Animation Options */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 shrink-0">
             Inhale / Exhale Animation
@@ -193,7 +398,7 @@ export const BreathVisualizerCanvas: React.FC<BreathVisualizerCanvasProps> = ({
           <div
             role="radiogroup"
             aria-label="Inhale and exhale animation style"
-            className="grid grid-cols-3 sm:inline-flex items-center gap-1 p-1 rounded-xl bg-slate-900/90 border border-slate-800 w-full sm:w-auto"
+            className="grid grid-cols-2 sm:inline-flex items-center gap-1 p-1 rounded-xl bg-slate-900/90 border border-slate-800 w-full sm:w-auto"
           >
             {ANIMATION_OPTIONS.map((opt) => {
               const Icon = opt.icon;
@@ -526,6 +731,21 @@ export const BreathVisualizerCanvas: React.FC<BreathVisualizerCanvasProps> = ({
             </div>
           )}
 
+          {/* ============================================================== */}
+          {/* ANIMATION OPTION 4: STARRY BUDDHA (LIVE COSMIC BREATH CANVAS)  */}
+          {/* ============================================================== */}
+          {animationStyle === 'starry_buddha' && (
+            <div
+              aria-hidden="true"
+              className="relative w-60 h-60 sm:w-[264px] sm:h-[264px] rounded-full overflow-hidden flex items-center justify-center pointer-events-none"
+            >
+              <canvas
+                ref={buddhaCanvasRef}
+                className="w-full h-full block"
+              />
+            </div>
+          )}
+
           {/* Centered Interactive Readout & Tap-to-Toggle Trigger */}
           <button
             type="button"
@@ -538,9 +758,17 @@ export const BreathVisualizerCanvas: React.FC<BreathVisualizerCanvasProps> = ({
                 : 'Click to resume breathwork'
             }
             aria-label={isActive ? 'Pause breathwork' : 'Start or resume breathwork'}
-            className="absolute inset-6 rounded-full bg-transparent border-0 flex flex-col items-center justify-center text-center cursor-pointer focus:outline-none group"
+            className={`absolute inset-6 rounded-full bg-transparent border-0 flex flex-col items-center text-center cursor-pointer focus:outline-none group ${
+              animationStyle === 'starry_buddha' ? 'justify-end pb-1' : 'justify-center'
+            }`}
           >
-            <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-slate-950/65 backdrop-blur-md border border-slate-700/60 flex flex-col items-center justify-center px-2 shadow-lg transition-transform duration-200 group-hover:scale-[1.03] group-active:scale-95">
+            <div
+              className={`bg-slate-950/65 backdrop-blur-md border border-slate-700/60 flex flex-col items-center justify-center shadow-lg transition-transform duration-200 group-hover:scale-[1.03] group-active:scale-95 ${
+                animationStyle === 'starry_buddha'
+                  ? 'px-3.5 py-1.5 rounded-2xl'
+                  : 'w-28 h-28 sm:w-32 sm:h-32 rounded-full px-2'
+              }`}
+            >
               <span className={`text-[11px] uppercase tracking-[0.14em] font-bold flex items-center gap-1 ${phasePalette.textClass}`}>
                 {!isActive && isInitialState ? (
                   <>
@@ -557,9 +785,13 @@ export const BreathVisualizerCanvas: React.FC<BreathVisualizerCanvasProps> = ({
                 )}
               </span>
 
-              <span className="text-3xl sm:text-4xl font-light text-slate-100 font-mono tabular-nums tracking-tight leading-none my-1">
+              <span
+                className={`font-light text-slate-100 font-mono tabular-nums tracking-tight leading-none ${
+                  animationStyle === 'starry_buddha' ? 'text-xl sm:text-2xl my-0.5' : 'text-3xl sm:text-4xl my-1'
+                }`}
+              >
                 {secondsRemaining}
-                <span className="text-base text-slate-400 ml-0.5">s</span>
+                <span className={`${animationStyle === 'starry_buddha' ? 'text-xs' : 'text-base'} text-slate-400 ml-0.5`}>s</span>
               </span>
 
               <span className="text-[10px] text-slate-400 tracking-wide group-hover:text-sky-300 transition-colors">

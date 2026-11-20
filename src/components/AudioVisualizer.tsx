@@ -14,8 +14,15 @@ import {
   Gauge,
   Play,
   Pause,
+  Wind,
 } from 'lucide-react';
 import { audioEngine } from '../services/audioEngine';
+import { breathSyncEngine, type BreathSyncState } from '../services/breathSyncEngine';
+import {
+  renderCosmicDepthBackdrop,
+  renderCosmicForegroundDepth,
+  renderStarryBuddha,
+} from '../services/cosmicVisualizerRenderer';
 
 interface AudioVisualizerProps {
   isPlaying: boolean;
@@ -36,6 +43,7 @@ interface AudioVisualizerProps {
 
 export type VisualizerMode =
   | 'sacred_lotus'
+  | 'starry_buddha'
   | 'dreamy_nebula'
   | 'celestial_sri_yantra'
   | 'mandala'
@@ -51,6 +59,7 @@ export type AnyCanvasContext = CanvasRenderingContext2D | OffscreenCanvasRenderi
 
 export const VISUALIZER_MODES: { id: VisualizerMode; label: string; desc: string }[] = [
   { id: 'sacred_lotus', label: 'Sacred Lotus', desc: 'Bioluminescent 432Hz Emblem' },
+  { id: 'starry_buddha', label: 'Starry Buddha', desc: 'Breath-Synced Starlight Outline' },
   { id: 'dreamy_nebula', label: 'Dreamy Stardust', desc: 'Celestial Stardust Cloud' },
   { id: 'celestial_sri_yantra', label: 'Sri Yantra', desc: 'Sacred Golden Triangles' },
   { id: 'mandala', label: 'Mandala', desc: 'Harmonic Lotus Geometry' },
@@ -111,10 +120,19 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
     remainingSeconds: audioEngine.getFadeRemainingSeconds(),
     durationSeconds: audioEngine.getFadeDurationSeconds(),
   }));
+  const [breathSyncState, setBreathSyncState] = useState<BreathSyncState>(() =>
+    breathSyncEngine.getState()
+  );
 
   useEffect(() => {
     return audioEngine.subscribeFadeStatus((status) => {
       setEngineFadeStatus(status);
+    });
+  }, []);
+
+  useEffect(() => {
+    return breathSyncEngine.subscribe((next) => {
+      setBreathSyncState(next);
     });
   }, []);
 
@@ -235,6 +253,12 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
   const lastWheelTimeRef = useRef<number>(0);
 
   const renderFnRef = useRef<((time: number) => void) | null>(null);
+  const pointerParallaxRef = useRef<{ x: number; y: number; targetX: number; targetY: number }>({
+    x: 0,
+    y: 0,
+    targetX: 0,
+    targetY: 0,
+  });
 
   // Awaken RAF on playback, touch, ripple or parameter transitions
   const triggerRender = useCallback(() => {
@@ -244,11 +268,11 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
     }
   }, []);
 
-  // When mode or comfort preset changes, trigger clean transition
+  // When mode, comfort preset, playback, or breathwork sync state changes, trigger clean transition
   useEffect(() => {
     needsClearRef.current = true;
     triggerRender();
-  }, [mode, comfortPreset, effectiveIsLight, isPlaying, flowSpeed, triggerRender]);
+  }, [mode, comfortPreset, effectiveIsLight, isPlaying, flowSpeed, breathSyncState.isActive, triggerRender]);
 
   // Spawn an acoustic feedback ripple on tap/click
   const spawnRipple = useCallback((x: number, y: number, maxR = 150) => {
@@ -305,6 +329,12 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
   }, [triggerRender]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      pointerParallaxRef.current.targetX = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+      pointerParallaxRef.current.targetY = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+    }
+
     if (!isDraggingRef.current || !pointerStartRef.current) return;
     const dx = e.clientX - pointerStartRef.current.x;
     const dy = e.clientY - pointerStartRef.current.y;
@@ -484,9 +514,11 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
       }
 
       const cfg = renderConfigRef.current;
+      const breathVisual = breathSyncEngine.getVisualState(timeNow, cfg.flowSpeed);
+      const isBreathAnimated = cfg.mode === 'starry_buddha' || breathVisual.isSynced;
 
-      // Conserve CPU & battery: when paused and no touch ripples active, throttle idle breathing to 20fps
-      if (!cfg.isPlaying && ripplesRef.current.length === 0) {
+      // Conserve CPU & battery: when paused and not running breath-synced visuals or ripples, throttle idle frames
+      if (!cfg.isPlaying && !isBreathAnimated && ripplesRef.current.length === 0) {
         if (timeNow - (lastTimeRef.current || 0) < 45) {
           animFrameRef.current = requestAnimationFrame(render);
           return;
@@ -503,10 +535,15 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
       const dt = Math.min((timeNow - lastTime) / 16.67, 2.5) * cfg.flowSpeed;
       lastTimeRef.current = timeNow;
 
+      // Smooth pointer parallax damping for subtle 3D cosmic depth
+      const px = pointerParallaxRef.current;
+      px.x += (px.targetX - px.x) * Math.min(1, 0.06 * dt);
+      px.y += (px.targetY - px.y) * Math.min(1, 0.06 * dt);
+
       // 1. Soft Optical Motion Persistence Wash directly on OffscreenCanvas
       const isLight = cfg.isLight;
       const washAlpha = cfg.comfortPreset === 'zen' ? 0.24 : cfg.comfortPreset === 'glow' ? 0.16 : 0.20;
-      if (needsClearRef.current) {
+      if (needsClearRef.current || cfg.mode === 'starry_buddha') {
         offscreenCtx.clearRect(0, 0, width, height);
         offscreenCtx.fillStyle = isLight ? '#f8fafc' : '#020617';
         offscreenCtx.fillRect(0, 0, width, height);
@@ -612,25 +649,46 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
       const treble = smoothTrebleRef.current;
       const pulse = smoothPulseRef.current;
 
-      // 7. Soft Ambient Radial Biofield Glow (Rendered directly to OffscreenCanvas)
-      const auraRadius = Math.min(cx, cy) * (cfg.comfortPreset === 'glow' ? 1.3 : 1.15);
-      const bgAura = offscreenCtx.createRadialGradient(cx, cy, 8, cx, cy, auraRadius);
-      const auraOpacity = cfg.comfortPreset === 'zen' ? 0.08 : cfg.comfortPreset === 'glow' ? 0.16 : 0.12;
-      if (isLight) {
-        bgAura.addColorStop(0, `rgba(2, 132, 199, ${auraOpacity * 1.4 + pulse * 0.06})`);
-        bgAura.addColorStop(0.45, `rgba(99, 102, 241, ${auraOpacity * 0.8})`);
-        bgAura.addColorStop(0.8, `rgba(217, 119, 6, ${auraOpacity * 0.35})`);
-        bgAura.addColorStop(1, 'rgba(248, 250, 252, 0)');
-      } else {
-        bgAura.addColorStop(0, `rgba(14, 165, 233, ${auraOpacity + pulse * 0.05})`);
-        bgAura.addColorStop(0.45, `rgba(99, 102, 241, ${auraOpacity * 0.6})`);
-        bgAura.addColorStop(0.8, `rgba(217, 70, 239, ${auraOpacity * 0.25})`);
-        bgAura.addColorStop(1, 'rgba(2, 6, 23, 0)');
+      // 7. Deep Cosmic Parallax Starfield & Volumetric Nebula Backdrop (Elevates depth across ALL visualizers)
+      const timeSec = timeNow * 0.001;
+      const cosmicIntensity = cfg.comfortPreset === 'zen' ? 0.68 : cfg.comfortPreset === 'glow' ? 1.2 : 0.96;
+      const activeBreathEased = breathVisual.isSynced || cfg.mode === 'starry_buddha' ? breathVisual.breathEased : breathWave;
+
+      renderCosmicDepthBackdrop(offscreenCtx, {
+        width,
+        height,
+        timeSec,
+        breathEased: activeBreathEased,
+        energy,
+        bass,
+        isLight,
+        intensity: cfg.mode === 'starry_buddha' ? cosmicIntensity * 1.08 : cosmicIntensity * 0.84,
+        parallaxX: px.x,
+        parallaxY: px.y,
+        opaqueBase: cfg.mode === 'starry_buddha',
+      });
+
+      // Soft Ambient Radial Biofield Glow (Blended cleanly over cosmic backdrop)
+      if (cfg.mode !== 'starry_buddha') {
+        const auraRadius = Math.min(cx, cy) * (cfg.comfortPreset === 'glow' ? 1.3 : 1.15);
+        const bgAura = offscreenCtx.createRadialGradient(cx, cy, 8, cx, cy, auraRadius);
+        const auraOpacity = cfg.comfortPreset === 'zen' ? 0.08 : cfg.comfortPreset === 'glow' ? 0.16 : 0.12;
+        if (isLight) {
+          bgAura.addColorStop(0, `rgba(2, 132, 199, ${auraOpacity * 1.4 + pulse * 0.06})`);
+          bgAura.addColorStop(0.45, `rgba(99, 102, 241, ${auraOpacity * 0.8})`);
+          bgAura.addColorStop(0.8, `rgba(217, 119, 6, ${auraOpacity * 0.35})`);
+          bgAura.addColorStop(1, 'rgba(248, 250, 252, 0)');
+        } else {
+          bgAura.addColorStop(0, `rgba(14, 165, 233, ${auraOpacity + pulse * 0.05})`);
+          bgAura.addColorStop(0.45, `rgba(99, 102, 241, ${auraOpacity * 0.6})`);
+          bgAura.addColorStop(0.8, `rgba(217, 70, 239, ${auraOpacity * 0.25})`);
+          bgAura.addColorStop(1, 'rgba(2, 6, 23, 0)');
+        }
+        offscreenCtx.fillStyle = bgAura;
+        offscreenCtx.beginPath();
+        offscreenCtx.arc(cx, cy, auraRadius, 0, Math.PI * 2);
+        offscreenCtx.fill();
       }
-      offscreenCtx.fillStyle = bgAura;
-      offscreenCtx.beginPath();
-      offscreenCtx.arc(cx, cy, auraRadius, 0, Math.PI * 2);
-      offscreenCtx.fill();
 
       // 7.5 Subtle Glowing Visualizer Effect: Pulses in sync with Musical Mode ethereal pads (Soft Pastel Indigo)
       const padSwell = audioEngine.getMusicalPadSwell();
@@ -652,6 +710,25 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
       const curMode = cfg.mode;
       if (curMode === 'sacred_lotus') {
         renderComfortSacredLotus(offscreenCtx, cx, cy, energy, bass, mids, treble, pulse, dynamicPulse, phaseRef.current, breathWave, cfg.comfortPreset, cfg.baseFreq, isLight);
+      } else if (curMode === 'starry_buddha') {
+        renderStarryBuddha(offscreenCtx, {
+          width,
+          height,
+          cx,
+          cy,
+          timeSec,
+          breathEased: breathVisual.breathEased,
+          phaseType: breathVisual.phaseType,
+          holdStillness: breathVisual.holdStillness,
+          energy,
+          bass,
+          mids,
+          treble,
+          isLight,
+          intensity: cosmicIntensity,
+          scaleFactor: 0.96,
+          includeBackdrop: false,
+        });
       } else if (curMode === 'dreamy_nebula') {
         renderComfortDreamyNebula(offscreenCtx, cx, cy, energy, bass, mids, treble, pulse, dynamicPulse, phaseRef.current, breathWave, cfg.comfortPreset, isLight);
       } else if (curMode === 'celestial_sri_yantra') {
@@ -669,6 +746,20 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
       } else if (curMode === 'pranic_orb') {
         renderComfortPranicOrb(offscreenCtx, cx, cy, energy, bass, mids, treble, pulse, dynamicPulse, phaseRef.current, breathWave, cfg.comfortPreset, isLight);
       }
+
+      // 8.5 Foreground Depth Bokeh Stardust & Soft Atmospheric Vignette
+      renderCosmicForegroundDepth(offscreenCtx, {
+        width,
+        height,
+        timeSec,
+        breathEased: activeBreathEased,
+        energy,
+        bass,
+        isLight,
+        intensity: curMode === 'starry_buddha' ? cosmicIntensity : cosmicIntensity * 0.72,
+        parallaxX: px.x,
+        parallaxY: px.y,
+      });
 
       // 9. Render Interactive Touch Ripples directly to OffscreenCanvas
       renderInteractiveRipples(offscreenCtx, dt);
@@ -710,8 +801,14 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
         display2dCtx.drawImage(offscreenCanvas, 0, 0, cachedWidth, cachedHeight);
       }
 
-      // 11. Smart Loop Lifecycle: Active during playback/ripples/musical pad swell, idles when paused to eliminate main-thread CPU waste
-      if (cfg.isPlaying || ripplesRef.current.length > 0 || isDraggingRef.current || (padSwell.isActive && padSwell.envelope > 0.01)) {
+      // 11. Smart Loop Lifecycle: Active during playback, Starry Buddha breathing, Breathwork sync, ripples, or pad swell
+      if (
+        cfg.isPlaying ||
+        isBreathAnimated ||
+        ripplesRef.current.length > 0 ||
+        isDraggingRef.current ||
+        (padSwell.isActive && padSwell.envelope > 0.01)
+      ) {
         animFrameRef.current = requestAnimationFrame(render);
       } else {
         animFrameRef.current = null;
@@ -2707,6 +2804,67 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
           </span>
         </div>
       )}
+
+      {/* Live Breath Sync Indicator (shown when Breathwork is active or when viewing Starry Buddha) */}
+      {(breathSyncState.isActive || mode === 'starry_buddha') && (() => {
+        const activePhase = breathSyncState.pattern.phases[breathSyncState.phaseIndex] || breathSyncState.pattern.phases[0];
+        const remaining = Math.max(0, activePhase.duration - breathSyncState.phaseElapsed).toFixed(1);
+        const topClass = isPlaying && isMusicalModeActive ? 'top-[62px]' : 'top-10';
+        const phaseAccent =
+          !breathSyncState.isActive
+            ? effectiveIsLight
+              ? 'text-sky-700'
+              : 'text-aurora-teal'
+            : activePhase.type === 'inhale'
+            ? effectiveIsLight
+              ? 'text-sky-700'
+              : 'text-aurora-teal'
+            : activePhase.type === 'hold'
+            ? effectiveIsLight
+              ? 'text-amber-700'
+              : 'text-amber-300'
+            : effectiveIsLight
+            ? 'text-indigo-700'
+            : 'text-cosmic-lavender';
+
+        return (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              breathSyncEngine.toggleActive();
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            title={
+              breathSyncState.isActive
+                ? `Breathwork Sync active (${breathSyncState.pattern.name}). Click to pause breath timer.`
+                : 'Starry Buddha is breathing on a slow 5.5s rhythm. Click to start synced Breathwork.'
+            }
+            className={`absolute ${topClass} left-2.5 z-20 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl backdrop-blur-md border text-[11px] font-medium transition-colors cursor-pointer whitespace-nowrap ${
+              effectiveIsLight
+                ? 'bg-white/85 hover:bg-white border-slate-200 text-slate-700'
+                : 'bg-slate-950/75 hover:bg-slate-900/90 border-slate-700/70 text-slate-200'
+            }`}
+          >
+            <Wind className={`w-3.5 h-3.5 shrink-0 ${phaseAccent}`} />
+            {breathSyncState.isActive ? (
+              <>
+                <span className={`font-semibold ${phaseAccent}`}>{activePhase.name}</span>
+                <span aria-hidden="true" className="opacity-45">·</span>
+                <span className="font-mono tabular-nums text-[10px]">{remaining}s</span>
+                <span aria-hidden="true" className="opacity-45">·</span>
+                <span className="text-[10px] opacity-75">{breathSyncState.pattern.shortLabel}</span>
+              </>
+            ) : (
+              <>
+                <span className={`font-semibold ${phaseAccent}`}>Slow Breath</span>
+                <span aria-hidden="true" className="opacity-45">·</span>
+                <span className="text-[10px] opacity-80">Tap to Sync</span>
+              </>
+            )}
+          </button>
+        );
+      })()}
 
       {/* Top Right: Visualizer Animation Settings & Fullscreen Zen Mode (Standard UX Hierarchy) */}
       <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-20">

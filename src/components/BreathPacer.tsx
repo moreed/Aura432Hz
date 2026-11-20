@@ -25,6 +25,7 @@ import {
   Info,
 } from 'lucide-react';
 import { audioEngine, SanctuaryBowlTone } from '../services/audioEngine';
+import { breathSyncEngine, type BreathSyncState } from '../services/breathSyncEngine';
 import { Guided478Overlay } from './Guided478Overlay';
 import { BUILT_IN_MIX_PRESETS, MixPreset } from '../services/storage';
 import { BreathVisualizerCanvas, BreathAnimationStyle } from './BreathVisualizerCanvas';
@@ -234,7 +235,14 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
   isPlaying = false,
   onTogglePlay,
 }) => {
-  const [selectedPattern, setSelectedPattern] = useState<BreathPattern>(initialPattern || 'relax_478');
+  const [syncState, setSyncState] = useState<BreathSyncState>(() => breathSyncEngine.getState());
+  const selectedPattern = syncState.patternId;
+  const isActive = syncState.isActive;
+  const phaseIndex = syncState.phaseIndex;
+  const phaseElapsed = syncState.phaseElapsed;
+  const completedCycles = syncState.completedCycles;
+  const audioCueEnabled = syncState.audioCueEnabled;
+  const sanctuaryBowlTone = syncState.sanctuaryBowlTone;
 
   // Track suitable preset index for every breathwork pattern so each pattern has a tailored preset
   const [recommendedPresetIndices, setRecommendedPresetIndices] = useState<Record<BreathPattern, number>>({
@@ -268,40 +276,36 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
   const smoothedIntensityRef = useRef<number>(0.5);
 
   useEffect(() => {
-    if (initialPattern) {
-      setSelectedPattern(initialPattern);
-      setPhaseIndex(0);
-      setPhaseElapsed(0);
+    return breathSyncEngine.subscribe((next) => {
+      setSyncState(next);
+    });
+  }, []);
+
+  const appliedInitialPatternRef = useRef<BreathPattern | undefined>(undefined);
+  useEffect(() => {
+    if (
+      initialPattern &&
+      initialPattern !== appliedInitialPatternRef.current &&
+      !breathSyncEngine.getState().isActive
+    ) {
+      appliedInitialPatternRef.current = initialPattern;
+      breathSyncEngine.setPattern(initialPattern);
     }
   }, [initialPattern]);
 
-  // Starts paused first so the user can prepare in stillness
-  const [isActive, setIsActive] = useState<boolean>(false);
-  const [audioCueEnabled, setAudioCueEnabled] = useState<boolean>(true);
   const [show478Overlay, setShow478Overlay] = useState<boolean>(false);
   const [animationStyle, setAnimationStyle] = useState<BreathAnimationStyle>(() => {
     try {
       const saved = localStorage.getItem('aura_breath_animation_style');
-      if (saved === 'orb' || saved === 'lotus' || saved === 'wave') return saved;
-    } catch {}
-    return 'orb';
-  });
-  const [sanctuaryBowlTone, setSanctuaryBowlTone] = useState<SanctuaryBowlTone>(() => {
-    try {
-      const saved = localStorage.getItem('aura_breath_bowl_tone');
-      if (saved === 'warm_tibetan' || saved === 'deep_monastery' || saved === 'crystal_temple') {
+      if (saved === 'orb' || saved === 'lotus' || saved === 'wave' || saved === 'starry_buddha') {
         return saved;
       }
     } catch {}
-    return 'warm_tibetan';
+    return 'orb';
   });
 
-  const [phaseIndex, setPhaseIndex] = useState<number>(0);
-  const [phaseElapsed, setPhaseElapsed] = useState<number>(0);
-  const [completedCycles, setCompletedCycles] = useState<number>(0);
-
   const pattern = BREATH_PATTERNS.find((p) => p.id === selectedPattern) || BREATH_PATTERNS[0];
-  const currentPhase = pattern.phases[phaseIndex];
+  const currentPhase = pattern.phases[phaseIndex] || pattern.phases[0];
 
   // Keep latest phase timing in refs so the 60fps rAF oscilloscope loop stays uninterrupted
   const phaseElapsedRef = useRef<number>(phaseElapsed);
@@ -317,34 +321,19 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
   };
 
   const handleChangeBowlTone = (tone: SanctuaryBowlTone) => {
-    setSanctuaryBowlTone(tone);
-    try {
-      localStorage.setItem('aura_breath_bowl_tone', tone);
-    } catch {}
-    if (!audioCueEnabled) {
-      setAudioCueEnabled(true);
-    }
-    audioEngine.playBreathCue(currentPhase.type, tone);
+    breathSyncEngine.setSanctuaryBowlTone(tone, true);
   };
 
   const handlePreviewBowl = () => {
-    audioEngine.playBreathCue(currentPhase.type, sanctuaryBowlTone);
+    breathSyncEngine.previewCurrentBowl();
   };
 
   const handleToggleActive = () => {
-    const nextActive = !isActive;
-    setIsActive(nextActive);
-    if (nextActive && audioCueEnabled) {
-      audioEngine.playBreathCue(currentPhase.type, sanctuaryBowlTone);
-    }
+    breathSyncEngine.toggleActive();
   };
 
   const handleToggleAudioCue = () => {
-    const next = !audioCueEnabled;
-    setAudioCueEnabled(next);
-    if (next) {
-      audioEngine.playBreathCue(currentPhase.type, sanctuaryBowlTone);
-    }
+    breathSyncEngine.toggleAudioCue();
   };
 
   // Get current suitable preset recommendation for selected breathwork
@@ -389,60 +378,26 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
     });
   };
 
-  // High-precision breath pacing timer using performance.now delta
+  // Subscribe to shared BreathSyncEngine cycle completion for optional Auto-Shuffle
+  const autoRandomizeRef = useRef(autoRandomizeOnCycle);
+  autoRandomizeRef.current = autoRandomizeOnCycle;
+  const handleRandomizeRef = useRef(handleRandomizePreset);
+  handleRandomizeRef.current = handleRandomizePreset;
+
   useEffect(() => {
-    if (!isActive) return;
-
-    let lastTick = performance.now();
-    const timer = setInterval(() => {
-      const now = performance.now();
-      const deltaSec = Math.min((now - lastTick) / 1000, 0.2);
-      lastTick = now;
-
-      setPhaseElapsed((prev) => {
-        const next = prev + deltaSec;
-        if (next >= currentPhase.duration) {
-          // Advance to next phase
-          const nextIndex = (phaseIndex + 1) % pattern.phases.length;
-          setPhaseIndex(nextIndex);
-
-          if (nextIndex === 0) {
-            setCompletedCycles((c) => {
-              const newCount = c + 1;
-              if (autoRandomizeOnCycle) {
-                handleRandomizePreset(selectedPattern, true);
-              }
-              return newCount;
-            });
-          }
-
-          // Trigger Sanctuary Bowls transition tone
-          if (audioCueEnabled) {
-            const nextPhaseType = pattern.phases[nextIndex].type;
-            audioEngine.playBreathCue(nextPhaseType, sanctuaryBowlTone);
-          }
-
-          return 0;
-        }
-        return next;
-      });
-    }, 30);
-
-    return () => clearInterval(timer);
-  }, [isActive, phaseIndex, pattern, currentPhase, audioCueEnabled, sanctuaryBowlTone, autoRandomizeOnCycle, selectedPattern]);
+    return breathSyncEngine.subscribeCycleComplete((patternId) => {
+      if (autoRandomizeRef.current) {
+        handleRandomizeRef.current(patternId, true);
+      }
+    });
+  }, []);
 
   const handlePatternChange = (newPatternId: BreathPattern) => {
-    setSelectedPattern(newPatternId);
-    setPhaseIndex(0);
-    setPhaseElapsed(0);
-    setIsActive(false); // keep paused so user can ground themselves before starting
+    breathSyncEngine.setPattern(newPatternId);
   };
 
   const handleReset = () => {
-    setPhaseIndex(0);
-    setPhaseElapsed(0);
-    setCompletedCycles(0);
-    setIsActive(false); // paused on reset
+    breathSyncEngine.reset();
   };
 
   const handleApplyCurrentPreset = () => {
@@ -458,9 +413,7 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
     setIsCoherenceSync(next);
     if (next) {
       if (selectedPattern !== 'coherence_55') {
-        setSelectedPattern('coherence_55');
-        setPhaseIndex(0);
-        setPhaseElapsed(0);
+        breathSyncEngine.setPattern('coherence_55', { keepActive: isActive });
       }
       setRandomizeToast('⚡ 432Hz Coherence Sync Active: Screen UI expansion synchronized with 432Hz sine cycle');
       setTimeout(() => setRandomizeToast(null), 3500);
@@ -1107,13 +1060,14 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
         </div>
       )}
 
-      {/* Restyled Sanctuary Breathwork Visualizer with 3 Inhale & Exhale Animation Modes */}
+      {/* Restyled Sanctuary Breathwork Visualizer with 4 Inhale & Exhale Animation Modes including Starry Buddha */}
       <BreathVisualizerCanvas
         isActive={isActive}
         isInitialState={isInitialState}
         isZenMode={isZenMode}
         isCoherenceSync={isCoherenceSync}
         audioCueEnabled={audioCueEnabled}
+        isPlayingAudio={isPlaying}
         patternName={pattern.name}
         patternDesc={pattern.desc}
         phases={pattern.phases}
@@ -1134,7 +1088,7 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
       <Guided478Overlay
         isOpen={show478Overlay}
         onClose={() => setShow478Overlay(false)}
-        onCompleteCycle={() => setCompletedCycles((c) => c + 1)}
+        onCompleteCycle={() => breathSyncEngine.recordExternalCycle()}
         sanctuaryBowlTone={sanctuaryBowlTone}
       />
     </div>
