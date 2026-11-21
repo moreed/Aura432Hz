@@ -4,14 +4,13 @@ import {
   Eye,
   Sliders,
   PowerOff,
-  Check,
-  Clock,
   ExternalLink,
 } from 'lucide-react';
 import {
   useSiteContent,
   toggleUnderConstruction,
 } from '../services/siteContent';
+import { ConfirmDialog } from './ConfirmDialog';
 
 interface FloatingAdminMaintenanceBarProps {
   adminEmail?: string;
@@ -31,22 +30,26 @@ export const FloatingAdminMaintenanceBar: React.FC<FloatingAdminMaintenanceBarPr
   const content = useSiteContent();
   const config = content.underConstruction;
   const [isToggling, setIsToggling] = useState(false);
+  const [confirmRestoreOpen, setConfirmRestoreOpen] = useState(false);
 
   if (!config.enabled) {
     return null;
   }
 
-  const handleTurnOff = async () => {
-    if (window.confirm('Restore public access to the Sanctuary? Visitors will immediately see the live website.')) {
-      setIsToggling(true);
-      try {
-        await toggleUnderConstruction(false, adminEmail);
-        if (onStatusChanged) onStatusChanged(false);
-      } catch (e) {
-        console.error('Failed to toggle off under construction mode', e);
-      } finally {
-        setIsToggling(false);
-      }
+  const handleTurnOff = () => {
+    setConfirmRestoreOpen(true);
+  };
+
+  const executeTurnOff = async () => {
+    setConfirmRestoreOpen(false);
+    setIsToggling(true);
+    try {
+      await toggleUnderConstruction(false, adminEmail);
+      if (onStatusChanged) onStatusChanged(false);
+    } catch (e) {
+      console.error('Failed to toggle off under construction mode', e);
+    } finally {
+      setIsToggling(false);
     }
   };
 
@@ -120,6 +123,17 @@ export const FloatingAdminMaintenanceBar: React.FC<FloatingAdminMaintenanceBarPr
           </button>
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmRestoreOpen}
+        title="Restore Public Sanctuary Access"
+        message="Turn off Under Construction Mode now? Public visitors will immediately see the live sanctuary website."
+        confirmLabel="Restore Live Site"
+        variant="primary"
+        loading={isToggling}
+        onConfirm={executeTurnOff}
+        onCancel={() => setConfirmRestoreOpen(false)}
+      />
     </div>
   );
 };

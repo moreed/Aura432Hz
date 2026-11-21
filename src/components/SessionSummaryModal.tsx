@@ -7,8 +7,6 @@ import {
   Mail,
   X,
   Volume2,
-  ArrowRight,
-  BookOpen,
 } from 'lucide-react';
 import { analytics } from '../services/analytics';
 

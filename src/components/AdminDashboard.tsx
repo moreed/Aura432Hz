@@ -5,7 +5,6 @@ import {
   ShieldCheck,
   Download,
   Search,
-  Filter,
   RefreshCw,
   Clock,
   Activity,
@@ -14,7 +13,6 @@ import {
   UserX,
   FileSpreadsheet,
   FileText,
-  Calendar,
   Sparkles,
   ChevronRight,
   Headphones,
@@ -26,8 +24,6 @@ import {
   Key,
   Smartphone,
   Copy,
-  QrCode,
-  LogOut,
   CheckCircle2,
   Globe,
   Printer,
@@ -52,16 +48,12 @@ import {
   VisitLogEntry,
   fetchAllUsers,
   fetchVisitLogs,
-  fetchVisitLogsTotalCount,
   fetchSanctuaryAnalyticsSummary,
   subscribeToLiveAuditLogs,
   subscribeToLiveUsers,
   SanctuaryAnalyticsSummary,
-  FEATURE_META,
-  FREQUENCY_META,
   createUserWithPermissions,
   updateUserRoleAndPermissions,
-  updateUserRole,
   deleteUserFromDirectory,
   updateUserStatus,
 } from '../services/firebase';
@@ -72,12 +64,11 @@ import {
   clearAdminSession,
   onAdminSessionChange,
   AdminSession,
-  getAdminSecurityConfig,
-  updateAdminCredentials,
-  DEFAULT_RECOVERY_CODES,
-  DEFAULT_2FA_SECRET,
-  getGoogleAuthenticatorUri,
-  generateTOTPCode,
+  AdminSecurityDetails,
+  fetchAdminSecurityInfo,
+  updateAdminPassword,
+  setAdminTwoFactorEnabled,
+  regenerateAdminRecoveryCodes,
 } from '../services/adminAuth';
 import { AdminLoginModal } from './AdminLoginModal';
 import { SiteContentCustomizer } from './SiteContentCustomizer';
@@ -140,14 +131,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
   const [ga4Range, setGa4Range] = useState<Ga4DateRange>('today');
   const [ga4PollIntervalSec, setGa4PollIntervalSec] = useState<number>(30);
 
-  // Security configuration management in settings
+  // Security configuration management in settings (server-managed)
+  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [securitySuccess, setSecuritySuccess] = useState<string | null>(null);
   const [securityError, setSecurityError] = useState<string | null>(null);
+  const [securityInfo, setSecurityInfo] = useState<AdminSecurityDetails | null>(null);
+  const [newlyGeneratedCodes, setNewlyGeneratedCodes] = useState<string[] | null>(null);
+  const [securityBusy, setSecurityBusy] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
-  const [liveTOTP, setLiveTOTP] = useState<string>('------');
   const [totpCountdown, setTotpCountdown] = useState<number>(30);
 
   // Search & Filter state
@@ -187,19 +181,40 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
     return () => unsub();
   }, []);
 
-  // Update live TOTP ticker for Security tab
+  // Load server-managed security details and keep TOTP countdown fresh on Security tab
   useEffect(() => {
-    if (activeSubTab !== 'security') return;
-    const tick = async () => {
-      const code = await generateTOTPCode(DEFAULT_2FA_SECRET);
-      setLiveTOTP(code);
+    if (activeSubTab !== 'security' || !adminSession) return;
+    let cancelled = false;
+
+    const refreshSecurity = async () => {
+      try {
+        const info = await fetchAdminSecurityInfo();
+        if (!cancelled) {
+          setSecurityInfo(info);
+          setTotpCountdown(info.totpCountdown);
+        }
+      } catch (err: any) {
+        if (!cancelled) {
+          setSecurityError(err?.message || 'Unable to load server security details.');
+        }
+      }
+    };
+
+    refreshSecurity();
+
+    const iv = setInterval(() => {
       const secs = 30 - (Math.floor(Date.now() / 1000) % 30);
       setTotpCountdown(secs);
+      if (secs === 30) {
+        refreshSecurity();
+      }
+    }, 1000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(iv);
     };
-    tick();
-    const iv = setInterval(tick, 1000);
-    return () => clearInterval(iv);
-  }, [activeSubTab]);
+  }, [activeSubTab, adminSession]);
 
   const loadData = async () => {
     // Only load if authorized as Moreed and 2FA session is active
@@ -405,20 +420,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
     setTimeout(() => setActionSuccess(null), 3500);
   };
 
-  const handleToggleRole = async (user: UserProfile) => {
-    const newRole = user.role === 'admin' ? 'user' : 'admin';
-    try {
-      await updateUserRole(user.uid, newRole);
-      setUsers(users.map((u) => (u.uid === user.uid ? { ...u, role: newRole } : u)));
-      showNotification(`Updated ${user.displayName}'s role to ${newRole.toUpperCase()}`);
-      if (onRefreshUser && currentUser?.uid === user.uid) {
-        onRefreshUser();
-      }
-    } catch (err) {
-      showNotification('Failed to update user role');
-    }
-  };
-
   const handleToggleStatus = async (user: UserProfile) => {
     const newStatus = user.status === 'active' ? 'suspended' : 'active';
     try {
@@ -618,7 +619,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
     setSecurityError(null);
     setSecuritySuccess(null);
 
-    if (newPassword.length < 8) {
+    if (!currentPassword.trim()) {
+      setSecurityError('Please enter your current master password.');
+      return;
+    }
+    if (newPassword.trim().length < 8) {
       setSecurityError('New password must be at least 8 characters.');
       return;
     }
@@ -627,13 +632,54 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
       return;
     }
 
+    setSecurityBusy(true);
     try {
-      await updateAdminCredentials(newPassword);
-      setSecuritySuccess('Master Password updated successfully.');
+      await updateAdminPassword(currentPassword, newPassword);
+      setSecuritySuccess('Master Password updated and re-hashed on server.');
+      setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err: any) {
       setSecurityError(err?.message || 'Failed to update credentials.');
+    } finally {
+      setSecurityBusy(false);
+    }
+  };
+
+  const handleToggle2FA = async () => {
+    if (!securityInfo) return;
+    setSecurityError(null);
+    setSecuritySuccess(null);
+    setSecurityBusy(true);
+    try {
+      const updated = await setAdminTwoFactorEnabled(!securityInfo.totpEnabled);
+      setSecurityInfo(updated);
+      setSecuritySuccess(
+        updated.totpEnabled
+          ? '2-Factor Authentication is now required for future admin logins.'
+          : '2-Factor Authentication has been disabled for admin logins.'
+      );
+    } catch (err: any) {
+      setSecurityError(err?.message || 'Failed to update 2FA setting.');
+    } finally {
+      setSecurityBusy(false);
+    }
+  };
+
+  const handleRegenerateRecoveryCodes = async () => {
+    setSecurityError(null);
+    setSecuritySuccess(null);
+    setSecurityBusy(true);
+    try {
+      const codes = await regenerateAdminRecoveryCodes();
+      setNewlyGeneratedCodes(codes);
+      const refreshed = await fetchAdminSecurityInfo();
+      setSecurityInfo(refreshed);
+      setSecuritySuccess('Generated 6 new one-time recovery codes. Save them now — they are only shown once.');
+    } catch (err: any) {
+      setSecurityError(err?.message || 'Failed to regenerate recovery codes.');
+    } finally {
+      setSecurityBusy(false);
     }
   };
 
@@ -693,7 +739,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
         <AdminLoginModal
           isOpen={showAuthModal}
           onClose={() => setShowAuthModal(false)}
-          onSuccess={(adminUser) => {
+          onSuccess={() => {
             setAdminSession(getActiveAdminSession());
             if (onRefreshUser) onRefreshUser();
             setShowAuthModal(false);
@@ -2122,149 +2168,195 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
               </div>
 
               <form onSubmit={handleUpdatePassword} className="space-y-3 pt-2">
-                <div>
-                  <label className="text-[11px] font-medium text-slate-400 mb-1 block">New Master Password</label>
-                  <input
-                    type="password"
-                    required
-                    minLength={8}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Minimum 8 characters"
-                    className="w-full px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-indigo-400"
-                  />
-                </div>
+                {securityInfo?.mode === 'env' ? (
+                  <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-500/40 text-[11px] text-amber-200 leading-relaxed">
+                    Master passcode is controlled by the server <code className="font-mono">ADMIN_PASSCODE</code> environment variable. Update it in your deployment environment secrets to rotate it.
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <label className="text-[11px] font-medium text-slate-400 mb-1 block">Current Master Password</label>
+                      <input
+                        type="password"
+                        required
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        placeholder="Enter current master password"
+                        className="w-full px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-indigo-400"
+                      />
+                    </div>
 
-                <div>
-                  <label className="text-[11px] font-medium text-slate-400 mb-1 block">Confirm New Password</label>
-                  <input
-                    type="password"
-                    required
-                    minLength={8}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Re-enter new password"
-                    className="w-full px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-indigo-400"
-                  />
-                </div>
+                    <div>
+                      <label className="text-[11px] font-medium text-slate-400 mb-1 block">New Master Password</label>
+                      <input
+                        type="password"
+                        required
+                        minLength={8}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Minimum 8 characters"
+                        className="w-full px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-indigo-400"
+                      />
+                    </div>
 
-                <button
-                  type="submit"
-                  className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs shadow-md transition-all flex items-center justify-center gap-2"
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Update Master Password</span>
-                </button>
+                    <div>
+                      <label className="text-[11px] font-medium text-slate-400 mb-1 block">Confirm New Password</label>
+                      <input
+                        type="password"
+                        required
+                        minLength={8}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Re-enter new password"
+                        className="w-full px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-indigo-400"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={securityBusy}
+                      className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-medium text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Update Master Password</span>
+                    </button>
+                  </>
+                )}
               </form>
             </div>
 
             {/* Card 2: 2FA Google Authenticator Configuration */}
             <div className="p-5 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-4">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-indigo-500/10 border border-indigo-500/30 rounded-xl text-indigo-400">
-                  <Smartphone className="w-5 h-5" />
+              <div className="flex items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-indigo-500/10 border border-indigo-500/30 rounded-xl text-indigo-400">
+                    <Smartphone className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-200">Google Authenticator / 2FA TOTP</h4>
+                    <p className="text-xs text-slate-400">Server-verified RFC 6238 one-time passcodes</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-sm font-semibold text-slate-200">Google Authenticator / 2FA TOTP</h4>
-                  <p className="text-xs text-slate-400">RFC 6238 time-based one-time passcodes</p>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleToggle2FA}
+                  disabled={securityBusy || !securityInfo}
+                  className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer disabled:opacity-50 ${
+                    securityInfo?.totpEnabled
+                      ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/25'
+                      : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                  }`}
+                >
+                  {securityInfo?.totpEnabled ? '2FA Required' : 'Enable 2FA'}
+                </button>
               </div>
 
               <div className="space-y-3 pt-2 text-xs">
-                {/* Live Rolling Code Indicator */}
-                <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] text-slate-400 uppercase font-semibold block">Live 2FA Code</span>
-                    <span className="text-lg font-mono font-bold tracking-widest text-indigo-300">
-                      {liveTOTP}
-                    </span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[10px] text-slate-400 block">Next token in</span>
-                    <span className="text-xs font-mono font-bold text-sky-400">{totpCountdown}s</span>
-                  </div>
-                </div>
+                {securityInfo?.totpSecret && securityInfo?.otpauthUri ? (
+                  <>
+                    {/* Live Rolling Code Indicator */}
+                    <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] text-slate-400 uppercase font-semibold block">Server 2FA Verification</span>
+                        <span className="text-lg font-mono font-bold tracking-widest text-indigo-300">
+                          {securityInfo.currentTotp || '------'}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] text-slate-400 block">Next token in</span>
+                        <span className="text-xs font-mono font-bold text-sky-400">{totpCountdown}s</span>
+                      </div>
+                    </div>
 
-                {/* Google Authenticator QR Code */}
-                <div className="flex flex-col sm:flex-row items-center gap-3 p-3 bg-slate-900 border border-slate-800 rounded-xl">
-                  <div className="bg-white p-2 rounded-xl shrink-0 shadow-md">
-                    <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=130x130&margin=2&data=${encodeURIComponent(
-                        getGoogleAuthenticatorUri(DEFAULT_2FA_SECRET)
-                      )}`}
-                      alt="Google Authenticator QR Code"
-                      className="w-24 h-24 object-contain"
-                    />
-                  </div>
-                  <div className="flex-1 space-y-1.5 text-left">
-                    <span className="font-semibold text-slate-200 block text-xs">Link to Phone</span>
-                    <p className="text-[11px] text-slate-400 leading-relaxed">
-                      Scan this barcode with Google Authenticator on your phone to link your account.
-                    </p>
-                    <a
-                      href={getGoogleAuthenticatorUri(DEFAULT_2FA_SECRET)}
-                      className="inline-flex items-center gap-1 text-[10px] text-indigo-400 hover:text-indigo-300 underline"
-                    >
-                      <span>Direct Authenticator Link</span>
-                    </a>
-                  </div>
-                </div>
+                    {/* Direct Authenticator Link */}
+                    <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl space-y-2">
+                      <span className="font-semibold text-slate-200 block text-xs">Link Authenticator App</span>
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        Add this secret key to Google Authenticator, Authy, Apple Keychain, or 1Password under <span className="text-slate-200 font-mono">{securityInfo.email}</span>.
+                      </p>
+                      <a
+                        href={securityInfo.otpauthUri}
+                        className="inline-flex items-center gap-1 text-[11px] text-indigo-400 hover:text-indigo-300 underline"
+                      >
+                        <span>Open Direct Authenticator Link</span>
+                      </a>
+                    </div>
 
-                {/* Base32 Secret Key */}
-                <div className="space-y-1">
-                  <span className="text-[11px] text-slate-400 block">Base32 Secret Key:</span>
-                  <div className="flex items-center justify-between p-2.5 bg-slate-900 border border-slate-800 rounded-xl font-mono text-[11px] text-sky-300">
-                    <span className="truncate">{DEFAULT_2FA_SECRET}</span>
-                    <button
-                      type="button"
-                      onClick={() => copyToClipboard(DEFAULT_2FA_SECRET, 'key')}
-                      className="ml-2 text-slate-400 hover:text-white p-1"
-                      title="Copy 2FA Secret Key"
-                    >
-                      {copiedKey ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                    </button>
-                  </div>
-                </div>
-
-                <p className="text-[11px] text-slate-400 leading-relaxed">
-                  Enter this key into Google Authenticator, Authy, Apple Keychain, or 1Password under account name <span className="text-slate-200 font-mono">moreed.raouf@gmail.com</span>.
-                </p>
+                    {/* Base32 Secret Key */}
+                    <div className="space-y-1">
+                      <span className="text-[11px] text-slate-400 block">Base32 Secret Key:</span>
+                      <div className="flex items-center justify-between p-2.5 bg-slate-900 border border-slate-800 rounded-xl font-mono text-[11px] text-sky-300">
+                        <span className="truncate">{securityInfo.totpSecret}</span>
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard(securityInfo.totpSecret!, 'key')}
+                          className="ml-2 text-slate-400 hover:text-white p-1 cursor-pointer"
+                          title="Copy 2FA Secret Key"
+                        >
+                          {copiedKey ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-[11px] text-slate-400 leading-relaxed p-3 rounded-xl bg-slate-900 border border-slate-800">
+                    Enable 2FA above to provision a unique server-generated Base32 TOTP secret for your authenticator app.
+                  </p>
+                )}
               </div>
             </div>
 
             {/* Card 3: Emergency Recovery Codes */}
             <div className="p-5 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-4">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-400">
-                  <ShieldAlert className="w-5 h-5" />
+              <div className="flex items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-400">
+                    <ShieldAlert className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-200">Emergency Recovery Codes</h4>
+                    <p className="text-xs text-slate-400">
+                      {securityInfo ? `${securityInfo.remainingRecoveryCodes} unused hashed code(s) active` : 'Stored hashed on server'}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-sm font-semibold text-slate-200">Emergency Recovery Codes</h4>
-                  <p className="text-xs text-slate-400">One-time rescue tokens if mobile authenticator is lost</p>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleRegenerateRecoveryCodes}
+                  disabled={securityBusy}
+                  className="px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 text-[11px] font-medium transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  Regenerate
+                </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 pt-1">
-                {DEFAULT_RECOVERY_CODES.map((code) => (
-                  <div
-                    key={code}
-                    className="p-2 bg-slate-900 border border-slate-800 rounded-xl font-mono text-xs text-indigo-300 flex items-center justify-between"
-                  >
-                    <span>{code}</span>
-                    <button
-                      type="button"
-                      onClick={() => copyToClipboard(code, 'code')}
-                      className="text-slate-400 hover:text-slate-200 w-6 h-6 inline-flex items-center justify-center rounded cursor-pointer"
-                      title="Copy recovery code"
+              {newlyGeneratedCodes ? (
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  {newlyGeneratedCodes.map((code) => (
+                    <div
+                      key={code}
+                      className="p-2 bg-slate-900 border border-slate-800 rounded-xl font-mono text-xs text-indigo-300 flex items-center justify-between"
                     >
-                      <Copy className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
+                      <span>{code}</span>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(code, 'code')}
+                        className="text-slate-400 hover:text-slate-200 w-6 h-6 inline-flex items-center justify-center rounded cursor-pointer"
+                        title="Copy recovery code"
+                      >
+                        {copiedCode ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-[11px] text-slate-400 leading-relaxed p-3 rounded-xl bg-slate-900 border border-slate-800">
+                  Existing recovery codes are stored as one-way hashes on the server and cannot be viewed again. Click <strong className="text-slate-200">Regenerate</strong> to issue a fresh set of 6 one-time codes.
+                </p>
+              )}
 
               <p className="text-[11px] text-slate-400 leading-relaxed">
-                Keep these recovery codes stored in a secure offline vault. Each code can be entered into the 2FA input to recover access.
+                Each recovery code is consumed immediately upon use. Store regenerated codes in a secure offline password manager.
               </p>
             </div>
 
@@ -2276,7 +2368,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
                 </div>
                 <div>
                   <h4 className="text-sm font-semibold text-slate-200">Active Verified Session</h4>
-                  <p className="text-xs text-slate-400">Cryptographically signed authorization</p>
+                  <p className="text-xs text-slate-400">Server-issued in-memory Bearer token</p>
                 </div>
               </div>
 
@@ -2298,8 +2390,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, onR
                   </span>
                 </div>
                 <div className="flex justify-between py-1 text-slate-400">
-                  <span>Token:</span>
-                  <span className="font-mono text-slate-400 truncate max-w-[160px]">{adminSession?.token}</span>
+                  <span>Storage Mode:</span>
+                  <span className="font-mono text-emerald-300">Memory-Only (Cleared on Reload)</span>
                 </div>
               </div>
 

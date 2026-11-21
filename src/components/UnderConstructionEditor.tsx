@@ -6,17 +6,12 @@ import {
   RotateCcw,
   Eye,
   Check,
-  Calendar,
   Clock,
   Mail,
   Quote,
   Sparkles,
-  Waves,
-  Wind,
   Download,
   Users,
-  Copy,
-  ChevronRight,
   Sliders,
   CheckCircle2,
   AlertCircle,
@@ -47,11 +42,11 @@ import {
 } from '../services/siteContent';
 import { UnderConstructionPage } from './UnderConstructionPage';
 import {
-  SacredSocialIcon,
   SacredSocialLinks,
   SocialAccountsModal,
   SocialAccountsConfig,
 } from './SacredSocialIcons';
+import { ConfirmDialog } from './ConfirmDialog';
 
 interface UnderConstructionEditorProps {
   adminEmail?: string;
@@ -107,6 +102,7 @@ export const UnderConstructionEditor: React.FC<UnderConstructionEditorProps> = (
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
 
   // Subscribed leads
   const [subscribers, setSubscribers] = useState<ConstructionSubscriber[]>([]);
@@ -288,9 +284,7 @@ export const UnderConstructionEditor: React.FC<UnderConstructionEditorProps> = (
   };
 
   const handleReset = () => {
-    if (window.confirm('Reset all Under Construction settings back to default values?')) {
-      setConfig(DEFAULT_UNDER_CONSTRUCTION);
-    }
+    setConfirmResetOpen(true);
   };
 
   const applyQuotePreset = (preset: { author: string; quote: string }) => {
@@ -1397,6 +1391,19 @@ export const UnderConstructionEditor: React.FC<UnderConstructionEditorProps> = (
           customLinks: socialForm.customLinks || [],
         }}
         onSave={handleSaveSocialAccounts}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmResetOpen}
+        title="Reset Under Construction Settings"
+        message="Reset all Under Construction messages, quotes, and layout options back to their default values?"
+        confirmLabel="Reset Settings"
+        variant="danger"
+        onConfirm={() => {
+          setConfig(DEFAULT_UNDER_CONSTRUCTION);
+          setConfirmResetOpen(false);
+        }}
+        onCancel={() => setConfirmResetOpen(false)}
       />
     </div>
   );

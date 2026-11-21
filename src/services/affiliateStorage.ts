@@ -6,6 +6,7 @@
 
 import { SpiritualProduct, SPIRITUAL_AND_AUDIO_PRODUCTS } from '../data/spiritualProducts';
 import { FetchedProductData } from '../server/metadataFetcher';
+import { getAdminAuthHeaders } from './adminAuth';
 
 export interface AffiliateProduct extends SpiritualProduct {
   photos?: string[];
@@ -21,7 +22,6 @@ export interface AffiliateProduct extends SpiritualProduct {
 }
 
 const STORAGE_KEY = 'aura_affiliate_products_v2';
-const CLICKS_KEY = 'aura_affiliate_clicks_v1';
 
 class AffiliateStorageService {
   private products: AffiliateProduct[] = [];
@@ -181,7 +181,10 @@ class AffiliateStorageService {
     try {
       const response = await fetch('/api/fetch-product-metadata', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAdminAuthHeaders(),
+        },
         body: JSON.stringify({ url }),
       });
 

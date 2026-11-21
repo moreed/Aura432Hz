@@ -3,8 +3,6 @@ import {
   Play,
   Pause,
   Timer,
-  Volume2,
-  Maximize2,
   Sparkles,
   Download,
 } from 'lucide-react';

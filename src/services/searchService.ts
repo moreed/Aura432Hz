@@ -6,9 +6,9 @@ import {
   NatureSoundState,
   BrainwaveMode,
 } from './audioEngine';
-import { SPIRITUAL_AND_AUDIO_PRODUCTS, SpiritualProduct } from '../data/spiritualProducts';
+import { SPIRITUAL_AND_AUDIO_PRODUCTS } from '../data/spiritualProducts';
 import { editorialStorage, EditorialArticle } from './editorialStorage';
-import { BUYING_GUIDES, BuyingGuideArticle } from '../components/BuyingGuidesSection';
+import { BUYING_GUIDES } from '../components/BuyingGuidesSection';
 import { SearchResultItem, SearchCategoryFilter } from '../types/search';
 
 /**

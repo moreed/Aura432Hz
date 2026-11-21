@@ -6,14 +6,9 @@ import {
   ChevronRight,
   ChevronUp,
   Check,
-  Moon,
-  Sun,
   Eye,
-  Heart,
   Sliders,
   Gauge,
-  Play,
-  Pause,
   Wind,
 } from 'lucide-react';
 import { audioEngine } from '../services/audioEngine';
@@ -96,10 +91,8 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
   isPlaying,
   baseFreq,
   alphaBeatHz,
-  brainwaveName,
   isLight,
   onOpenAmbientMode,
-  onTogglePlay,
   isMusicalMode,
   timerSecondsRemaining = null,
   timerTotalSeconds = null,
@@ -231,11 +224,6 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
   const currentComfortPreset = useMemo(() => {
     return COMFORT_PRESETS.find((p) => p.id === comfortPreset) || COMFORT_PRESETS[1];
   }, [comfortPreset]);
-
-  // Memoized flow speed info
-  const currentFlowSpeed = useMemo(() => {
-    return FLOW_SPEEDS.find((s) => s.id === flowSpeed) || FLOW_SPEEDS[1];
-  }, [flowSpeed]);
 
   // Memoized frequency & alpha beat badge display text
   const freqBadgeInfo = useMemo(() => {
@@ -942,15 +930,15 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
     ctx: AnyCanvasContext,
     cx: number,
     cy: number,
-    energy: number,
+    _energy: number,
     bassEnergy: number,
     midsEnergy: number,
     trebleEnergy: number,
-    pulse: number,
+    _pulse: number,
     dynamicPulse: number,
     phase: number,
     breathWave: number,
-    comfort: VisualComfortPreset,
+    _comfort: VisualComfortPreset,
     isLight: boolean
   ) => {
     // 1. Dreamy Multi-Chromatic Soft Pulsing Core
@@ -1060,15 +1048,14 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
     fft: Float32Array,
     energy: number,
     trebleEnergy: number,
-    pulse: number,
-    dynamicPulse: number,
+    _pulse: number,
+    _dynamicPulse: number,
     phase: number,
     breathWave: number,
-    comfort: VisualComfortPreset,
+    _comfort: VisualComfortPreset,
     isLight: boolean
   ) => {
     ctx.save();
-    const cx = width / 2;
     const cy = height / 2;
     const ribbonCount = 5;
 
@@ -1144,18 +1131,17 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
     cy: number,
     energy: number,
     bassEnergy: number,
-    mids: number,
+    _mids: number,
     treble: number,
     pulse: number,
-    dynamicPulse: number,
+    _dynamicPulse: number,
     phase: number,
     breathWave: number,
-    preset: VisualComfortPreset,
-    frequencyHz: number,
+    _preset: VisualComfortPreset,
+    _frequencyHz: number,
     isLightMode: boolean = false
   ) => {
     const medallionR = Math.min(cx, cy) * 0.84;
-    const baseBreath = Math.sin(phase * 0.75) * 2.5;
 
     ctx.save();
 
@@ -1696,12 +1682,12 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
     cx: number,
     cy: number,
     energy: number,
-    bassEnergy: number,
+    _bassEnergy: number,
     pulse: number,
     dynamicPulse: number,
     phase: number,
     breathWave: number,
-    preset: VisualComfortPreset,
+    _preset: VisualComfortPreset,
     isLightMode: boolean = false
   ) => {
     const maxR = Math.min(cx, cy) * 0.92;
@@ -1765,11 +1751,11 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
     cy: number,
     energy: number,
     pulse: number,
-    dynamicPulse: number,
+    _dynamicPulse: number,
     rotation: number,
     phase: number,
     breathWave: number,
-    preset: VisualComfortPreset,
+    _preset: VisualComfortPreset,
     isLightMode: boolean = false
   ) => {
     const unitR = (33 + Math.sin(phase * 0.6) * 2.5 + energy * 10) * (0.97 + breathWave * 0.06);
@@ -1845,7 +1831,7 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
     rotation: number,
     phase: number,
     breathWave: number,
-    preset: VisualComfortPreset,
+    _preset: VisualComfortPreset,
     isLightMode: boolean = false
   ) => {
     const maxR = Math.min(cx, cy) * (0.84 + breathWave * 0.09);
@@ -2018,12 +2004,12 @@ const AudioVisualizerComponent: React.FC<AudioVisualizerProps> = ({
   // =========================================================================
   const applyEthericBloomPostProcess = (
     ctx: AnyCanvasContext,
-    width: number,
-    height: number,
+    _width: number,
+    _height: number,
     cx: number,
     cy: number,
     peakBloom: number,
-    frequencies: number[],
+    _frequencies: number[],
     phase: number,
     isLightMode: boolean
   ) => {

@@ -22,7 +22,6 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signOut,
-  onAuthStateChanged,
   User as FirebaseUser,
 } from 'firebase/auth';
 import firebaseConfig from '../../firebase-applet-config.json';
@@ -150,9 +149,6 @@ export const googleProvider = new Proxy({} as GoogleAuthProvider, {
   },
 });
 
-// Owner email has automatic super-admin rights
-const OWNER_EMAIL = 'moreed.raouf@gmail.com';
-
 import {
   onGuestAuthStateChanged,
   notifyAuthStateListeners,
@@ -275,7 +271,7 @@ export async function signInAsRegisteredMember(
 
 // 1-Click Fast Guest / Meditator Sign-In
 // Directly establishes persistent guest session with zero network errors or admin-restricted restrictions
-export async function signInAsGuestOneClick(requestedRole: 'user' = 'user'): Promise<UserProfile> {
+export async function signInAsGuestOneClick(_requestedRole: 'user' = 'user'): Promise<UserProfile> {
   const guestUid = getOrCreateGuestUid(false);
   const now = new Date().toISOString();
 

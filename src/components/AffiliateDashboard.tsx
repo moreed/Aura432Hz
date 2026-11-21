@@ -4,8 +4,6 @@ import {
   ShoppingBag,
   ExternalLink,
   Search,
-  Filter,
-  Plus,
   Trash2,
   Edit3,
   Check,
@@ -15,24 +13,17 @@ import {
   TrendingUp,
   DollarSign,
   Layers,
-  ArrowRight,
-  Eye,
   CheckCircle2,
   RefreshCw,
   AlertCircle,
   Tag,
   MessageSquare,
-  Image as ImageIcon,
-  Flame,
-  Bell,
-  Shirt,
-  Headphones,
-  Sliders,
 } from 'lucide-react';
 import { affiliateStorage, AffiliateProduct } from '../services/affiliateStorage';
 import { FetchedProductData } from '../server/metadataFetcher';
 import { stagingStorage } from '../services/stagingStorage';
 import { ShopAddProductModal } from './ShopAddProductModal';
+import { ConfirmDialog } from './ConfirmDialog';
 
 const SAMPLE_FETCH_PRESETS = [
   {
@@ -63,6 +54,7 @@ export const AffiliateDashboard: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [partnerFilter, setPartnerFilter] = useState<string>('all');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
 
   // Link Fetcher Tool State
   const [fetchUrl, setFetchUrl] = useState('');
@@ -544,12 +536,8 @@ export const AffiliateDashboard: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => {
-              if (window.confirm('Reset catalog back to curated defaults?')) {
-                affiliateStorage.resetToDefaults();
-              }
-            }}
-            className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 transition-colors text-xs"
+            onClick={() => setConfirmResetOpen(true)}
+            className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 transition-colors text-xs cursor-pointer"
             title="Reset to initial products"
           >
             <RefreshCw className="w-4 h-4" />
@@ -716,6 +704,19 @@ export const AffiliateDashboard: React.FC = () => {
           </div>,
           document.body
         )}
+
+      <ConfirmDialog
+        isOpen={confirmResetOpen}
+        title="Reset Affiliate Catalog"
+        message="Reset the affiliate product catalog back to the curated sanctuary defaults? Custom additions will be replaced."
+        confirmLabel="Reset Catalog"
+        variant="danger"
+        onConfirm={() => {
+          affiliateStorage.resetToDefaults();
+          setConfirmResetOpen(false);
+        }}
+        onCancel={() => setConfirmResetOpen(false)}
+      />
     </div>
   );
 };

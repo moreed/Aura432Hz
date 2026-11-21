@@ -9,13 +9,11 @@ import {
   Download,
   Eye,
   RefreshCw,
-  Plus,
   Headphones,
   ShoppingBag,
   BookOpen,
   Check,
   AlertCircle,
-  Clock,
   X,
 } from 'lucide-react';
 import {
@@ -25,10 +23,8 @@ import {
   fetchMonthlyNewsletters,
   fetchWelcomeEmails,
   fetchNewsletterSubscribers,
-  saveMonthlyNewsletter,
   broadcastMonthlyNewsletter,
   sendWelcomeEmail,
-  subscribeToNewsletter,
 } from '../services/emailService';
 import { UserProfile } from '../services/firebase';
 

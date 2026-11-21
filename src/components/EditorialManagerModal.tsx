@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Sparkles, BookOpen } from 'lucide-react';
+import { X, Sparkles } from 'lucide-react';
 import { EditorialArticle } from '../services/editorialStorage';
 import { EditorialManager } from './EditorialManager';
 

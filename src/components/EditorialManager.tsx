@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
-  FileText,
   Plus,
   Edit3,
   Trash2,
   Check,
   ShieldCheck,
-  Calendar,
   Sparkles,
   BookOpen,
   User,
@@ -16,10 +14,6 @@ import {
   Clock,
   Search,
   Filter,
-  ArrowRight,
-  ExternalLink,
-  Image as ImageIcon,
-  Quote,
   Layers,
   RefreshCw,
   AlertCircle,
@@ -33,6 +27,8 @@ import {
 import { Contributor } from './Contributor';
 import { FetchedArticleData } from '../server/metadataFetcher';
 import { stagingStorage } from '../services/stagingStorage';
+import { getAdminAuthHeaders } from '../services/adminAuth';
+import { ConfirmDialog } from './ConfirmDialog';
 
 const SAMPLE_ARTICLE_PRESETS = [
   {
@@ -93,24 +89,15 @@ export const EditorialManager: React.FC<EditorialManagerProps> = ({ onArticleSav
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   // Daily Internet Research & Auto-Fetch Engine state
-  const [dailyStatus, setDailyStatus] = useState<any>(null);
   const [isDailyRunning, setIsDailyRunning] = useState<boolean>(false);
   const [dailyNotice, setDailyNotice] = useState<string | null>(null);
-
-  const loadDailyStatus = async () => {
-    try {
-      const res = await fetch('/api/research/daily-status');
-      if (res.ok) {
-        const data: any = await res.json();
-        if (data.success) {
-          setDailyStatus(data.status);
-        }
-      }
-    } catch (e) {}
-  };
+  const [confirmAction, setConfirmAction] = useState<
+    | { type: 'delete'; id: string; title: string }
+    | { type: 'reset' }
+    | null
+  >(null);
 
   useEffect(() => {
-    loadDailyStatus();
     editorialStorage.syncWithDailyResearch().then((synced) => {
       setArticles(synced);
     });
@@ -122,13 +109,15 @@ export const EditorialManager: React.FC<EditorialManagerProps> = ({ onArticleSav
     try {
       const res = await fetch('/api/research/daily-auto-fetch', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAdminAuthHeaders(),
+        },
       });
       const data: any = await res.json();
       if (data.success && data.article) {
         await editorialStorage.syncWithDailyResearch();
         setArticles(editorialStorage.getArticles());
-        setDailyStatus(data.status);
         setDailyNotice(`✦ Human Article Verified: "${data.article.title.slice(0, 36)}..." by ${data.article.writerName} published to live library.`);
         setTimeout(() => setDailyNotice(null), 6000);
       } else {
@@ -152,7 +141,10 @@ export const EditorialManager: React.FC<EditorialManagerProps> = ({ onArticleSav
     try {
       const response = await fetch('/api/fetch-article-metadata', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAdminAuthHeaders(),
+        },
         body: JSON.stringify({ url }),
       });
 
@@ -268,19 +260,25 @@ export const EditorialManager: React.FC<EditorialManagerProps> = ({ onArticleSav
   };
 
   const handleDelete = (id: string, title: string) => {
-    if (window.confirm(`Are you sure you want to delete "${title}"?`)) {
-      editorialStorage.deleteArticle(id);
-      if (editingArticle?.id === id) setEditingArticle(null);
-    }
+    setConfirmAction({ type: 'delete', id, title });
   };
 
   const handleResetDefaults = () => {
-    if (window.confirm('Reset all editorial articles to verified scholarly defaults? Any custom modifications will be replaced.')) {
+    setConfirmAction({ type: 'reset' });
+  };
+
+  const executeConfirmedEditorialAction = () => {
+    if (!confirmAction) return;
+    if (confirmAction.type === 'delete') {
+      editorialStorage.deleteArticle(confirmAction.id);
+      if (editingArticle?.id === confirmAction.id) setEditingArticle(null);
+    } else {
       editorialStorage.resetToDefaults();
       setEditingArticle(null);
       setSaveSuccessNotice('Reset to verified scholarly archive defaults.');
       setTimeout(() => setSaveSuccessNotice(null), 3000);
     }
+    setConfirmAction(null);
   };
 
   const handleSetUpdatedToToday = () => {
@@ -1177,6 +1175,24 @@ export const EditorialManager: React.FC<EditorialManagerProps> = ({ onArticleSav
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={Boolean(confirmAction)}
+        title={
+          confirmAction?.type === 'delete'
+            ? 'Delete Editorial Article'
+            : 'Reset Editorial Archive'
+        }
+        message={
+          confirmAction?.type === 'delete'
+            ? `Are you sure you want to permanently delete "${confirmAction.title}"?`
+            : 'Reset all editorial articles to verified scholarly defaults? Any custom modifications will be replaced.'
+        }
+        confirmLabel={confirmAction?.type === 'delete' ? 'Delete Article' : 'Reset Archive'}
+        variant="danger"
+        onConfirm={executeConfirmedEditorialAction}
+        onCancel={() => setConfirmAction(null)}
+      />
     </div>
   );
 };

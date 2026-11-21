@@ -4,7 +4,6 @@ import {
   MessageSquare,
   Send,
   CheckCircle2,
-  Clock,
   Sparkles,
   HelpCircle,
   Headphones,
@@ -20,7 +19,6 @@ import {
 } from 'lucide-react';
 import {
   sendContactMessage,
-  ContactMessage,
   sendChatMessage,
   subscribeToChatMessages,
   ChatMessage,

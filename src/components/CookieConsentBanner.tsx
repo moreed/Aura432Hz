@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   Cookie,
-  Shield,
   Sliders,
   Check,
   X,

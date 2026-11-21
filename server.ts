@@ -7,7 +7,6 @@ import { fetchProductMetadata, fetchArticleMetadata } from './src/server/metadat
 import {
   getDailyResearchArticles,
   getDailyResearchStatus,
-  saveDailyResearchStatus,
   executeDailyResearchFetch,
 } from './src/server/dailyResearcher.ts';
 import {
@@ -15,6 +14,17 @@ import {
   fetchGa4SyncReport,
   Ga4ApiError,
 } from './src/server/ga4Service.ts';
+import {
+  authenticateAdminLogin,
+  changeAdminPassword,
+  getAdminAuthStatus,
+  getAdminSecurityDetails,
+  regenerateAdminRecoveryCodes,
+  revokeAdminBearerToken,
+  setAdminTwoFactor,
+  setupInitialAdminCredentials,
+  verifyAdminBearerToken,
+} from './src/server/adminAuthService.ts';
 
 dotenv.config();
 
@@ -95,29 +105,42 @@ app.get(['/api/deployment/status', '/api/cloudflare/status'], (req, res) => {
 // Cross-Origin CORS Handling for Cloudflare Pages, custom domain, and Google AI Studio
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  const allowedOrigins = [
-    'https://aura432hz.com',
-    'https://www.aura432hz.com',
-    'https://aura432hz.pages.dev',
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-  ];
+  const host = req.headers.host || '';
+  const appUrlOrigin = (() => {
+    try {
+      return process.env.APP_URL ? new URL(process.env.APP_URL).origin : null;
+    } catch {
+      return null;
+    }
+  })();
 
-  const isAllowed =
-    !origin ||
-    allowedOrigins.includes(origin) ||
-    origin.endsWith('.pages.dev') ||
-    origin.endsWith('.run.app');
+  const allowedOrigins = new Set(
+    [
+      'https://aura432hz.com',
+      'https://www.aura432hz.com',
+      'https://aura432hz.pages.dev',
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+      host ? `https://${host}` : null,
+      host ? `http://${host}` : null,
+      appUrlOrigin,
+    ].filter((v): v is string => Boolean(v))
+  );
 
-  if (isAllowed && origin) {
+  const isExplicitlyAllowed = Boolean(
+    origin &&
+      (allowedOrigins.has(origin) ||
+        /^https:\/\/ais-(dev|pre)-[a-z0-9-]+\.europe-west1\.run\.app$/i.test(origin))
+  );
+
+  if (origin && isExplicitlyAllowed) {
     res.setHeader('Access-Control-Allow-Origin', origin);
-  } else if (!origin) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
   }
 
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, cf-connecting-ip');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Max-Age', '86400');
 
   if (req.method === 'OPTIONS') {
@@ -154,8 +177,106 @@ app.use((req, res, next) => {
   next();
 });
 
-// Affiliate Product metadata fetch endpoint
+// Server-Verified Admin Authentication & Session Endpoints
+app.get('/api/admin/auth/status', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ success: true, ...getAdminAuthStatus() });
+});
+
+app.post('/api/admin/auth/setup', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  const { email, password, enable2FA } = req.body || {};
+  const result = setupInitialAdminCredentials(email, password, Boolean(enable2FA));
+  if (!result.success) {
+    return res.status(result.statusCode).json({ success: false, error: result.error });
+  }
+  return res.status(result.statusCode).json({
+    success: true,
+    session: result.session,
+    totpSecret: result.totpSecret,
+    otpauthUri: result.otpauthUri,
+    recoveryCodes: result.recoveryCodes,
+    totpEnabled: result.totpEnabled,
+  });
+});
+
+app.post('/api/admin/auth/login', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  const { email, password, twoFactorCode } = req.body || {};
+  const clientIp =
+    (req.headers['cf-connecting-ip'] as string | undefined) ||
+    req.ip ||
+    'unknown';
+  const result = authenticateAdminLogin(email, password, twoFactorCode, clientIp);
+  if (!result.success) {
+    return res.status(result.statusCode).json({ success: false, error: result.error });
+  }
+  return res.status(200).json({ success: true, session: result.session });
+});
+
+app.get('/api/admin/auth/session', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  const session = verifyAdminBearerToken(req.headers.authorization);
+  if (!session) {
+    return res.status(401).json({ success: false, authenticated: false });
+  }
+  return res.json({ success: true, authenticated: true, session });
+});
+
+app.post('/api/admin/auth/logout', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  revokeAdminBearerToken(req.headers.authorization);
+  return res.json({ success: true });
+});
+
+app.get('/api/admin/auth/security', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  const details = getAdminSecurityDetails(req.headers.authorization);
+  if (!details) {
+    return res.status(401).json({ success: false, error: 'Active administrator session required.' });
+  }
+  return res.json({ success: true, security: details });
+});
+
+app.post('/api/admin/auth/change-password', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  const { currentPassword, newPassword } = req.body || {};
+  const result = changeAdminPassword(req.headers.authorization, currentPassword, newPassword);
+  if (!result.success) {
+    return res.status(result.statusCode).json({ success: false, error: result.error });
+  }
+  return res.json({ success: true });
+});
+
+app.post('/api/admin/auth/2fa', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  const { enabled } = req.body || {};
+  const result = setAdminTwoFactor(req.headers.authorization, Boolean(enabled));
+  if (!result.success) {
+    return res.status(result.statusCode).json({ success: false, error: result.error });
+  }
+  return res.json({ success: true, security: result.info });
+});
+
+app.post('/api/admin/auth/recovery-codes/regenerate', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  const result = regenerateAdminRecoveryCodes(req.headers.authorization);
+  if (!result.success) {
+    return res.status(result.statusCode).json({ success: false, error: result.error });
+  }
+  return res.json({ success: true, recoveryCodes: result.recoveryCodes });
+});
+
+// Strict Server-Verified Admin Gate: Requires active cryptographic Bearer session token
+function isAuthorizedAdminRequest(req: express.Request): boolean {
+  return Boolean(verifyAdminBearerToken(req.headers.authorization));
+}
+
+// Affiliate Product metadata fetch endpoint (Admin only)
 app.post('/api/fetch-product-metadata', async (req, res) => {
+  if (!isAuthorizedAdminRequest(req)) {
+    return res.status(403).json({ error: 'Forbidden: Active administrator session required.' });
+  }
   try {
     const { url } = req.body;
     if (!url || typeof url !== 'string') {
@@ -171,8 +292,11 @@ app.post('/api/fetch-product-metadata', async (req, res) => {
   }
 });
 
-// Science & Research / Blog Article metadata fetch endpoint
+// Science & Research / Blog Article metadata fetch endpoint (Admin only)
 app.post('/api/fetch-article-metadata', async (req, res) => {
+  if (!isAuthorizedAdminRequest(req)) {
+    return res.status(403).json({ error: 'Forbidden: Active administrator session required.' });
+  }
   try {
     const { url } = req.body;
     if (!url || typeof url !== 'string') {
@@ -187,8 +311,9 @@ app.post('/api/fetch-article-metadata', async (req, res) => {
     });
   }
 });
+
 // Daily Internet Research & Auto-Fetch Engine Endpoints
-app.get('/api/research/daily-status', (req, res) => {
+app.get('/api/research/daily-status', (_req, res) => {
   try {
     const status = getDailyResearchStatus();
     res.json({ success: true, status });
@@ -197,7 +322,7 @@ app.get('/api/research/daily-status', (req, res) => {
   }
 });
 
-app.get('/api/research/daily-articles', (req, res) => {
+app.get('/api/research/daily-articles', (_req, res) => {
   try {
     const articles = getDailyResearchArticles();
     res.json({ success: true, articles });
@@ -207,6 +332,9 @@ app.get('/api/research/daily-articles', (req, res) => {
 });
 
 app.post('/api/research/daily-auto-fetch', async (req, res) => {
+  if (!isAuthorizedAdminRequest(req)) {
+    return res.status(403).json({ error: 'Forbidden: Active administrator session required.' });
+  }
   try {
     const { topicIndex } = req.body || {};
     const article = await executeDailyResearchFetch(typeof topicIndex === 'number' ? topicIndex : undefined);
@@ -244,20 +372,6 @@ function writePersistedSiteContent(content: any): void {
   }
 }
 
-// Security gate: Ensure only authorized administrator (moreed.raouf@gmail.com) can modify site configuration
-function isAuthorizedAdminRequest(req: express.Request): boolean {
-  const authHeader = req.headers['authorization'];
-  const adminEmailHeader = req.headers['x-admin-email'] as string | undefined;
-
-  if (adminEmailHeader && adminEmailHeader.trim().toLowerCase() === 'moreed.raouf@gmail.com') {
-    return true;
-  }
-  if (authHeader && authHeader.startsWith('Bearer aura_adm_')) {
-    return true;
-  }
-  return false;
-}
-
 // GET /api/site-content: Delivers live site configuration (including under construction status)
 app.get('/api/site-content', (_req, res) => {
   const content = readPersistedSiteContent();
@@ -267,16 +381,16 @@ app.get('/api/site-content', (_req, res) => {
 // POST /api/usage-event: Lightweight, zero-overhead telemetry collector (zero client SDK footprint)
 app.post('/api/usage-event', (_req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  res.setHeader('Access-Control-Allow-Origin', '*');
   res.json({ ok: true });
 });
 
 // GET /api/ga4/properties: Discover accessible GA4 properties using client's OAuth Bearer token
 app.get('/api/ga4/properties', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
   const authHeader = req.headers['authorization'] || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
   if (!token) {
-    return res.status(401).json({ error: 'Missing Google Analytics OAuth Bearer token.' });
+    return res.status(401).json({ success: false, error: 'Missing Google Analytics OAuth Bearer token.' });
   }
   try {
     const properties = await fetchGa4Properties(token);
@@ -291,20 +405,29 @@ app.get('/api/ga4/properties', async (req, res) => {
   }
 });
 
-// POST /api/ga4/sync: Fetch real-time (30m) and historical GA4 metrics for selected Property ID
-app.post('/api/ga4/sync', async (req, res) => {
+// Shared handler for POST and GET /api/ga4/sync (Bearer token via Authorization header only)
+const handleGa4SyncRequest = async (req: express.Request, res: express.Response) => {
+  res.setHeader('Cache-Control', 'no-store');
   const authHeader = req.headers['authorization'] || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
   if (!token) {
-    return res.status(401).json({ error: 'Missing Google Analytics OAuth Bearer token.' });
+    return res.status(401).json({ success: false, error: 'Missing Google Analytics OAuth Bearer token.' });
   }
-  const { propertyId, range } = req.body || {};
-  if (!propertyId || typeof propertyId !== 'string') {
-    return res.status(400).json({ error: 'Numeric GA4 Property ID is required.' });
+  const rawPropertyId = req.method === 'GET' ? req.query?.propertyId : req.body?.propertyId;
+  const rawRange = req.method === 'GET' ? req.query?.range : req.body?.range;
+  const cleanPropertyId = typeof rawPropertyId === 'string'
+    ? rawPropertyId.replace(/^properties\//, '').trim()
+    : '';
+  if (!/^\d+$/.test(cleanPropertyId)) {
+    return res.status(400).json({
+      success: false,
+      error: 'Numeric GA4 Property ID is required (e.g. 412345678).',
+      code: 'INVALID_ARGUMENT',
+    });
   }
-  const validRange = range === '7days' || range === '30days' ? range : 'today';
+  const validRange = rawRange === '7days' || rawRange === '30days' ? rawRange : 'today';
   try {
-    const data = await fetchGa4SyncReport(token, propertyId, validRange);
+    const data = await fetchGa4SyncReport(token, cleanPropertyId, validRange);
     return res.json({ success: true, data });
   } catch (err: any) {
     const status = err instanceof Ga4ApiError ? err.status : 500;
@@ -314,7 +437,11 @@ app.post('/api/ga4/sync', async (req, res) => {
       code: err?.code,
     });
   }
-});
+};
+
+// POST & GET /api/ga4/sync: Fetch real-time (30m) and historical GA4 metrics for selected Property ID
+app.post('/api/ga4/sync', handleGa4SyncRequest);
+app.get('/api/ga4/sync', handleGa4SyncRequest);
 
 // POST /api/site-content: Updates and persists site configuration across all devices and visitors (Admin only)
 app.post('/api/site-content', (req, res) => {
@@ -390,7 +517,7 @@ async function startServer() {
   const isProduction = process.env.NODE_ENV === 'production';
 
   // Serve robots.txt for search engine crawlers
-  app.get('/robots.txt', (req, res) => {
+  app.get('/robots.txt', (_req, res) => {
     const robotsPath = path.resolve(__dirname, 'public', 'robots.txt');
     if (fs.existsSync(robotsPath)) {
       res.setHeader('Content-Type', 'text/plain');
@@ -401,7 +528,7 @@ async function startServer() {
   });
 
   // Serve sitemap.xml for SEO indexing
-  app.get('/sitemap.xml', (req, res) => {
+  app.get('/sitemap.xml', (_req, res) => {
     const sitemapPath = path.resolve(__dirname, 'public', 'sitemap.xml');
     if (fs.existsSync(sitemapPath)) {
       res.setHeader('Content-Type', 'application/xml');
@@ -412,7 +539,7 @@ async function startServer() {
   });
 
   // Serve manifest.webmanifest / manifest.json for PWA installability
-  app.get(['/manifest.webmanifest', '/manifest.json'], (req, res) => {
+  app.get(['/manifest.webmanifest', '/manifest.json'], (_req, res) => {
     const manifestPath = path.resolve(__dirname, 'public', 'manifest.webmanifest');
     if (fs.existsSync(manifestPath)) {
       res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
@@ -432,10 +559,20 @@ async function startServer() {
     next();
   });
 
+  // Escape JSON safely for embedding inside an inline <script> tag
+  function safeJsonForInlineScript(value: unknown): string {
+    return JSON.stringify(value ?? null)
+      .replace(/</g, '\\u003c')
+      .replace(/>/g, '\\u003e')
+      .replace(/&/g, '\\u0026')
+      .replace(/\u2028/g, '\\u2028')
+      .replace(/\u2029/g, '\\u2029');
+  }
+
   // Zero-Flicker Synchronous HTML Injection: Ensures the client browser knows Under Construction status on Frame 0
   function injectInitialSiteContent(html: string): string {
     const content = readPersistedSiteContent();
-    const serialized = JSON.stringify(content || null);
+    const serialized = safeJsonForInlineScript(content);
     const injection = `<script id="aura-initial-site-content">window.__AURA_INITIAL_SITE_CONTENT__ = ${serialized};</script>`;
     if (html.includes('</head>')) {
       return html.replace('</head>', `${injection}\n</head>`);
@@ -476,7 +613,7 @@ async function startServer() {
       dotfiles: 'allow',
       maxAge: '1h',
     }));
-    app.get('*', (req, res) => {
+    app.get('*', (_req, res) => {
       res.setHeader('Cache-Control', 'no-cache');
       try {
         const rawIndexHtml = fs.readFileSync(distIndexHtml, 'utf-8');

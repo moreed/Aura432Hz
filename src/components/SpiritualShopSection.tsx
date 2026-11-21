@@ -26,7 +26,6 @@ export interface SpiritualShopSectionProps {
 }
 
 export const SpiritualShopSection: React.FC<SpiritualShopSectionProps> = ({
-  isAdmin = false,
   highlightProductId = null,
 }) => {
   const [isTestingSound, setIsTestingSound] = useState<string | null>(null);

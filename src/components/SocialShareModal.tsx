@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Share2, Check, Copy, X, Sparkles, MessageCircle, Send } from 'lucide-react';
+import { Share2, Check, Copy, X, MessageCircle, Send } from 'lucide-react';
 
 interface SocialShareModalProps {
   isOpen: boolean;
@@ -10,7 +10,6 @@ interface SocialShareModalProps {
 export const SocialShareModal: React.FC<SocialShareModalProps> = ({
   isOpen,
   onClose,
-  baseFreq,
 }) => {
   const [copied, setCopied] = useState<boolean>(false);
 

@@ -3,12 +3,8 @@ import {
   ExternalLink,
   Check,
   AlertCircle,
-  ShieldCheck,
   Clock,
   Sparkles,
-  Info,
-  DollarSign,
-  Tag,
   Edit3,
   Trash2,
 } from 'lucide-react';
@@ -56,7 +52,6 @@ interface AffiliateProductCardProps {
 
 export const AffiliateProductCard: React.FC<AffiliateProductCardProps> = ({
   product,
-  onPlaySoundDemo,
   onEdit,
   onDelete,
 }) => {

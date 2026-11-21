@@ -21,7 +21,6 @@ import {
 import { SacredLotusBreathVisualizer } from './SacredLotusBreathVisualizer';
 import { FlatLogo } from './FlatLogo';
 import { SacredSocialLinks } from './SacredSocialIcons';
-import { getActiveAdminSession } from '../services/adminAuth';
 
 interface UnderConstructionPageProps {
   customConfig?: UnderConstructionConfig;
@@ -126,7 +125,6 @@ function calculateTimeLeft(targetIso: string): TimeLeft {
 export const UnderConstructionPage: React.FC<UnderConstructionPageProps> = ({
   customConfig,
   isPreview = false,
-  isAdmin = false,
   onClosePreview,
   onOpenAdminLogin,
   onOpenLegalModal,
@@ -135,8 +133,6 @@ export const UnderConstructionPage: React.FC<UnderConstructionPageProps> = ({
 }) => {
   const liveContent = useSiteContent();
   const config = customConfig || liveContent.underConstruction;
-  const activeAdminSession = getActiveAdminSession();
-  const isUserAdmin = Boolean(isAdmin || activeAdminSession);
 
   // Countdown timer state
   const [timeLeft, setTimeLeft] = useState<TimeLeft>(() => calculateTimeLeft(config.launchDate));

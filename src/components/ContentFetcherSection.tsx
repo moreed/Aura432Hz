@@ -13,28 +13,20 @@ import {
   Filter,
   Trash2,
   Edit3,
-  Clock,
   Layers,
-  ArrowRight,
-  User,
-  ShieldCheck,
   Tag,
-  DollarSign,
-  Copy,
   Plus,
   Eye,
   FileText,
   Link as LinkIcon,
   Image as ImageIcon,
   X,
-  Music,
-  Sliders,
   Wand2,
 } from 'lucide-react';
 import { FetchedProductData, FetchedArticleData } from '../server/metadataFetcher';
 import { stagingStorage, StagedContentDraft } from '../services/stagingStorage';
 import { affiliateStorage } from '../services/affiliateStorage';
-import { editorialStorage } from '../services/editorialStorage';
+import { getAdminAuthHeaders } from '../services/adminAuth';
 
 export const SANCTUARY_CATEGORIES: {
   value: FetchedProductData['category'];
@@ -118,7 +110,6 @@ interface ContentFetcherSectionProps {
 export const ContentFetcherSection: React.FC<ContentFetcherSectionProps> = ({
   onNavigateToShop,
   onNavigateToBlog,
-  onEditArticle,
 }) => {
   // Destination: 'shop' (Curated Shop Affiliate Product) vs 'blog' (Science & Research Blog Human Article)
   const [destination, setDestination] = useState<'shop' | 'blog'>('shop');
@@ -205,7 +196,10 @@ export const ContentFetcherSection: React.FC<ContentFetcherSectionProps> = ({
       if (destination === 'shop') {
         const res = await fetch('/api/fetch-product-metadata', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAdminAuthHeaders(),
+          },
           body: JSON.stringify({ url: queryUrl }),
         });
         const data: any = await res.json();
@@ -234,7 +228,10 @@ export const ContentFetcherSection: React.FC<ContentFetcherSectionProps> = ({
         // Blog destination
         const res = await fetch('/api/fetch-article-metadata', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAdminAuthHeaders(),
+          },
           body: JSON.stringify({ url: queryUrl }),
         });
         const data: any = await res.json();

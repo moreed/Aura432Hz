@@ -277,7 +277,6 @@ class AudioEngine {
   private normGain: GainNode | null = null;
   private isVolumeNormalized = true; // Enabled by default for balanced multi-layer playback
   private autoLevelTrim = 1.0;
-  private autoLevelDeltaDb = 0.0;
 
   // Nature Sounds Map & Timeout Tracker
   private natureNodes: Map<string, { gain: GainNode; cleanup: () => void }> = new Map();
@@ -319,7 +318,6 @@ class AudioEngine {
   private chordsVolume = 0.55;
   private isChordsPlaying = false;
   private isMusicalModeEnabled = false;
-  private currentChordProgression = 'solfeggio_adaptive';
   private musicalModeStyle: MusicalModeStyle = 'wave_adaptive';
   private activeResolvedVoice: ResolvedMusicalVoice = 'pads_and_ocarina';
   private activeMotifName = 'Starlight Cradle';
@@ -420,9 +418,8 @@ class AudioEngine {
     return 1 / Math.sqrt(1 + (totalActive - 1) * 0.65);
   }
 
-  public setLoudnessAutoLevelTrim(trimMultiplier: number, deltaDb: number) {
+  public setLoudnessAutoLevelTrim(trimMultiplier: number, _deltaDb: number) {
     this.autoLevelTrim = Math.max(0.25, Math.min(2.0, trimMultiplier));
-    this.autoLevelDeltaDb = deltaDb;
     if (this.ctx && this.normGain && this.isVolumeNormalized && r128LoudnessMeter.getAutoLevelEnabled()) {
       const now = this.ctx.currentTime;
       const baseFactor = this.calculateBaseNormFactor();
@@ -2845,7 +2842,6 @@ class AudioEngine {
   }
 
   public setChordProgression(progressionId: string) {
-    this.currentChordProgression = progressionId;
     if (this.isChordsPlaying) {
       this.stopAmbientChords();
       this.startAmbientChords(progressionId);
@@ -2936,7 +2932,7 @@ class AudioEngine {
     this.melodyInterval = window.setInterval(runMelodyCycle, melodyCycleMs);
   }
 
-  public async startAmbientChords(progressionId: string = 'solfeggio_adaptive') {
+  public async startAmbientChords(_progressionId: string = 'solfeggio_adaptive') {
     if (this.instantStopTimeout) {
       clearTimeout(this.instantStopTimeout);
       this.instantStopTimeout = null;
@@ -2947,7 +2943,6 @@ class AudioEngine {
     }
     this.clearMelodyTimers();
 
-    this.currentChordProgression = progressionId;
     this.isChordsPlaying = true;
     this.isMusicalModeEnabled = true;
 

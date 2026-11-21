@@ -188,25 +188,79 @@ function validateSafeUrl(rawUrl: string): URL {
     throw new Error('Invalid URL protocol. Only HTTP and HTTPS are permitted.');
   }
 
-  // Prevent SSRF to internal networks, cloud metadata, and loopback
-  const host = urlObj.hostname.toLowerCase();
+  // Reject embedded credentials
+  if (urlObj.username || urlObj.password) {
+    throw new Error('URLs with embedded credentials are prohibited.');
+  }
+
+  // Normalize hostname (strip IPv6 brackets and trailing dot)
+  const host = urlObj.hostname.toLowerCase().replace(/^\[|\]$/g, '').replace(/\.$/, '');
+
+  // Reject obfuscated integer, hex, or octal IPv4 forms (e.g. 2130706433, 0x7f000001, 0177.0.0.1)
+  const isObfuscatedNumericIp =
+    /^\d+$/.test(host) ||
+    /^0x[0-9a-f]+$/i.test(host) ||
+    /^0\d+\./.test(host) ||
+    /\.0\d+/.test(host);
+
   const isPrivateOrLoopback =
+    !host ||
     host === 'localhost' ||
-    host === '127.0.0.1' ||
+    host.endsWith('.localhost') ||
     host === '0.0.0.0' ||
+    host === '::' ||
     host === '::1' ||
+    host.startsWith('::ffff:') ||
+    host.startsWith('fe80:') ||
+    host.startsWith('fc') ||
+    host.startsWith('fd') ||
     host === '169.254.169.254' ||
     host.endsWith('.local') ||
     host.endsWith('.internal') ||
+    /^127\./.test(host) ||
+    /^0\./.test(host) ||
     /^10\./.test(host) ||
+    /^169\.254\./.test(host) ||
     /^192\.168\./.test(host) ||
-    /^172\.(1[6-9]|2\d|3[01])\./.test(host);
+    /^172\.(1[6-9]|2\d|3[01])\./.test(host) ||
+    /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./.test(host) ||
+    isObfuscatedNumericIp;
 
   if (isPrivateOrLoopback) {
     throw new Error('Access to private or internal network addresses is prohibited.');
   }
 
   return urlObj;
+}
+
+// Fetch helper that validates every redirect hop against SSRF rules
+async function safeFetch(
+  initialUrl: string,
+  options: RequestInit,
+  maxRedirects = 4
+): Promise<{ response: Response; finalUrl: string }> {
+  let currentUrl = validateSafeUrl(initialUrl).href;
+
+  for (let hop = 0; hop <= maxRedirects; hop++) {
+    const response = await fetch(currentUrl, {
+      ...options,
+      redirect: 'manual',
+    });
+
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get('location');
+      if (!location) {
+        return { response, finalUrl: currentUrl };
+      }
+      const nextUrl = new URL(location, currentUrl).href;
+      currentUrl = validateSafeUrl(nextUrl).href;
+      continue;
+    }
+
+    return { response, finalUrl: currentUrl };
+  }
+
+  throw new Error('Too many redirects while fetching external URL.');
 }
 
 /**
@@ -218,8 +272,9 @@ export async function fetchProductMetadata(targetUrl: string): Promise<FetchedPr
   const partner = detectPartner(hostname);
 
   let html = '';
+  let resolvedTargetUrl = urlObj.href;
   try {
-    const res = await fetch(targetUrl, {
+    const { response: res, finalUrl } = await safeFetch(targetUrl, {
       headers: {
         'User-Agent':
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -228,6 +283,9 @@ export async function fetchProductMetadata(targetUrl: string): Promise<FetchedPr
       },
       signal: AbortSignal.timeout(9000),
     });
+    if (finalUrl && finalUrl.startsWith('http')) {
+      resolvedTargetUrl = finalUrl;
+    }
     if (res.ok) {
       html = await res.text();
     }
@@ -333,22 +391,7 @@ export async function fetchProductMetadata(targetUrl: string): Promise<FetchedPr
   // 5. Photos Extraction Engine (Multi-Angle Real Photos)
   const photos: string[] = [];
 
-  // Strategy A: Unshorten URL and Resolve Final Canonical Address
-  let resolvedTargetUrl = targetUrl;
-  try {
-    const headRes = await fetch(targetUrl, {
-      method: 'GET',
-      redirect: 'follow',
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-      },
-      signal: AbortSignal.timeout(4500),
-    });
-    if (headRes.url && headRes.url.startsWith('http')) {
-      resolvedTargetUrl = headRes.url;
-    }
-  } catch {}
+  // Strategy A: Use already SSRF-validated canonical URL resolved during initial fetch
 
   // Strategy B: Direct Amazon ASIN Multi-Angle Real Photo Resolution
   const asinRegexes = [
@@ -409,7 +452,7 @@ export async function fetchProductMetadata(targetUrl: string): Promise<FetchedPr
       const shopifyHandle = urlObj.pathname.split('/products/')[1]?.split(/[/?#]/)[0];
       if (shopifyHandle) {
         const shopifyJsonUrl = `${urlObj.origin}/products/${shopifyHandle}.json`;
-        const sRes = await fetch(shopifyJsonUrl, {
+        const { response: sRes } = await safeFetch(shopifyJsonUrl, {
           headers: {
             Accept: 'application/json',
             'User-Agent':
@@ -611,7 +654,7 @@ export async function fetchArticleMetadata(targetUrl: string): Promise<FetchedAr
 
   let html = '';
   try {
-    const res = await fetch(targetUrl, {
+    const { response: res } = await safeFetch(targetUrl, {
       headers: {
         'User-Agent':
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',

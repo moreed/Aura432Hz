@@ -1,27 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  Sparkles,
   Maximize2,
   Minimize2,
   X,
   Play,
   Pause,
-  Moon,
   Timer,
   Volume2,
-  VolumeX,
-  Sliders,
   Palette,
-  Eye,
-  EyeOff,
-  Layers,
-  CloudRain,
-  Flame,
-  Droplets,
   Wind,
   Check,
-  Headphones,
-  RotateCcw,
   ShieldCheck,
   ChevronLeft,
   ChevronRight,
@@ -85,7 +73,6 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
   baseFreq,
   onSelectBaseFreq,
   brainwaveMode,
-  onSelectBrainwaveMode,
   natureSounds,
   onToggleNatureSound,
   masterVolume,
@@ -132,7 +119,6 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
   const [controlsVisible, setControlsVisible] = useState<boolean>(true);
   const [isBrowserFullscreen, setIsBrowserFullscreen] = useState<boolean>(false);
   const [showPaletteMenu, setShowPaletteMenu] = useState<boolean>(false);
-  const [showSoundMixer, setShowSoundMixer] = useState<boolean>(false);
   const [breathSyncState, setBreathSyncState] = useState<BreathSyncState>(() =>
     breathSyncEngine.getState()
   );
@@ -358,7 +344,6 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
       if (showPaletteMenuRef.current) return;
       setControlsVisible(false);
       setShowPaletteMenu(false);
-      setShowSoundMixer(false);
     }, 6000);
   }, []);
 
@@ -378,7 +363,6 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
 
     needsClearRef.current = true;
     setShowPaletteMenu(false);
-    setShowSoundMixer(false);
     resetHideTimer();
 
     const prevOverflow = document.body.style.overflow;
@@ -450,14 +434,6 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
     if (ripplesRef.current.length > 10) {
       ripplesRef.current.shift();
     }
-  };
-
-  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    resetHideTimer();
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    spawnRipple(x, y);
   };
 
   // High-Resolution Canvas Audio-Reactive Render Loop
@@ -734,13 +710,13 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
     ctx: CanvasRenderingContext2D,
     cx: number,
     cy: number,
-    energy: number,
+    _energy: number,
     bassEnergy: number,
-    pulse: number,
+    _pulse: number,
     dynamicPulse: number,
     phase: number,
     breathWave: number,
-    theme: any
+    _theme: any
   ) => {
     const coreRadius = Math.min(cx, cy) * 0.36 * (1 + dynamicPulse * 0.2 + breathWave * 0.12);
     const radGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreRadius * 2.5);
@@ -836,11 +812,11 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
     energy: number,
     bassEnergy: number,
     pulse: number,
-    dynamicPulse: number,
+    _dynamicPulse: number,
     phase: number,
     breathWave: number,
-    theme: any,
-    frequencyHz: number
+    _theme: any,
+    _frequencyHz: number
   ) => {
     // Dynamic sizing based on viewport
     const medallionR = Math.min(cx, cy) * 0.72;
@@ -1377,7 +1353,7 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
     cy: number,
     energy: number,
     pulse: number,
-    dynamicPulse: number,
+    _dynamicPulse: number,
     rotation: number,
     phase: number,
     breathWave: number,
@@ -1438,7 +1414,7 @@ export const AmbientModeView: React.FC<AmbientModeViewProps> = ({
     cx: number,
     cy: number,
     energy: number,
-    bassEnergy: number,
+    _bassEnergy: number,
     pulse: number,
     dynamicPulse: number,
     rotation: number,

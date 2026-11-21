@@ -6,9 +6,11 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db, auth } from './firebase';
-import type {
-  Ga4PropertySummary,
-  Ga4SyncPayload,
+import {
+  fetchGa4Properties as fetchGa4PropertiesDirect,
+  fetchGa4SyncReport as fetchGa4SyncReportDirect,
+  type Ga4PropertySummary,
+  type Ga4SyncPayload,
 } from '../server/ga4Service';
 
 export type {
@@ -261,28 +263,60 @@ export async function saveGa4Config(config: {
 }
 
 // ==========================================
-// Server Proxy Calls (Bearer Token Auth)
+// Server Proxy Calls with Direct Google API Fallback (Bearer Token Auth)
 // ==========================================
-export async function discoverGa4Properties(accessToken: string): Promise<Ga4PropertySummary[]> {
-  const res = await fetch('/api/ga4/properties', {
-    method: 'GET',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-  const json = (await res.json().catch(() => ({}))) as {
-    success?: boolean;
-    error?: string;
-    code?: string;
-    properties?: Ga4PropertySummary[];
-  };
-  if (!res.ok || !json?.success) {
-    const err: any = new Error(json?.error || `Failed to list GA4 properties (HTTP ${res.status})`);
-    err.status = res.status;
-    err.code = json?.code;
-    throw err;
+function isProxyUnavailableResponse(res: Response, parsedJson: Record<string, any> | null): boolean {
+  if (res.status === 404 || res.status === 405 || res.status === 501) {
+    return true;
   }
-  return json.properties || [];
+  const contentType = (res.headers.get('content-type') || '').toLowerCase();
+  if (!contentType.includes('application/json') && !parsedJson) {
+    return true;
+  }
+  return false;
+}
+
+export async function discoverGa4Properties(accessToken: string): Promise<Ga4PropertySummary[]> {
+  let shouldFallbackToDirect = false;
+
+  try {
+    const res = await fetch('/api/ga4/properties', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    const contentType = (res.headers.get('content-type') || '').toLowerCase();
+    const json = contentType.includes('application/json')
+      ? ((await res.json().catch(() => null)) as {
+          success?: boolean;
+          error?: string;
+          code?: string;
+          properties?: Ga4PropertySummary[];
+        } | null)
+      : null;
+
+    if (isProxyUnavailableResponse(res, json)) {
+      shouldFallbackToDirect = true;
+    } else if (!res.ok || !json?.success) {
+      const err: any = new Error(json?.error || `Failed to list GA4 properties (HTTP ${res.status})`);
+      err.status = res.status;
+      err.code = json?.code;
+      throw err;
+    } else {
+      return json.properties || [];
+    }
+  } catch (err: any) {
+    if (err?.status || err?.code) {
+      throw err;
+    }
+    shouldFallbackToDirect = true;
+  }
+
+  if (shouldFallbackToDirect) {
+    return await fetchGa4PropertiesDirect(accessToken);
+  }
+  return [];
 }
 
 export async function syncGa4Statistics(
@@ -290,25 +324,46 @@ export async function syncGa4Statistics(
   propertyId: string,
   range: Ga4DateRange = 'today'
 ): Promise<Ga4SyncPayload> {
-  const res = await fetch('/api/ga4/sync', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ propertyId, range }),
-  });
-  const json = (await res.json().catch(() => ({}))) as {
-    success?: boolean;
-    error?: string;
-    code?: string;
-    data?: Ga4SyncPayload;
-  };
-  if (!res.ok || !json?.success || !json?.data) {
-    const err: any = new Error(json?.error || `Failed to sync GA4 metrics (HTTP ${res.status})`);
-    err.status = res.status;
-    err.code = json?.code;
-    throw err;
+  let shouldFallbackToDirect = false;
+
+  try {
+    const res = await fetch('/api/ga4/sync', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ propertyId, range }),
+    });
+    const contentType = (res.headers.get('content-type') || '').toLowerCase();
+    const json = contentType.includes('application/json')
+      ? ((await res.json().catch(() => null)) as {
+          success?: boolean;
+          error?: string;
+          code?: string;
+          data?: Ga4SyncPayload;
+        } | null)
+      : null;
+
+    if (isProxyUnavailableResponse(res, json)) {
+      shouldFallbackToDirect = true;
+    } else if (!res.ok || !json?.success || !json?.data) {
+      const err: any = new Error(json?.error || `Failed to sync GA4 metrics (HTTP ${res.status})`);
+      err.status = res.status;
+      err.code = json?.code;
+      throw err;
+    } else {
+      return json.data;
+    }
+  } catch (err: any) {
+    if (err?.status || err?.code) {
+      throw err;
+    }
+    shouldFallbackToDirect = true;
   }
-  return json.data;
+
+  if (shouldFallbackToDirect) {
+    return await fetchGa4SyncReportDirect(accessToken, propertyId, range);
+  }
+  throw new Error('Failed to sync Google Analytics metrics.');
 }

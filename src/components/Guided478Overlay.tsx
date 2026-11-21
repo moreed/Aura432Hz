@@ -8,18 +8,14 @@ import {
   VolumeX,
   Sparkles,
   X,
-  Check,
   Heart,
   Maximize2,
   Minimize2,
-  Moon,
   Vibrate,
   VibrateOff,
-  Flame,
   Award,
   Clock,
   ShieldCheck,
-  ChevronRight,
 } from 'lucide-react';
 import { audioEngine, SanctuaryBowlTone } from '../services/audioEngine';
 

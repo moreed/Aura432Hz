@@ -9,25 +9,19 @@ import {
   Check,
   RefreshCw,
   ExternalLink,
-  AlertTriangle,
-  ArrowRight,
-  Terminal,
   FileCode,
   Zap,
-  Lock,
   Network
 } from 'lucide-react';
 import {
   AURA_CLOUDFLARE_CONFIG,
   RECOMMENDED_DNS_RECORDS,
   checkDeploymentStatus,
-  DeploymentCheckResult,
 } from '../services/cloudflareDeploymentService';
 
 export const DeploymentHub: React.FC = () => {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [checkLoading, setCheckLoading] = useState<boolean>(false);
-  const [statusResult, setStatusResult] = useState<DeploymentCheckResult | null>(null);
   const [activeConfigTab, setActiveConfigTab] = useState<'wrangler' | 'github' | 'worker' | 'headers' | 'redirects'>('wrangler');
 
   useEffect(() => {
@@ -37,8 +31,7 @@ export const DeploymentHub: React.FC = () => {
   const runCheck = async () => {
     setCheckLoading(true);
     try {
-      const res = await checkDeploymentStatus();
-      setStatusResult(res);
+      await checkDeploymentStatus();
     } catch (e) {
       console.error('Failed to check deployment status', e);
     } finally {

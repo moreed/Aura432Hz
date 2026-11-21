@@ -1,13 +1,7 @@
 import React from 'react';
 import {
   X,
-  Volume2,
-  Sliders,
-  Moon,
-  ShieldCheck,
   Sparkles,
-  Headphones,
-  CheckCircle2,
 } from 'lucide-react';
 
 interface HowItWorksModalProps {

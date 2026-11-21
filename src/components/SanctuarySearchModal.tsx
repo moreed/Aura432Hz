@@ -10,15 +10,12 @@ import {
   VolumeX,
   Play,
   Pause,
-  Check,
   ArrowRight,
-  ExternalLink,
   Brain,
   Radio,
   FileText,
   ShieldCheck,
   Sparkles,
-  Command,
   CornerDownLeft,
   Flame,
   Droplets,
@@ -31,8 +28,6 @@ import {
   Bell,
   Music,
   Layers,
-  Star,
-  Tag,
 } from 'lucide-react';
 import { SearchCategoryFilter, SearchResultItem } from '../types/search';
 import {
@@ -42,9 +37,7 @@ import {
 } from '../services/searchService';
 import { NatureSoundState, BrainwaveMode } from '../services/audioEngine';
 import { MixPreset } from '../services/storage';
-import { SpiritualProduct } from '../data/spiritualProducts';
 import { EditorialArticle } from '../services/editorialStorage';
-import { BuyingGuideArticle } from './BuyingGuidesSection';
 
 interface SanctuarySearchModalProps {
   isOpen: boolean;
@@ -72,7 +65,6 @@ export const SanctuarySearchModal: React.FC<SanctuarySearchModalProps> = ({
   isPlaying,
   currentPresetId,
   baseFreq,
-  brainwaveMode,
   onApplyPreset,
   onSelectFrequency,
   onToggleNatureSound,

@@ -1,22 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import {
   ShieldCheck,
-  Scale,
   CheckCircle2,
-  AlertTriangle,
-  Zap,
-  Volume2,
   X,
   Radio,
   Activity,
-  Heart,
-  HelpCircle,
   Headphones,
   Lock,
   Sparkles,
   Printer,
 } from 'lucide-react';
-import { audioEngine, SOLFEGGIO_FREQUENCIES } from '../services/audioEngine';
+import { audioEngine } from '../services/audioEngine';
 
 interface FrequencySafetyModalProps {
   isOpen: boolean;

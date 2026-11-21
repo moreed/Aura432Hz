@@ -7,20 +7,15 @@ import {
   VolumeX,
   Sparkles,
   Check,
-  Shield,
-  ChevronRight,
   Dices,
   Shuffle,
   Music,
-  Headphones,
   CheckCircle2,
   Minimize2,
   Maximize2,
   Waves,
   Radio,
   Activity,
-  Zap,
-  Sliders,
   Gauge,
   Info,
 } from 'lucide-react';
@@ -253,7 +248,7 @@ export const BreathPacer: React.FC<BreathPacerProps> = ({
   });
 
   const [randomizeToast, setRandomizeToast] = useState<string | null>(null);
-  const [autoRandomizeOnCycle, setAutoRandomizeOnCycle] = useState<boolean>(false);
+  const [autoRandomizeOnCycle] = useState<boolean>(false);
   const [isShufflingPreset, setIsShufflingPreset] = useState<boolean>(false);
   const [isZenMode, setIsZenMode] = useState<boolean>(false);
 

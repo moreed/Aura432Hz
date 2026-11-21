@@ -2,13 +2,9 @@ import React, { useState, useEffect } from 'react';
 import {
   Activity,
   Gauge,
-  Sliders,
   RotateCcw,
-  Volume2,
-  Check,
   ChevronDown,
   ChevronUp,
-  Info,
   ShieldCheck,
   Sparkles,
 } from 'lucide-react';
@@ -29,7 +25,6 @@ export const LoudnessMeterHUD: React.FC<LoudnessMeterHUDProps> = ({
 }) => {
   const [metrics, setMetrics] = useState<LoudnessMetrics>(r128LoudnessMeter.getMetrics());
   const [isExpanded, setIsExpanded] = useState<boolean>(!isCompact);
-  const [showTooltip, setShowTooltip] = useState<boolean>(false);
 
   useEffect(() => {
     const unsubscribe = r128LoudnessMeter.subscribe((newMetrics) => {
@@ -60,7 +55,6 @@ export const LoudnessMeterHUD: React.FC<LoudnessMeterHUDProps> = ({
   };
 
   const momPercent = lufsToPercent(metrics.momentaryLUFS);
-  const shortPercent = lufsToPercent(metrics.shortTermLUFS);
   const targetPercent = lufsToPercent(metrics.targetLUFS);
 
   // Meter color logic

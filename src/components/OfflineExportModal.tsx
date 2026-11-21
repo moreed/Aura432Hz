@@ -17,10 +17,8 @@ import {
   RotateCcw,
   HardDrive,
   Trash2,
-  Radio,
   FileAudio,
   FolderDown,
-  Layers,
   Music,
 } from 'lucide-react';
 import { audioEngine, NatureSoundState, BrainwaveMode } from '../services/audioEngine';
@@ -40,6 +38,7 @@ import {
   recordWavDownload,
 } from '../services/quotaService';
 import { offlineVault, VaultTrack } from '../services/offlineVault';
+import { ConfirmDialog } from './ConfirmDialog';
 
 export type ExportAudioFormat = 'wav' | 'mp3';
 
@@ -77,6 +76,7 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
 
   // Format selection: Studio WAV (16-bit 44.1kHz lossless) vs Compact MP3 (128kbps stereo)
   const [exportFormat, setExportFormat] = useState<ExportAudioFormat>('wav');
+  const [confirmClearVaultOpen, setConfirmClearVaultOpen] = useState(false);
 
   // Determine user tier: admin (unlimited), member (50m pool), guest (10m trial)
   const userTier: 'admin' | 'member' | 'guest' = useMemo(() => {
@@ -685,15 +685,18 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
     refreshVault();
   };
 
-  const handleClearAllVault = async () => {
-    if (window.confirm('Are you sure you want to remove all saved tracks from the offline vault?')) {
-      if (vaultAudioRef.current) {
-        vaultAudioRef.current.pause();
-      }
-      setVaultPlayingId(null);
-      await offlineVault.clearAll();
-      refreshVault();
+  const handleClearAllVault = () => {
+    setConfirmClearVaultOpen(true);
+  };
+
+  const executeClearAllVault = async () => {
+    setConfirmClearVaultOpen(false);
+    if (vaultAudioRef.current) {
+      vaultAudioRef.current.pause();
     }
+    setVaultPlayingId(null);
+    await offlineVault.clearAll();
+    refreshVault();
   };
 
   // Quota styling
@@ -1453,6 +1456,16 @@ export const OfflineExportModal: React.FC<OfflineExportModalProps> = ({
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmClearVaultOpen}
+        title="Clear Offline Vault"
+        message="Are you sure you want to remove all saved audio tracks from your offline vault? This action cannot be undone."
+        confirmLabel="Remove All Tracks"
+        variant="danger"
+        onConfirm={executeClearAllVault}
+        onCancel={() => setConfirmClearVaultOpen(false)}
+      />
     </div>
   );
 };

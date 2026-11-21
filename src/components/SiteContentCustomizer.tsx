@@ -17,11 +17,8 @@ import {
   EyeOff,
   Sliders,
   CheckCircle2,
-  AlertCircle,
   Moon,
   ArrowRightLeft,
-  CheckSquare,
-  Square,
   ShieldAlert,
 } from 'lucide-react';
 import {
@@ -40,6 +37,7 @@ import {
 } from '../services/siteContent';
 import { SacredSocialIcon } from './SacredSocialIcons';
 import { UnderConstructionEditor } from './UnderConstructionEditor';
+import { ConfirmDialog } from './ConfirmDialog';
 
 interface SiteContentCustomizerProps {
   adminEmail?: string;
@@ -58,6 +56,7 @@ export const SiteContentCustomizer: React.FC<SiteContentCustomizerProps> = ({
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
+  const [confirmResetOpen, setConfirmResetOpen] = useState<boolean>(false);
   const [activeSection, setActiveSection] = useState<'socials' | 'hero' | 'branding' | 'bulk' | 'construction'>(initialSection);
 
   useEffect(() => {
@@ -94,21 +93,20 @@ export const SiteContentCustomizer: React.FC<SiteContentCustomizerProps> = ({
     }
   };
 
-  const handleReset = async () => {
-    if (
-      window.confirm(
-        'Are you sure you want to reset all sanctuary site texts and social links back to defaults?'
-      )
-    ) {
-      setSaving(true);
-      try {
-        const reset = await resetSiteContent(adminEmail);
-        setFormData(reset);
-        setSaveSuccess('Sanctuary site content reset to defaults.');
-        setTimeout(() => setSaveSuccess(null), 3000);
-      } finally {
-        setSaving(false);
-      }
+  const handleReset = () => {
+    setConfirmResetOpen(true);
+  };
+
+  const executeReset = async () => {
+    setConfirmResetOpen(false);
+    setSaving(true);
+    try {
+      const reset = await resetSiteContent(adminEmail);
+      setFormData(reset);
+      setSaveSuccess('Sanctuary site content reset to defaults.');
+      setTimeout(() => setSaveSuccess(null), 3000);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -1292,26 +1290,50 @@ export const SiteContentCustomizer: React.FC<SiteContentCustomizerProps> = ({
             Last published by: <strong className="text-slate-300">{formData.lastUpdatedBy}</strong>
           </span>
 
-          <button
-            type="button"
-            onClick={() => handleSave()}
-            disabled={saving}
-            className="px-6 py-2.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-300 hover:to-indigo-400 text-slate-950 transition-all shadow-md active:scale-95 flex items-center gap-2 cursor-pointer"
-          >
-            {saving ? (
-              <>
-                <Sparkles className="w-3.5 h-3.5 animate-spin" />
-                <span>Publishing to Sanctuary...</span>
-              </>
-            ) : (
-              <>
-                <Save className="w-3.5 h-3.5" />
-                <span>Save & Publish All Changes Live</span>
-              </>
-            )}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleReset}
+              disabled={saving}
+              className="px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 transition-all flex items-center gap-1.5 cursor-pointer"
+              title="Reset all site texts, flags, and social links to defaults"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reset All Defaults</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSave()}
+              disabled={saving}
+              className="px-6 py-2.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-300 hover:to-indigo-400 text-slate-950 transition-all shadow-md active:scale-95 flex items-center gap-2 cursor-pointer"
+            >
+              {saving ? (
+                <>
+                  <Sparkles className="w-3.5 h-3.5 animate-spin" />
+                  <span>Publishing to Sanctuary...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-3.5 h-3.5" />
+                  <span>Save & Publish All Changes Live</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmResetOpen}
+        title="Reset Sanctuary Site Content"
+        message="Are you sure you want to reset all sanctuary site texts, feature flags, and social links back to their default values?"
+        confirmLabel="Reset to Defaults"
+        variant="danger"
+        loading={saving}
+        onConfirm={executeReset}
+        onCancel={() => setConfirmResetOpen(false)}
+      />
     </div>
   );
 };

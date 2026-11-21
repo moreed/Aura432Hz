@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, Sparkles, Plus, Trash2, BookmarkCheck, Calendar, Smile, Sun, Feather, Share2, Check } from 'lucide-react';
+import { Heart, Plus, Trash2, Calendar, Share2, Check } from 'lucide-react';
 import { audioEngine } from '../services/audioEngine';
 
 export interface GratitudeEntry {

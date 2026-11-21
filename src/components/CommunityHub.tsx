@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Heart, Star, Users, MessageSquareHeart } from 'lucide-react';
+import { Heart, Star, Users } from 'lucide-react';
 import { GratitudeSection } from './GratitudeSection';
 import { TestimonialsSection } from './TestimonialsSection';
 

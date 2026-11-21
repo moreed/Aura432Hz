@@ -9,7 +9,6 @@ import type { EditorialArticle } from './editorialStorage';
 import type { SpiritualProduct } from '../data/spiritualProducts';
 
 const BASE_URL = 'https://aura432hz.com';
-const DEFAULT_TITLE = 'Aura 432Hz — Harmonic Resonance & Ambient Meditation Sanctuary';
 const DEFAULT_DESCRIPTION =
   '432Hz Alpha Waves ambient relaxation soundscapes, harmonic breath pacer, interactive crystal sound harp, sacred visualizer animations, nature mixer, and offline meditation sanctuary.';
 

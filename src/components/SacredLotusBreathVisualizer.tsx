@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useId } from 'react';
-import { Play, Pause, RotateCcw, Wind, Sparkles, ChevronDown, ChevronUp, Check } from 'lucide-react';
+import { Play, Pause, RotateCcw, Wind, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 
 export interface BreathTechnique {
   id: string;

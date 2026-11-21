@@ -5,25 +5,13 @@ import {
   Search,
   Tag,
   Clock,
-  Calendar,
   Sparkles,
   ArrowRight,
   Headphones,
   CheckCircle2,
-  Share2,
-  Bookmark,
-  ChevronRight,
-  Flame,
-  Volume2,
-  Brain,
-  Moon,
-  Heart,
-  Radio,
   X,
   ShieldCheck,
-  ExternalLink,
   FileText,
-  User,
   Edit3,
   Trash2,
   Plus,
@@ -35,12 +23,10 @@ import { MixPreset, BUILT_IN_MIX_PRESETS } from '../services/storage';
 import {
   EditorialArticle,
   editorialStorage,
-  ArticleCategory,
 } from '../services/editorialStorage';
 import { applyArticleSeo, applyPageSeo } from '../services/seo';
 import { Contributor } from './Contributor';
 import { EditorialManagerModal } from './EditorialManagerModal';
-import { Lock } from 'lucide-react';
 
 interface BlogSectionProps {
   onSelectPreset?: (preset: MixPreset) => void;
@@ -53,7 +39,6 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
   onSelectPreset,
   isAdmin = false,
   onOpenAdminLogin,
-  onNavigateToAdminEditorial,
 }) => {
   const [articles, setArticles] = useState<EditorialArticle[]>(() =>
     editorialStorage.getArticles()
@@ -64,18 +49,15 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
   const [readingPost, setReadingPost] = useState<EditorialArticle | null>(null);
   const [isEditorialModalOpen, setIsEditorialModalOpen] = useState<boolean>(false);
   const [editingArticleId, setEditingArticleId] = useState<string | null>(null);
-  const [articleActionNotice, setArticleActionNotice] = useState<string | null>(null);
   const [articleToDelete, setArticleToDelete] = useState<EditorialArticle | null>(null);
 
   const confirmDeleteArticle = () => {
     if (!isAdmin) return;
     if (!articleToDelete) return;
-    const { id, title } = articleToDelete;
+    const { id } = articleToDelete;
     editorialStorage.deleteArticle(id);
     if (readingPost?.id === id) setReadingPost(null);
     setArticles(editorialStorage.getArticles());
-    setArticleActionNotice(`Deleted article "${title}".`);
-    setTimeout(() => setArticleActionNotice(null), 3500);
     setArticleToDelete(null);
   };
 

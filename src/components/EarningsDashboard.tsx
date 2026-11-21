@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   DollarSign,
   TrendingUp,
-  TrendingDown,
   Receipt,
   FileSpreadsheet,
   Printer,
@@ -17,7 +16,6 @@ import {
   Radio,
   Music,
   ShoppingBag,
-  ExternalLink,
   Edit2,
   Trash2,
   CheckCircle2,
@@ -25,14 +23,10 @@ import {
   AlertCircle,
   RefreshCw,
   X,
-  PieChart,
   BarChart3,
   Percent,
-  Check,
   ChevronDown,
   Upload,
-  Download,
-  FileText,
   FileDown,
 } from 'lucide-react';
 import {
@@ -63,7 +57,6 @@ import {
   exportCommissionsOnlyCSV,
   exportExpensesOnlyCSV,
   exportFinancialJSON,
-  generatePrintableReport,
   generatePrintableHTML,
   downloadFinancialHTMLReport,
   formatDateRangeDisplay,

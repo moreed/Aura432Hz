@@ -9,14 +9,10 @@ import {
   Zap,
   Lock,
   Check,
-  User,
   Mail,
   Clock,
-  Download,
   AlertTriangle,
   Copy,
-  CheckCircle2,
-  ChevronRight,
   RefreshCw,
 } from 'lucide-react';
 import { FlatLogo } from './FlatLogo';
@@ -35,7 +31,6 @@ import {
   LIFETIME_MAX_MINUTES,
   LIFETIME_MAX_TRACKS,
   GUEST_MAX_MINUTES,
-  GUEST_MAX_TRACKS,
   isGuestUser,
   UserWavQuota,
 } from '../services/quotaService';

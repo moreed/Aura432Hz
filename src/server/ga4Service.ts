@@ -114,12 +114,15 @@ async function runGa4Endpoint(
   method: 'GET' | 'POST',
   body?: Record<string, any>
 ): Promise<any> {
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${accessToken}`,
+  };
+  if (body) {
+    headers['Content-Type'] = 'application/json';
+  }
   const res = await fetch(url, {
     method,
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
+    headers,
     ...(body ? { body: JSON.stringify(body) } : {}),
   });
 
@@ -154,7 +157,7 @@ export async function fetchGa4Properties(accessToken: string): Promise<Ga4Proper
     for (const p of props) {
       const resourceName = String(p?.property || '');
       const propertyId = resourceName.replace(/^properties\//, '').trim();
-      if (!propertyId) continue;
+      if (!/^\d+$/.test(propertyId)) continue;
       flattened.push({
         propertyId,
         resourceName,

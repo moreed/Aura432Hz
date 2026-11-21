@@ -9,12 +9,10 @@ import {
   collection,
   doc,
   setDoc,
-  getDoc,
   getDocs,
   query,
   orderBy,
   limit,
-  addDoc,
   updateDoc,
 } from 'firebase/firestore';
 import { db, UserProfile } from './firebase';

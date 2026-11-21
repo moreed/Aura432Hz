@@ -12,13 +12,11 @@ import {
   User,
   Shield,
   ExternalLink,
-  ChevronRight,
   Info,
   Printer,
 } from 'lucide-react';
 import { AffiliateProductCard, CuratedAffiliateProduct } from './AffiliateProductCard';
 import { MONETIZATION_CONFIG } from '../config/monetization';
-import { analytics } from '../services/analytics';
 
 export interface BuyingGuideArticle {
   id: string;

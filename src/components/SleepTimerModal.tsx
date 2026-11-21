@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Timer, Volume2, Check, X, Bell } from 'lucide-react';
+import { Clock, Timer, Volume2, X } from 'lucide-react';
 
 interface SleepTimerModalProps {
   isOpen: boolean;

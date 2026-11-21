@@ -12,7 +12,6 @@ import {
   Pause,
   Volume2,
   VolumeX,
-  Clock,
   Sparkles,
   Download,
   Wifi,
@@ -24,23 +23,14 @@ import {
   Moon,
   Sun,
   Timer,
-  Printer,
   Info,
   Layers,
   Wind,
   Music,
   Heart,
-  RotateCcw,
   Share2,
-  MessageCircle,
-  Send,
-  Star,
-  MessageSquare,
   LogIn,
-  User,
   Maximize2,
-  Minimize2,
-  Eye,
   ChevronRight,
   ChevronDown,
   MoreHorizontal,
@@ -48,10 +38,8 @@ import {
   Scale,
   Mail,
   Flame,
-  Edit3,
   Cookie,
   Bot,
-  Lock,
   Search,
   Activity,
 } from 'lucide-react';
@@ -71,7 +59,6 @@ import {
   getCustomPresets,
   saveCustomPreset,
 } from './services/storage';
-import { getRecommendedProductForPreset } from './services/presetProductRecommendations';
 import { useSiteContent } from './services/siteContent';
 import { AudioVisualizer, type VisualizerMode } from './components/AudioVisualizer';
 import { LoudnessMeterHUD } from './components/LoudnessMeterHUD';
@@ -115,12 +102,9 @@ const UnderConstructionPage = React.lazy(() => import('./components/UnderConstru
 const FloatingAdminMaintenanceBar = React.lazy(() => import('./components/FloatingAdminMaintenanceBar').then((m) => ({ default: m.FloatingAdminMaintenanceBar })));
 import { AUTHORIZED_ADMIN_EMAIL, isAuthorizedAdminEmail, getActiveAdminSession } from './services/adminAuth';
 import { analytics } from './services/analytics';
-import { MONETIZATION_CONFIG } from './config/monetization';
 import {
   subscribeToSanctuaryAuth,
   logSanctuaryUsageEvent as logUsageEvent,
-  getActiveGuestUser,
-  clearActiveGuestUser,
   type UserProfile,
 } from './services/sessionAuth';
 
@@ -535,7 +519,6 @@ export default function App() {
   const [isTimerModalOpen, setIsTimerModalOpen] = useState<boolean>(false);
   const [timerSecondsRemaining, setTimerSecondsRemaining] = useState<number | null>(null);
   const [timerTotalSeconds, setTimerTotalSeconds] = useState<number | null>(null);
-  const [fadeDurationMinutes, setFadeDurationMinutes] = useState<number>(3);
   const timerIntervalRef = useRef<number | null>(null);
 
   // Offline Export Modal State
@@ -947,7 +930,6 @@ export default function App() {
     const totalSeconds = minutes * 60;
     setTimerSecondsRemaining(totalSeconds);
     setTimerTotalSeconds(totalSeconds);
-    setFadeDurationMinutes(fadeOutMins);
 
     // Auto start playing if not playing
     if (!isPlaying) {

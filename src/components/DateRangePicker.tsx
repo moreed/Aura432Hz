@@ -6,7 +6,6 @@ import {
   X,
   RotateCcw,
   Clock,
-  ArrowRight,
   SlidersHorizontal,
 } from 'lucide-react';
 import { DateFilterPreset, DateFilterConfig } from '../types/finance';

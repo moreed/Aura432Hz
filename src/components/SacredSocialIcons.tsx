@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Check, ExternalLink, Sparkles, Eye, EyeOff, Zap, Plus, Trash2, Globe, Link2 } from 'lucide-react';
+import { X, Check, ExternalLink, Sparkles, Eye, EyeOff, Zap, Plus, Trash2, Link2 } from 'lucide-react';
 import { useSiteContent, updateSiteContent, bulkToggleAllSocialVisibility, CustomSocialLink } from '../services/siteContent';
 
 export type SocialPlatform = 'facebook' | 'instagram' | 'tiktok' | 'youtube' | 'twitter' | 'telegram' | 'custom';
@@ -938,7 +938,6 @@ export const SacredSocialLinks: React.FC<SacredSocialLinksProps> = ({
   headline,
   size = 40,
   isAdmin = false,
-  onOpenAdminLogin,
 }) => {
   const siteContent = useSiteContent();
 

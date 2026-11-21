@@ -290,19 +290,21 @@ export async function fetchSiteContent(): Promise<SiteContentConfig> {
  */
 export async function updateSiteContent(
   updates: Partial<SiteContentConfig>,
-  adminEmail: string = AUTHORIZED_ADMIN_EMAIL
+  adminEmail?: string
 ): Promise<SiteContentConfig> {
   const current = getLocalSiteContent();
 
-  // Strict Admin Gate: Only authorized administrator can modify site settings, social links, or under construction status
+  // Strict Admin Gate: Require an active, server-verified in-memory admin session
   const activeSession = getActiveAdminSession();
-  const isAuthorized =
-    (activeSession && isAuthorizedAdminEmail(activeSession.email)) ||
-    isAuthorizedAdminEmail(adminEmail);
+  const isAuthorized = Boolean(
+    activeSession &&
+      activeSession.token &&
+      isAuthorizedAdminEmail(activeSession.email)
+  );
 
-  if (!isAuthorized) {
+  if (!isAuthorized || !activeSession) {
     console.warn(
-      `[Aura Security] Blocked unauthorized attempt to change site settings. Only authenticated administrator (${AUTHORIZED_ADMIN_EMAIL}) can modify settings.`
+      `[Aura Security] Blocked unauthorized attempt to change site settings. Active verified admin session (${AUTHORIZED_ADMIN_EMAIL}) is required.`
     );
     return current;
   }
@@ -336,7 +338,7 @@ export async function updateSiteContent(
     },
     announcementEnabled: mergedFlags.announcementBar,
     updatedAt: new Date().toISOString(),
-    lastUpdatedBy: activeSession?.email || adminEmail,
+    lastUpdatedBy: activeSession.email || adminEmail || AUTHORIZED_ADMIN_EMAIL,
   };
 
   // Keep in-memory window snapshot strictly updated
@@ -358,20 +360,19 @@ export async function updateSiteContent(
     );
   }
 
-  // 3. Persist to Server API with Admin Authorization Header
+  // 3. Persist to Server API with strict Bearer token authorization
   try {
-    const authHeaders: Record<string, string> = {
-      'Content-Type': 'application/json',
-      'X-Admin-Email': activeSession?.email || adminEmail || AUTHORIZED_ADMIN_EMAIL,
-    };
-    if (activeSession?.token) {
-      authHeaders['Authorization'] = `Bearer ${activeSession.token}`;
-    }
-    fetch('/api/site-content', {
+    const res = await fetch('/api/site-content', {
       method: 'POST',
-      headers: authHeaders,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${activeSession.token}`,
+      },
       body: JSON.stringify(merged),
-    }).catch((err) => console.debug('Server API site content sync error:', err));
+    });
+    if (!res.ok) {
+      console.warn('Server rejected site content update:', res.status);
+    }
   } catch (err) {
     console.debug('Failed to post to server site content API:', err);
   }

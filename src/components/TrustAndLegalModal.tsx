@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Scale,
   Shield,
-  FileText,
   Lock,
   Cookie,
   DollarSign,
@@ -11,7 +10,6 @@ import {
   X,
   Printer,
   CheckCircle2,
-  ExternalLink,
   Mail,
   AlertTriangle,
 } from 'lucide-react';

@@ -1,12 +1,8 @@
 import React from 'react';
 import {
   Calendar,
-  Clock,
   ShieldCheck,
   User,
-  CheckCircle2,
-  ExternalLink,
-  BookOpen,
   FileCheck2,
 } from 'lucide-react';
 
@@ -45,7 +41,6 @@ export const Contributor: React.FC<ContributorProps> = ({
   reviewer,
   variant = 'compact',
   status = 'published',
-  onEdit,
   className = '',
 }) => {
   const getStatusBadge = () => {

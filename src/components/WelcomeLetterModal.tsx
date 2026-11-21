@@ -4,10 +4,7 @@ import {
   Mail,
   Sparkles,
   CheckCircle2,
-  ShieldCheck,
   Headphones,
-  Sliders,
-  Download,
   Calendar,
 } from 'lucide-react';
 import { UserProfile } from '../services/firebase';

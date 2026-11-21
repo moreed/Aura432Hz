@@ -8,8 +8,6 @@ import {
   ExternalLink,
   Check,
   X,
-  Sliders,
-  AlertCircle,
 } from 'lucide-react';
 import { useCookieConsent } from '../hooks/useCookieConsent';
 import { recordCookieActionTaken } from '../services/cookieConsent';
@@ -25,7 +23,7 @@ export const CookieSettingsModal: React.FC<CookieSettingsModalProps> = ({
   onClose,
   onOpenCookiePolicy,
 }) => {
-  const { preferences, savePreferences, acceptAll, declineNonEssential, consent } =
+  const { preferences, savePreferences, acceptAll, declineNonEssential } =
     useCookieConsent();
 
   const [functional, setFunctional] = useState(preferences.functional);
